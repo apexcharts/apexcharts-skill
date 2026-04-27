@@ -1,0 +1,46 @@
+{
+  "name": "apexcharts-skill",
+  "version": "1.0.0",
+  "description": "AI coding skill for ApexCharts.js — structured reference docs that help AI assistants (Claude, Cursor, Copilot, etc.) generate correct ApexCharts code.",
+  "keywords": [
+    "apexcharts",
+    "ai",
+    "skill",
+    "claude",
+    "cursor",
+    "copilot",
+    "charts",
+    "data-visualization",
+    "documentation",
+    "reference"
+  ],
+  "author": "ApexCharts <info@apexcharts.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/apexcharts/apexcharts-skill#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apexcharts/apexcharts-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/apexcharts/apexcharts-skill/issues"
+  },
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./SKILL.md": "./SKILL.md",
+    "./references/*": "./references/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "SKILL.md",
+    "references"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

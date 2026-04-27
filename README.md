@@ -43,6 +43,22 @@ Or paste the contents of `.cursorrules` into Copilot's custom instructions.
 
 Paste the contents of `SKILL.md` into the system prompt or attach it as context.
 
+### As an npm dependency
+
+Tools that build on top of this skill (e.g. MCP servers, custom AI agents) can install it from npm and resolve absolute paths to the bundled markdown:
+
+```bash
+npm install apexcharts-skill
+```
+
+```js
+import { skillFile, referencesDir, referencePath } from 'apexcharts-skill';
+import { readFile } from 'node:fs/promises';
+
+const skill = await readFile(skillFile, 'utf8');
+const barCharts = await readFile(referencePath('bar-charts.md'), 'utf8');
+```
+
 ## Repository Structure
 
 ```
