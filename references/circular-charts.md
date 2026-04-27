@@ -22,7 +22,7 @@ import ApexCharts from 'apexcharts/radialBar'
 
 ## Data Format
 
-**All circular charts use a flat number array for `series`, NOT the object format used by axis charts.**
+**The canonical format for circular charts is a flat number array for `series` paired with a `labels` array.** The x/y object format used by axis charts also works (ApexCharts normalizes it by extracting `y` as the value and `x` as the label), but it is not recommended — prefer the flat array form for clarity and predictability.
 
 ### Pie / Donut / Polar Area
 
@@ -210,7 +210,7 @@ plotOptions: {
 
 ## Family-Specific Pitfalls
 
-1. **Using axis-chart series format** — `series: [{ name: 'A', data: [44, 55] }]` is WRONG for pie/donut. Use `series: [44, 55]` (flat array) + `labels: ['A', 'B']`.
+1. **Using axis-chart series format** — `series: [{ name: 'A', data: [44, 55] }]` is WRONG for pie/donut. The x/y object form `series: [{ data: [{ x: 'A', y: 44 }] }]` works (ApexCharts normalizes it), but the canonical form is preferred: `series: [44, 55]` (flat array) + `labels: ['A', 'B']`.
 2. **RadialBar values above 100** — values represent percentages and will overflow. If you have raw values, calculate percentages first: `(value / max) * 100`.
 3. **Missing `labels` array** — without `labels`, pie/donut slices show as "undefined" in tooltips and legend.
 4. **Donut center labels not showing** — must set `plotOptions.pie.donut.labels.show: true` explicitly.
