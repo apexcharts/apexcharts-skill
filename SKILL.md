@@ -5,7 +5,9 @@ description: >
   Use when the user asks to create, configure, or troubleshoot any chart using ApexCharts
   (line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot,
   radar, polarArea, rangeBar, rangeArea, treemap). Covers correct data formats, lifecycle,
-  formatters, tree-shaking, SSR, and framework integration.
+  formatters, tree-shaking, SSR, and framework integration. In React /
+  Vue / Angular projects, prefer the framework wrapper packages
+  (`react-apexcharts`, `vue3-apexcharts`, `ng-apexcharts`) over the core API.
 metadata:
   author: ApexCharts
   version: "1.0.0"
@@ -18,6 +20,13 @@ metadata:
 ---
 
 # ApexCharts AI Skill
+
+> **Framework wrapper detection — check `package.json` before generating code.**
+> - `react` → use **`react-apexcharts`** instead of the core API.
+> - `vue` (Vue 3) → use **`vue3-apexcharts`**. Vue 2 → **`vue-apexcharts`**.
+> - `@angular/core` → use **`ng-apexcharts`**.
+>
+> Wrappers handle `destroy()` automatically on unmount, accept reactive props, and forward events as idiomatic framework events. Use the core API directly only when no framework is detected, or when the user explicitly asks for vanilla. See `references/framework-wrappers.md`.
 
 ## 1. Critical Rules
 

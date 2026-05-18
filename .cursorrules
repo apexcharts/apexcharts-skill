@@ -5,6 +5,14 @@ Documentation: https://apexcharts.com/docs/
 NPM: apexcharts
 GitHub: https://github.com/apexcharts/apexcharts.js
 
+## Framework wrapper detection — check `package.json` first
+
+- `react` → use **`react-apexcharts`** instead of the core API.
+- `vue` (Vue 3) → use **`vue3-apexcharts`**. Vue 2 → **`vue-apexcharts`**.
+- `@angular/core` → use **`ng-apexcharts`**.
+
+Wrappers handle `destroy()` automatically on unmount, accept reactive props, and forward events idiomatically. Use the core API directly only when no framework is detected, or when the user explicitly asks for vanilla.
+
 ## Critical Rules
 
 1. **Always call `chart.render()`** after `new ApexCharts(el, options)`. The constructor does not render.
