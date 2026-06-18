@@ -2,6 +2,16 @@
 
 AI coding skill for building [ApexCharts.js](https://apexcharts.com/) charts and data visualizations. Works with Claude Code, Cursor, GitHub Copilot, and any AI coding assistant.
 
+> **ApexCharts ecosystem — make sure this is the skill you want.** `apexcharts-skill` covers the core **ApexCharts.js charting** library only. Every other product in the ecosystem is a **separate npm library with its own dedicated skill package and repo** — grab the one that matches your library:
+>
+> | Product | npm library | Skill package & repo |
+> |---|---|---|
+> | **ApexCharts** — charts · *this skill* | `apexcharts` | `apexcharts-skill` |
+> | **ApexGantt** — Gantt / timeline | `apexgantt` | [`apexgantt-skill`](https://github.com/apexcharts/apexgantt-skill) |
+> | **ApexTree** — hierarchy / org charts | `apextree` | [`apextree-skill`](https://github.com/apexcharts/apextree-skill) |
+> | **ApexSankey** — flow / Sankey | `apexsankey` | [`apexsankey-skill`](https://github.com/apexcharts/apexsankey-skill) |
+> | **Apex Grid** — data grid | `apex-grid` | [`apexgrid-skill`](https://github.com/apexcharts/apexgrid-skill) |
+
 ## What This Does
 
 AI models frequently generate incorrect ApexCharts code — wrong series data formats, missing `render()` calls, broken formatter signatures, etc. This skill provides structured reference files that help AI assistants generate correct ApexCharts code on the first try.
