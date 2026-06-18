@@ -11,7 +11,7 @@ description: >
 metadata:
   author: ApexCharts
   version: "1.0.0"
-  library_version: ">=5.0.0"
+  library_version: "5.15.0"
   category: data-visualization
   tags: [charts, visualization, javascript, typescript, svg, apexcharts]
   docs: https://apexcharts.com/docs/
@@ -55,7 +55,7 @@ This is the most critical reference. Using the wrong data format is the #1 cause
 |---|---|---|---|
 | Line | `'line'` | `[{ name, data: [number \| null] }]` or `[{ name, data: [{ x, y }] }]` | `series: [{ name: 'Sales', data: [30, 40, null, 50] }]` |
 | Area | `'area'` | Same as line | `series: [{ name: 'Views', data: [10, 20, 30] }]` |
-| Bar / Column | `'bar'` | Same as line. Use `plotOptions.bar.horizontal: true` for horizontal bars (default). Set `horizontal: false` for vertical columns. | `series: [{ name: 'Revenue', data: [44, 55, 41] }]` |
+| Bar / Column | `'bar'` | Same as line. Defaults to **vertical columns**; set `plotOptions.bar.horizontal: true` for horizontal bars. | `series: [{ name: 'Revenue', data: [44, 55, 41] }]` |
 | Scatter | `'scatter'` | `[{ name, data: [{ x, y }] }]` — always use XY format | `series: [{ name: 'Points', data: [{ x: 1, y: 5 }, { x: 2, y: 10 }] }]` |
 | Bubble | `'bubble'` | `[{ name, data: [{ x, y, z }] }]` — **z is required** (bubble size) | `series: [{ name: 'Data', data: [{ x: 1, y: 30, z: 10 }] }]` |
 | Range Area | `'rangeArea'` | `[{ name, data: [{ x, y: [low, high] }] }]` | `series: [{ name: 'Temp', data: [{ x: 'Jan', y: [5, 15] }] }]` |

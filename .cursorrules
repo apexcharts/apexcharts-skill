@@ -181,9 +181,9 @@ apexcharts/features/all          # All features
 ❌ `chart.updateOptions({ series: [{ data: newData }] })`
 ✅ `chart.updateSeries([{ name: 'Sales', data: newData }])`
 
-### 15. Bar chart defaults to horizontal
-❌ Expecting vertical columns with just `type: 'bar'`
-✅ `plotOptions: { bar: { horizontal: false } }` for vertical columns
+### 15. Bar chart defaults to vertical columns
+❌ Expecting horizontal bars with just `type: 'bar'`
+✅ `plotOptions: { bar: { horizontal: true } }` for horizontal bars
 
 ### 16. Categories with {x,y} data
 ❌ `xaxis: { categories: ['A','B'] }, series: [{ data: [{ x: 'A', y: 10 }] }]` — categories ignored

@@ -2,8 +2,8 @@
 
 ## Chart Types Covered
 
-- **Bar** (`'bar'`) — Horizontal bar chart (default orientation)
-- **Column** (`'bar'` + `plotOptions.bar.horizontal: false`) — Vertical bar/column chart
+- **Column** (`'bar'`) — Vertical column chart (the default for `type: 'bar'`)
+- **Bar** (`'bar'` + `plotOptions.bar.horizontal: true`) — Horizontal bar chart
 - **Range Bar** (`'rangeBar'`) — Bars with start/end values (used for timelines, Gantt charts)
 
 ## Tree-Shakeable Import
@@ -32,8 +32,8 @@ import ApexCharts from 'apexcharts/bar'
   },
   plotOptions: {
     bar: {
-      horizontal: true    // true = horizontal bars (default)
-                           // false = vertical columns
+      horizontal: true    // true = horizontal bars
+                           // false = vertical columns (default)
     }
   }
 }
@@ -237,7 +237,7 @@ series: [{
 
 ## Family-Specific Pitfalls
 
-1. **Forgetting `plotOptions.bar.horizontal: false` for column charts** — ApexCharts defaults to horizontal bars. Set `horizontal: false` explicitly for vertical columns.
+1. **Assuming `type: 'bar'` renders horizontal bars** — it defaults to **vertical columns** (`horizontal: false`). Set `plotOptions.bar.horizontal: true` when you actually want horizontal bars.
 2. **Stacking with `chart.stacked: true` but missing on bar type** — stacking only works on `type: 'bar'` (and `'area'`). It does NOT work on line, scatter, etc.
 3. **Range Bar with single value instead of array** — `y` must be `[start, end]`, not a single number.
 4. **Timeline without `xaxis.type: 'datetime'`** — date-based range bars need `xaxis: { type: 'datetime' }` to render correctly.
