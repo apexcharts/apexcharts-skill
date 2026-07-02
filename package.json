@@ -1,6 +1,6 @@
 {
   "name": "apexcharts-skill",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "AI coding skill for ApexCharts.js — structured reference docs that help AI assistants (Claude, Cursor, Copilot, etc.) generate correct ApexCharts code.",
   "keywords": [
     "apexcharts",
