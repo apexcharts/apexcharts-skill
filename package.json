@@ -35,7 +35,9 @@
   "files": [
     "index.js",
     "SKILL.md",
-    "references"
+    "references",
+    "install",
+    ".cursorrules"
   ],
   "engines": {
     "node": ">=18"
