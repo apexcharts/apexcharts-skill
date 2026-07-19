@@ -26,6 +26,7 @@ export const referenceFiles = [
   'radar-charts.md',
   'ssr.md',
   'tree-shaking.md',
+  'v6-features.md',
 ];
 
 /** Resolve a reference file by its filename. Throws if not in the known list. */

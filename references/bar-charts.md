@@ -5,6 +5,8 @@
 - **Column** (`'bar'`) — Vertical column chart (the default for `type: 'bar'`)
 - **Bar** (`'bar'` + `plotOptions.bar.horizontal: true`) — Horizontal bar chart
 - **Range Bar** (`'rangeBar'`) — Bars with start/end values (used for timelines, Gantt charts)
+- **Funnel** (`'funnel'`, **new in v6**): Stage-by-stage drop-off chart
+- **Pyramid** (`'pyramid'`, **new in v6**): A funnel with the wide base at the bottom
 
 ## Tree-Shakeable Import
 
@@ -12,7 +14,10 @@
 import ApexCharts from 'apexcharts/bar'
 // Registers: bar, column, rangeBar
 // Aliases: apexcharts/column, apexcharts/rangeBar
+// Also covers funnel + pyramid (they normalize to the bar engine in v6)
 ```
+
+**v6 note:** `funnel` and `pyramid` are first-class `chart.type` aliases that render through the bar engine. Use them directly as `chart.type`; you do **not** need `plotOptions.bar.isFunnel`. `plotOptions.funnel` carries the funnel-specific shape options.
 
 ---
 
@@ -140,6 +145,43 @@ import ApexCharts from 'apexcharts/bar'
 }
 ```
 
+### Funnel (v6)
+
+Values are a flat number array in the standard `[{ name, data }]` wrapper; stage labels go in `xaxis.categories`. Order values **largest → smallest**.
+
+```js
+{
+  chart: { type: 'funnel', height: 350 },
+  series: [{ name: 'Recruitment', data: [1380, 1100, 990, 880, 740, 548, 330, 200] }],
+  xaxis: { categories: ['Sourced', 'Screened', 'Assessed', 'HR', 'Technical', 'Verify', 'Offered', 'Hired'] },
+  plotOptions: {
+    // shape: 'rectangle' (default, centered rectangles) | 'trapezoid' (continuous sloped sides)
+    funnel: { shape: 'trapezoid', lastShape: 'flat' },  // lastShape: 'flat' | 'taper' (trapezoid only)
+    bar: { borderRadius: 0, barHeight: '80%' }           // cosmetic bar props still apply
+  },
+  dataLabels: {
+    enabled: true,
+    formatter: (val, opt) => opt.w.globals.labels[opt.dataPointIndex] + ':  ' + val
+  },
+  legend: { show: false }
+}
+```
+
+### Pyramid (v6)
+
+Same shape as funnel, but order values **smallest → largest** so the wide base sits at the bottom.
+
+```js
+{
+  chart: { type: 'pyramid', height: 350 },
+  series: [{ name: '', data: [200, 330, 548, 740, 880, 990, 1100, 1380] }],
+  xaxis: { categories: ['Sweets', 'Processed', 'Fats', 'Meat', 'Legumes', 'Dairy', 'Produce', 'Grains'] },
+  plotOptions: { bar: { distributed: true } },  // one color per stage
+  dataLabels: { enabled: true, formatter: (val, opt) => opt.w.globals.labels[opt.dataPointIndex] },
+  legend: { show: false }
+}
+```
+
 ---
 
 ## Key plotOptions.bar Options
@@ -242,3 +284,5 @@ series: [{
 3. **Range Bar with single value instead of array** — `y` must be `[start, end]`, not a single number.
 4. **Timeline without `xaxis.type: 'datetime'`** — date-based range bars need `xaxis: { type: 'datetime' }` to render correctly.
 5. **`distributed: true` with multiple series** — distributed coloring applies to each data point independently. With multiple series, each point gets a unique color which is usually not desired. Use `distributed: true` only with single-series charts.
+6. **Funnel/pyramid value ordering**: funnel expects values ordered largest-to-smallest and pyramid smallest-to-largest. The renderer does not sort for you; unsorted data produces a jagged shape. Stage labels come from `xaxis.categories`, and per-stage labels in `dataLabels.formatter` are read via `opt.w.globals.labels[opt.dataPointIndex]`.
+7. **Reaching for `plotOptions.bar.isFunnel` in v6**: unnecessary. Set `chart.type: 'funnel'` (or `'pyramid'`) and use `plotOptions.funnel` for shape options.

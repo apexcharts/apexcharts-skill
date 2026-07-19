@@ -1,17 +1,19 @@
 ---
 name: apexcharts
 description: >
-  AI skill for building ApexCharts.js charts and data visualizations.
+  AI skill for building ApexCharts.js charts and data visualizations (targets v6).
   Use when the user asks to create, configure, or troubleshoot any chart using ApexCharts
   (line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot,
-  radar, polarArea, rangeBar, rangeArea, treemap). Covers correct data formats, lifecycle,
-  formatters, tree-shaking, SSR, and framework integration. In React /
+  violin, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge). Covers
+  correct data formats, lifecycle, formatters, tree-shaking, SSR, and the v6 feature
+  platform (plugins, canvas renderer, custom series, undo/redo, shareable views, themes,
+  crossfilter, annotation authoring, storyboard, streaming, drilldown). In React /
   Vue / Angular projects, prefer the framework wrapper packages
   (`react-apexcharts`, `vue3-apexcharts`, `ng-apexcharts`) over the core API.
 metadata:
   author: ApexCharts
-  version: "1.2.1"
-  library_version: "5.15.2"
+  version: "2.0.0"
+  library_version: "6.1.0"
   category: data-visualization
   tags: [charts, visualization, javascript, typescript, svg, apexcharts]
   docs: https://apexcharts.com/docs/
@@ -28,6 +30,8 @@ metadata:
 >
 > Wrappers handle `destroy()` automatically on unmount, accept reactive props, and forward events as idiomatic framework events. Use the core API directly only when no framework is detected, or when the user explicitly asks for vanilla. See `references/framework-wrappers.md`.
 
+> **Targets ApexCharts v6.** v6 is backward compatible: existing v5 configs keep working unchanged. Everything new (the plugin platform, canvas renderer, custom series, undo/redo, shareable views, themes, crossfilter, annotation authoring, storyboard, streaming, drilldown) is opt-in and tree-shakeable. Two behaviors changed *on by default* (both respect `prefers-reduced-motion`): (1) data updates that add/remove points now animate coherently, and (2) mobile pinch-zoom / two-finger pan gestures are enabled. See `references/v6-features.md` for the full v6 surface.
+
 ## 1. Critical Rules
 
 1. **Always call `chart.render()`** after `new ApexCharts(el, options)`. The constructor does not render.
@@ -42,6 +46,9 @@ metadata:
 10. **RadialBar values must be 0–100** (they represent percentages).
 11. **Color hex values must include the `#` prefix** (e.g., `'#FF5733'`, not `'FF5733'`).
 12. **Tree-shaking**: importing `apexcharts/core` gives you a bare class — you must also import chart-type entries and feature entries separately.
+13. **v6 first-class aliases**: `funnel` and `pyramid` render through the bar engine; `gauge` renders through radialBar. Use them as `chart.type` directly (no `plotOptions.bar.isFunnel` needed). They are covered by the `apexcharts/bar` and `apexcharts/radialBar` tree-shaking entries respectively.
+14. **`violin` (v6, statistical)** uses a per-point density profile: `data: [{ x, y: { density: [[value, weight], ...], points?: [number] } }]`, not a plain number.
+15. **`render()` is idempotent (v6)**: calling `render()` twice on the same instance returns the same promise instead of building a duplicate chart. You still must `destroy()` before creating a *new* instance on the same element.
 
 ---
 
@@ -62,22 +69,27 @@ This is the most critical reference. Using the wrong data format is the #1 cause
 | Range Bar | `'rangeBar'` | `[{ name, data: [{ x, y: [start, end] }] }]` — for timeline/Gantt, use timestamps | `series: [{ name: 'Tasks', data: [{ x: 'Design', y: [1, 5] }] }]` |
 | Candlestick | `'candlestick'` | `[{ data: [{ x, y: [O, H, L, C] }] }]` — array of 4: Open, High, Low, Close | `series: [{ data: [{ x: new Date('2024-01-01'), y: [51, 56, 48, 53] }] }]` |
 | Box Plot | `'boxPlot'` | `[{ data: [{ x, y: [min, Q1, median, Q3, max] }] }]` — array of 5 | `series: [{ data: [{ x: 'Group A', y: [10, 20, 30, 40, 50] }] }]` |
+| Violin *(v6)* | `'violin'` | `[{ name, data: [{ x, y: { density: [[value, weight], ...], points?: [number] } }] }]` | `series: [{ name: 'Sessions', data: [{ x: 'A', y: { density: [[20, 0.1], [30, 0.2]], points: [21, 29] } }] }]` |
 | Heatmap | `'heatmap'` | `[{ name, data: [{ x, y: number }] }]` — y is the intensity value | `series: [{ name: 'Mon', data: [{ x: '10am', y: 45 }] }]` |
 | Treemap | `'treemap'` | `[{ data: [{ x, y: number }] }]` — y is the area/value | `series: [{ data: [{ x: 'Item A', y: 100 }, { x: 'Item B', y: 60 }] }]` |
 | Radar | `'radar'` | `[{ name, data: [number] }]` + `xaxis: { categories: [...] }` | `series: [{ name: 'Skill', data: [80, 50, 30, 40, 100] }]` |
+| Funnel *(v6)* | `'funnel'` | `[{ name, data: [number] }]` + `xaxis: { categories: [...] }`. Order values **largest→smallest**. | `series: [{ data: [1380, 990, 548, 200] }]` |
+| Pyramid *(v6)* | `'pyramid'` | Same as funnel; order values **smallest→largest** (wide base at bottom). | `series: [{ data: [200, 548, 990, 1380] }]` |
 
-### Non-Axis Charts (pie, donut, radialBar, polarArea)
+### Non-Axis Charts (pie, donut, radialBar, polarArea, gauge)
 
 These use a **flat number array** for `series`, NOT the object format:
 
 ```js
 // CORRECT — flat number array + labels
 {
-  chart: { type: 'pie' },  // or 'donut', 'polarArea', 'radialBar'
+  chart: { type: 'pie' },  // or 'donut', 'polarArea', 'radialBar', 'gauge'
   series: [44, 55, 13, 43, 22],
   labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E']
 }
 ```
+
+**Gauge *(v6)*** is a single-value radialBar alias: `series: [72]`, `labels: ['Progress']`. Configure the arc/needle, colored bands, ticks, and `min`/`max` domain through `plotOptions.radialBar` (see `references/circular-charts.md`).
 
 ---
 
@@ -101,21 +113,37 @@ import ApexCharts from 'apexcharts/column'        # same as /bar
 import ApexCharts from 'apexcharts/rangeBar'      # same as /bar
 import ApexCharts from 'apexcharts/candlestick'   # candlestick, boxPlot
 import ApexCharts from 'apexcharts/boxPlot'       # same as /candlestick
+import ApexCharts from 'apexcharts/violin'        # violin (v6)
 import ApexCharts from 'apexcharts/pie'           # pie, donut, polarArea
 import ApexCharts from 'apexcharts/donut'         # same as /pie
 import ApexCharts from 'apexcharts/polarArea'     # same as /pie
-import ApexCharts from 'apexcharts/radialBar'     # radialBar only
+import ApexCharts from 'apexcharts/radialBar'     # radialBar + gauge (v6)
 import ApexCharts from 'apexcharts/radar'         # radar only
 import ApexCharts from 'apexcharts/heatmap'       # heatmap only
 import ApexCharts from 'apexcharts/treemap'       # treemap only
+# funnel + pyramid (v6) render through the bar engine; use apexcharts/bar
 
 # Optional features (side-effect imports — just import, no default export needed)
-import 'apexcharts/features/exports'      # PNG/SVG/CSV export methods
-import 'apexcharts/features/legend'       # Interactive legend component
-import 'apexcharts/features/toolbar'      # Toolbar (zoom, pan, download buttons)
-import 'apexcharts/features/annotations'  # X/Y/point/text/image annotations
-import 'apexcharts/features/keyboard'     # Keyboard navigation (accessibility)
-import 'apexcharts/features/all'          # All features at once
+import 'apexcharts/features/exports'         # PNG/SVG/CSV export methods
+import 'apexcharts/features/legend'          # Interactive legend component
+import 'apexcharts/features/toolbar'         # Toolbar (zoom, pan, download buttons)
+import 'apexcharts/features/annotations'     # X/Y/point/text/image annotations
+import 'apexcharts/features/keyboard'        # Keyboard navigation (accessibility)
+# v6 feature platform (all opt-in, all tree-shakeable)
+import 'apexcharts/features/morph'           # Animated chart-type morphs
+import 'apexcharts/features/drilldown'       # Hierarchical drill-down
+import 'apexcharts/features/history'         # Undo/redo (Rewind)
+import 'apexcharts/features/perspectives'    # Shareable view state
+import 'apexcharts/features/storyboard'      # Scrollytelling (includes perspectives)
+import 'apexcharts/features/facet'           # Design tokens + OS-aware themes
+import 'apexcharts/features/weave'           # Public plugin platform
+import 'apexcharts/features/renderer-canvas' # Hybrid SVG + canvas renderer (Strata)
+import 'apexcharts/features/marks'           # Custom series types (registerSeriesType)
+import 'apexcharts/features/link'            # Crossfilter / linked views
+import 'apexcharts/features/ink'             # On-chart annotation authoring
+import 'apexcharts/features/measure'         # Measure / delta ruler
+import 'apexcharts/features/context-menu'    # Right-click / long-press context menu
+import 'apexcharts/features/all'             # All features at once
 
 # SSR (server-side rendering)
 import ApexCharts from 'apexcharts/ssr'    # Node.js: renderToString, renderToHTML
@@ -484,6 +512,19 @@ await chart.updateOptions({ title: { text: 'New Title' } })
 | `addEventListener(name, handler)` | Subscribe to chart event. |
 | `removeEventListener(name, handler)` | Unsubscribe from chart event. |
 
+### v6 Instance Methods (require the matching feature import)
+
+| Method | Feature | Description |
+|---|---|---|
+| `chart.history.undo() / redo() / jump(id) / transaction(fn)` | history | Undo/redo over the command journal. |
+| `chart.perspectives.capture() / toURL() / apply(token)` | perspectives | Serialize / restore the exact view. |
+| `chart.getActiveRenderer()` | renderer-canvas | Returns `'svg' \| 'canvas'` currently in use. |
+| `chart.refreshTokens()` | facet | Re-read `--apx-*` CSS custom properties. |
+| `chart.startMeasure() / stopMeasure() / clearMeasures()` | measure | Drive the measure ruler from code. |
+| `chart.storyboard.bind({ beats }) / goTo() / unbind()` | storyboard | Scroll-driven choreography. |
+| `chart.drillDown(id) / drillUp() / drillToRoot()` | drilldown | Navigate the drill-down hierarchy. |
+| `chart.clearCrossfilter()` | link | Clear active crossfilter selections. |
+
 ### Static Methods
 
 | Method | Description |
@@ -493,15 +534,21 @@ await chart.updateOptions({ title: { text: 'New Title' } })
 | `ApexCharts.merge(target, source)` | Deep-merge objects. |
 | `ApexCharts.use(typeMap)` | Register chart type constructors (tree-shaking). |
 | `ApexCharts.registerFeatures(featureMap)` | Register optional feature modules. |
+| `ApexCharts.registerPlugin(def) / unregisterPlugin(name)` | *(v6, Weave)* Register a reusable plugin. |
+| `ApexCharts.registerSeriesType(name, def) / unregisterSeriesType(name)` | *(v6, Marks)* Register a custom series type. |
+| `ApexCharts.registerTheme(name, def) / unregisterTheme(name)` | *(v6, Facet)* Register a named brand theme. |
+| `ApexCharts.registerEasing(name, fn)` | *(v6, Cadence)* Register a custom easing curve. |
+| `ApexCharts.crossfilter({ id, records }) / getCrossfilter(id)` | *(v6, Link)* Create / fetch a crossfilter engine. |
+| `ApexCharts.perspectives.fromURL(href)` | *(v6)* Decode a perspective token from a URL. |
 
 ### SSR Static Methods (available with `apexcharts/ssr`)
 
 | Method | Description |
 |---|---|
-| `ApexCharts.renderToString(options)` | Render chart to SVG string (Node.js). |
-| `ApexCharts.renderToHTML(options)` | Render chart to HTML string with wrapper (Node.js). |
-| `ApexCharts.hydrate(element)` | Hydrate server-rendered chart (browser). |
-| `ApexCharts.hydrateAll()` | Hydrate all server-rendered charts on page. |
+| `ApexCharts.renderToString(options, { width, height, scale })` | Render chart to raw SVG string (Node.js). |
+| `ApexCharts.renderToHTML(options, { width, height, scale, className })` | Render hydration-ready HTML string (Node.js). |
+| `ApexCharts.hydrate(element, clientOptions?)` | Hydrate a server-rendered chart (browser). |
+| `ApexCharts.hydrateAll(selector?, clientOptions?)` | Hydrate all server-rendered charts on page. |
 | `ApexCharts.isHydrated(element)` | Check if element is already hydrated. |
 
 ---
@@ -537,6 +584,17 @@ await chart.updateOptions({ title: { text: 'New Title' } })
       beforeResetZoom: (chart, options) => {},    // return false to cancel
       scrolled: (chart, { xaxis }) => {},
       selection: (chart, { xaxis, yaxis }) => {},
+
+      // v6 feature events (fire only when the matching feature is enabled)
+      annotationDragged: (chart, options) => {},  // ink
+      annotationEdited: (chart, options) => {},    // ink
+      annotationStyled: (chart, options) => {},    // ink
+      annotationDeleted: (chart, options) => {},   // ink
+      measured: (chart, { from, to, dx, dy, percentChange, slope }) => {}, // measure
+      beatChange: (chart, beatInfo) => {},         // storyboard
+      drillDownStart: (info, chart, options) => {},// drilldown
+      drillDownEnd: (info, chart, options) => {},  // drilldown
+      drillUp: (info, chart, options) => {},       // drilldown
     }
   }
 }
@@ -544,18 +602,40 @@ await chart.updateOptions({ title: { text: 'New Title' } })
 
 ---
 
-## 9. Reference Routing Table
+## 9. v6 Feature Platform (opt-in, tree-shakeable)
+
+All of the following are new in v6, off by default, and each ships as a `apexcharts/features/*` entry. Full config shapes, APIs, and examples are in `references/v6-features.md`. Quick map:
+
+| Feature | Opt-in | One-liner |
+|---|---|---|
+| **Weave** (plugins) | `apexcharts/features/weave` | Publish reusable chart plugins against a stable `ApexCharts.registerPlugin({ name, setup })` API; activate per chart with `plugins: [{ name }]`. |
+| **Strata** (canvas) | `apexcharts/features/renderer-canvas` | `chart: { renderer: 'auto', rendererThreshold }` paints the dense series layer to canvas while axes/tooltips/exports stay SVG. |
+| **Marks** (custom series) | `apexcharts/features/marks` | `ApexCharts.registerSeriesType(name, { renderItem })` for first-class custom marks (lollipop, dumbbell, bullet). Baseline is `scales.y(0)`, **not** `api.zeroY`. |
+| **Rewind** (undo/redo) | `apexcharts/features/history` | `chart: { history: { enabled: true } }`, then `chart.history.undo()/redo()/jump()/transaction()`. |
+| **Perspectives** (view state) | `apexcharts/features/perspectives` | `chart.perspectives.capture()/toURL()/apply()` to serialize and restore the exact view. |
+| **Facet** (themes/tokens) | `apexcharts/features/facet` | `theme: { follow: 'os', name }`, `--apx-*` CSS custom props, `ApexCharts.registerTheme`. |
+| **Cadence** (easing) | core | `chart.animations.easing` accepts a named curve, cubic-bezier array, or function; `ApexCharts.registerEasing`. |
+| **Link** (crossfilter) | `apexcharts/features/link` | `chart: { group, link: { enabled, mode } }` for highlight linking; `ApexCharts.crossfilter({ id, records })` for a filter engine. |
+| **Ink** (annotation authoring) | `apexcharts/features/ink` | `chart: { ink: { enabled: true } }` makes annotations draggable/resizable with a floating editor. |
+| **Measure** (ruler) | `apexcharts/features/measure` | `chart: { measure: { enabled, mode } }`; hold a key and drag to read change/percent/slope. v6.1 adds a toolbar tool (`toolbar.tools.measure`, `toolbar.autoSelected: 'measure'`). |
+| **Context menu** | `apexcharts/features/context-menu` | `chart: { contextMenu: { enabled, items } }` for point-specific right-click actions. |
+| **Storyboard** (scrollytelling) | `apexcharts/features/storyboard` | `chart.storyboard.bind({ beats })` pairs prose sections with saved views. |
+| **Streaming** | core | `chart: { streaming: { enabled, maxPoints } }` for constant-velocity rolling-window scroll. |
+| **Drilldown** | `apexcharts/features/drilldown` | `drilldown: { enabled, series }` + a `drilldown` id on data points; `chart.drillDown()/drillUp()`. |
+
+## 10. Reference Routing Table
 
 For detailed chart-family-specific options, data format variants, and full working examples, refer to:
 
 | Topic | Reference File |
 |---|---|
 | Line, Area, Scatter, Bubble, Range Area | `references/cartesian-charts.md` |
-| Bar, Column, Range Bar, Timeline/Gantt | `references/bar-charts.md` |
-| Candlestick, Box Plot | `references/financial-charts.md` |
-| Pie, Donut, Polar Area, Radial Bar | `references/circular-charts.md` |
+| Bar, Column, Range Bar, Timeline/Gantt, Funnel, Pyramid | `references/bar-charts.md` |
+| Candlestick, Box Plot, Violin | `references/financial-charts.md` |
+| Pie, Donut, Polar Area, Radial Bar, Gauge | `references/circular-charts.md` |
 | Heatmap, Treemap | `references/grid-charts.md` |
 | Radar | `references/radar-charts.md` |
+| v6 feature platform (plugins, canvas, undo/redo, themes, crossfilter, storyboard, ...) | `references/v6-features.md` |
 | Tree-shaking, Bundle optimization | `references/tree-shaking.md` |
 | Server-side rendering, Hydration | `references/ssr.md` |
 | React, Vue, Angular integration | `references/framework-wrappers.md` |

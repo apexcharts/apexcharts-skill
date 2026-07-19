@@ -5,7 +5,8 @@
 - **Pie** (`'pie'`) — Standard pie chart
 - **Donut** (`'donut'`) — Pie chart with hollow center
 - **Polar Area** (`'polarArea'`) — Radial segments with equal angles, varying radius
-- **Radial Bar** (`'radialBar'`) — Circular progress/gauge chart
+- **Radial Bar** (`'radialBar'`): Circular progress chart (one or more concentric tracks)
+- **Gauge** (`'gauge'`, **new in v6**): Single-value gauge with arc/needle shapes, colored bands, and ticks
 
 ## Tree-Shakeable Import
 
@@ -16,6 +17,7 @@ import ApexCharts from 'apexcharts/pie'
 
 import ApexCharts from 'apexcharts/radialBar'
 // Registers: radialBar (separate entry point)
+// Also covers gauge (it normalizes to the radialBar engine in v6)
 ```
 
 ---
@@ -45,6 +47,52 @@ import ApexCharts from 'apexcharts/radialBar'
 ```
 
 **Important:** RadialBar values represent percentages (0–100). Values above 100 will overflow the track.
+
+### Gauge (v6)
+
+A gauge is a single-value `radialBar` alias. Series is a flat one-element array; the value maps to the `min..max` domain (defaults 0-100). All configuration lives under `plotOptions.radialBar`; there is **no `plotOptions.gauge`**.
+
+```js
+// Minimal gauge:
+{
+  chart: { type: 'gauge', height: 350 },
+  series: [72],
+  labels: ['Progress']
+}
+```
+
+```js
+// Needle gauge with colored bands and ticks:
+{
+  chart: { type: 'gauge', height: 360 },
+  series: [68],
+  labels: ['Speed'],
+  plotOptions: {
+    radialBar: {
+      shape: 'needle',          // 'arc' (default, filled value-arc) | 'needle' (rotating pointer)
+      startAngle: -135, endAngle: 135,
+      min: 0, max: 100,          // value-to-angle domain
+      bands: [                   // colored threshold segments in the min..max domain
+        { from: 0, to: 30, color: '#FF4560' },
+        { from: 30, to: 70, color: '#FEB019' },
+        { from: 70, to: 100, color: '#00E396' }
+      ],
+      bandsStyle: { strokeWidth: '50%', gap: 1 },
+      ticks: {
+        show: true,
+        major: { count: 11, length: 8, width: 2, color: '#334155', placement: 'outside' },
+        minor: { count: 1, length: 4, width: 1, color: '#94A3B8', placement: 'outside' },
+        labels: { show: true, offset: 6, fontSize: '11px' }
+      },
+      needle: { color: '#0F172A', length: '60%', baseWidth: 6, tipWidth: 1 },
+      hollow: { size: '70%' },
+      dataLabels: { name: { show: false }, value: { offsetY: 32, fontSize: '28px', fontWeight: 700 } }
+    }
+  }
+}
+```
+
+A plain radialBar is effectively a gauge with `shape: 'arc'`. A semi-circle gauge is `startAngle: -90, endAngle: 90`.
 
 ---
 
@@ -216,3 +264,5 @@ plotOptions: {
 4. **Donut center labels not showing** — must set `plotOptions.pie.donut.labels.show: true` explicitly.
 5. **`total.formatter` signature** — receives `w` (the full chart config object), NOT a simple value. Access `w.globals.seriesTotals` for the array of current values.
 6. **Polar Area confused with Radar** — polar area uses `series: [num]` (flat), radar uses `series: [{ data: [num] }]` (axis format). They look similar but have different data shapes.
+7. **Looking for `plotOptions.gauge`**: it does not exist. Gauge is a `radialBar` alias; configure `shape`, `bands`, `ticks`, `needle`, and `min`/`max` under `plotOptions.radialBar`.
+8. **Gauge value outside `min`/`max`**: unlike a plain radialBar (fixed 0-100), a gauge maps its value to the `min..max` domain you set. A value beyond that domain saturates at the arc ends.

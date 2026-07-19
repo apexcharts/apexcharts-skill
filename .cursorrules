@@ -1,9 +1,11 @@
 # ApexCharts.js — AI Coding Rules
 
-You are working with ApexCharts.js, a JavaScript charting library.
+You are working with ApexCharts.js (v6), a JavaScript charting library.
 Documentation: https://apexcharts.com/docs/
 NPM: apexcharts
 GitHub: https://github.com/apexcharts/apexcharts.js
+
+v6 is backward compatible: existing v5 configs keep working. New chart types (violin, funnel, pyramid, gauge) and the feature platform (plugins, canvas renderer, custom series, undo/redo, shareable views, themes, crossfilter, annotation authoring, storyboard, streaming, drilldown) are opt-in and tree-shakeable. Two behaviors changed on by default (both respect prefers-reduced-motion): coherent add/remove data-transition animations, and mobile pinch-zoom / two-finger pan.
 
 ## Framework wrapper detection — check `package.json` first
 
@@ -27,6 +29,9 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 10. **RadialBar values must be 0–100** (percentages).
 11. **Color hex values must include `#`** (e.g., `'#FF5733'`).
 12. **Tree-shaking**: `apexcharts/core` requires separate chart-type + feature imports.
+13. **v6 aliases**: `funnel`/`pyramid` render through bar, `gauge` through radialBar. Use them as `chart.type` directly (no `plotOptions.bar.isFunnel`); covered by `apexcharts/bar` and `apexcharts/radialBar`.
+14. **`violin`** points use a density profile: `data: [{ x, y: { density: [[value, weight], ...], points?: [num] } }]`.
+15. **`render()` is idempotent (v6)**: a repeated `render()` returns the same promise; still `destroy()` before a new instance on the same element.
 
 ---
 
@@ -45,9 +50,12 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 | Range Bar | `'rangeBar'` | `[{ data: [{ x, y: [start, end] }] }]` | `[{ data: [{ x: 'Task', y: [1, 5] }] }]` |
 | Candlestick | `'candlestick'` | `[{ data: [{ x, y: [O,H,L,C] }] }]` — 4 values | `[{ data: [{ x: new Date(), y: [51,56,48,53] }] }]` |
 | Box Plot | `'boxPlot'` | `[{ data: [{ x, y: [min,Q1,med,Q3,max] }] }]` — 5 values | `[{ data: [{ x: 'A', y: [10,20,30,40,50] }] }]` |
+| Violin *(v6)* | `'violin'` | `[{ name, data: [{ x, y: { density: [[value,weight],...], points?: [num] } }] }]` | `[{ data: [{ x: 'A', y: { density: [[20,0.1],[30,0.2]], points: [21,29] } }] }]` |
 | Heatmap | `'heatmap'` | `[{ name, data: [{ x, y: number }] }]` — y is intensity | `[{ name: 'Mon', data: [{ x: '10am', y: 45 }] }]` |
 | Treemap | `'treemap'` | `[{ data: [{ x, y: number }] }]` — y is area value | `[{ data: [{ x: 'Item', y: 100 }] }]` |
 | Radar | `'radar'` | `[{ name, data: [num] }]` + `xaxis.categories` | `[{ data: [80, 50, 30] }]` |
+| Funnel *(v6)* | `'funnel'` | `[{ name, data: [num] }]` + `xaxis.categories`; order largest→smallest | `[{ data: [1380, 990, 548, 200] }]` |
+| Pyramid *(v6)* | `'pyramid'` | Same as funnel; order smallest→largest | `[{ data: [200, 548, 990, 1380] }]` |
 
 ### Non-Axis Charts (flat number array — NOT object format)
 
@@ -57,6 +65,9 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 
 // Radial Bar (values 0–100)
 { chart: { type: 'radialBar' }, series: [76, 67, 61], labels: ['X', 'Y', 'Z'] }
+
+// Gauge (v6): single value; domain via plotOptions.radialBar.min/max
+{ chart: { type: 'gauge' }, series: [72], labels: ['Progress'] }
 ```
 
 ---
@@ -86,10 +97,11 @@ chart.destroy()                                         // cleanup
 apexcharts              # Full bundle (all types + features)
 apexcharts/core         # Bare core (must register types + features manually)
 apexcharts/line         # line, area, scatter, bubble, rangeArea
-apexcharts/bar          # bar, column, rangeBar
+apexcharts/bar          # bar, column, rangeBar, funnel, pyramid (v6 aliases)
 apexcharts/candlestick  # candlestick, boxPlot
+apexcharts/violin       # violin (v6)
 apexcharts/pie          # pie, donut, polarArea
-apexcharts/radialBar    # radialBar
+apexcharts/radialBar    # radialBar, gauge (v6 alias)
 apexcharts/radar        # radar
 apexcharts/heatmap      # heatmap
 apexcharts/treemap      # treemap
@@ -97,13 +109,28 @@ apexcharts/ssr          # Server-side rendering (Node.js)
 apexcharts/client       # Explicit browser import
 
 # Optional features (side-effect imports)
-apexcharts/features/exports      # dataURI(), exportToCSV()
-apexcharts/features/legend       # Legend component
-apexcharts/features/toolbar      # Zoom, pan, download
-apexcharts/features/annotations  # X/Y/point annotations
-apexcharts/features/keyboard     # Keyboard navigation
-apexcharts/features/all          # All features
+apexcharts/features/exports         # dataURI(), exportToCSV()
+apexcharts/features/legend          # Legend component
+apexcharts/features/toolbar         # Zoom, pan, download
+apexcharts/features/annotations     # X/Y/point annotations
+apexcharts/features/keyboard        # Keyboard navigation
+# v6 feature platform (all opt-in):
+apexcharts/features/morph           # animated chart-type morphs
+apexcharts/features/drilldown       # hierarchical drill-down
+apexcharts/features/history         # undo/redo (Rewind)
+apexcharts/features/perspectives    # shareable view state
+apexcharts/features/storyboard      # scrollytelling
+apexcharts/features/facet           # design tokens + OS themes
+apexcharts/features/weave           # plugin platform
+apexcharts/features/renderer-canvas # hybrid SVG + canvas renderer (Strata)
+apexcharts/features/marks           # custom series types (registerSeriesType)
+apexcharts/features/link            # crossfilter / linked views
+apexcharts/features/ink             # on-chart annotation authoring
+apexcharts/features/measure         # measure / delta ruler
+apexcharts/features/context-menu    # right-click context menu
+apexcharts/features/all             # All features
 ```
+(Cadence easing and real-time streaming are core: no feature import needed.)
 
 ---
 
@@ -223,10 +250,10 @@ apexcharts/features/all          # All features
 
 | Method | Description |
 |---|---|
-| `ApexCharts.renderToString(opts)` | SVG string (server). |
-| `ApexCharts.renderToHTML(opts)` | HTML wrapper + SVG (server). |
-| `ApexCharts.hydrate(el)` | Hydrate SSR chart (client). |
-| `ApexCharts.hydrateAll()` | Hydrate all SSR charts. |
+| `ApexCharts.renderToString(opts, { width, height })` | SVG string (server). |
+| `ApexCharts.renderToHTML(opts, { width, height })` | HTML wrapper + SVG (server). |
+| `ApexCharts.hydrate(el, clientOpts?)` | Hydrate SSR chart (client). |
+| `ApexCharts.hydrateAll(selector?)` | Hydrate all SSR charts. |
 
 ---
 

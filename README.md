@@ -16,11 +16,14 @@ AI coding skill for building [ApexCharts.js](https://apexcharts.com/) charts and
 
 AI models frequently generate incorrect ApexCharts code — wrong series data formats, missing `render()` calls, broken formatter signatures, etc. This skill provides structured reference files that help AI assistants generate correct ApexCharts code on the first try.
 
+This skill targets **ApexCharts v6** (backward compatible with v5 configs).
+
 ### Coverage
 
-- **16 chart types**: line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot, radar, polarArea, rangeBar, rangeArea, treemap
+- **20 chart types**: line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot, violin, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge
 - **Correct data formats** for every chart type
-- **16 common pitfalls** with wrong/correct code examples
+- **Common pitfalls** with wrong/correct code examples
+- **v6 feature platform**: plugins (Weave), canvas renderer (Strata), custom series (Marks), undo/redo (Rewind), shareable views (Perspectives), themes (Facet), easing (Cadence), crossfilter (Link), annotation authoring (Ink), measure ruler, context menu, storyboard, streaming, drilldown
 - **Tree-shaking** and bundle optimization patterns
 - **SSR** (server-side rendering) and hydration
 - **Framework integration**: React, Vue 3, Angular
@@ -76,11 +79,12 @@ const barCharts = await readFile(referencePath('bar-charts.md'), 'utf8');
 ├── .cursorrules                # Self-contained version for Cursor/Windsurf
 ├── references/
 │   ├── cartesian-charts.md     # line, area, scatter, bubble, rangeArea
-│   ├── bar-charts.md           # bar, column, rangeBar, timeline/Gantt
-│   ├── financial-charts.md     # candlestick, boxPlot
-│   ├── circular-charts.md      # pie, donut, polarArea, radialBar
+│   ├── bar-charts.md           # bar, column, rangeBar, timeline/Gantt, funnel, pyramid
+│   ├── financial-charts.md     # candlestick, boxPlot, violin
+│   ├── circular-charts.md      # pie, donut, polarArea, radialBar, gauge
 │   ├── grid-charts.md          # heatmap, treemap
 │   ├── radar-charts.md         # radar
+│   ├── v6-features.md          # v6 feature platform (plugins, canvas, undo/redo, themes, ...)
 │   ├── tree-shaking.md         # bundle optimization
 │   ├── ssr.md                  # server-side rendering
 │   └── framework-wrappers.md   # React, Vue, Angular

@@ -1,9 +1,10 @@
-# Financial Charts Reference — ApexCharts
+# Financial & Statistical Charts Reference — ApexCharts
 
 ## Chart Types Covered
 
 - **Candlestick** (`'candlestick'`) — OHLC (Open, High, Low, Close) financial chart
 - **Box Plot** (`'boxPlot'`) — Statistical distribution chart showing min, Q1, median, Q3, max
+- **Violin** (`'violin'`, **new in v6**): Statistical distribution chart showing a density curve per category, optionally with the raw sample points overlaid as jitter
 
 ## Tree-Shakeable Import
 
@@ -11,6 +12,9 @@
 import ApexCharts from 'apexcharts/candlestick'
 // Registers: candlestick, boxPlot
 // Alias: apexcharts/boxPlot
+
+import ApexCharts from 'apexcharts/violin'
+// Registers: violin (separate entry point, new in v6)
 ```
 
 ---
@@ -65,6 +69,57 @@ The `y` value must be an array of exactly 5 numbers: `[min, Q1, median, Q3, max]
       { x: 'Mar 2024', y: [31, 39, 45, 51, 59] }
     ]
   }]
+}
+```
+
+### Violin: Density Profile (v6)
+
+Each point is `{ x, y: { density, points } }`:
+
+- `density` (**required**): an array of `[value, weight]` pairs describing the precomputed density/KDE profile.
+- `points` (optional): a flat array of raw observations, rendered as jitter dots.
+
+```js
+{
+  chart: { type: 'violin', height: 420 },
+  series: [{
+    name: 'Session duration',
+    data: [
+      {
+        x: 'Direct',
+        y: {
+          density: [[20, 0.02], [30, 0.08], [40, 0.18], [50, 0.10], [60, 0.03]], // [value, weight]
+          points: [22, 31, 38, 41, 47, 52, 58]                                    // raw observations
+        }
+      },
+      {
+        x: 'Referral',
+        y: {
+          density: [[25, 0.03], [35, 0.12], [45, 0.20], [55, 0.09], [65, 0.02]],
+          points: [27, 34, 44, 48, 53, 61]
+        }
+      }
+    ]
+  }],
+  plotOptions: {
+    violin: {
+      bandwidthScale: 1,          // multiplies the density-derived half-width
+      normalize: 'individual',     // 'individual' (each violin to its own peak) | 'group' (shared scale)
+      points: { show: false }      // set show:true to overlay the raw points as jitter
+    }
+  }
+}
+```
+
+**Orientation and per-category color come from `plotOptions.bar`** (violin reuses the bar renderer):
+
+```js
+plotOptions: {
+  bar: { horizontal: true, distributed: true },  // horizontal violins, one color each
+  violin: {
+    normalize: 'group',
+    points: { show: true, shape: 'circle', size: 3, jitter: 0.9, strokeWidth: 0 }
+  }
 }
 ```
 
@@ -155,3 +210,5 @@ plotOptions: {
 3. **Using simple numeric array** — `data: [10, 20, 30]` does NOT work for candlestick/boxPlot. Each point requires an array in `y`.
 4. **Missing `xaxis.type: 'datetime'`** — candlestick charts with date x-values need `xaxis: { type: 'datetime' }` to format dates correctly.
 5. **Confusing candlestick with boxPlot** — candlestick is 4 values (OHLC), boxPlot is 5 values (five-number summary). They share the same entry point but have different data shapes.
+6. **Violin with a plain numeric `y`**: violin points need `y: { density: [[value, weight], ...] }`, not a number. The `density` profile is precomputed (ApexCharts does not run a KDE for you); `points` for the raw-sample jitter overlay is optional.
+7. **Violin orientation set on the wrong namespace**: horizontal violins and per-violin colors come from `plotOptions.bar` (`horizontal`, `distributed`), while `bandwidthScale`, `normalize`, and `points` live under `plotOptions.violin`.

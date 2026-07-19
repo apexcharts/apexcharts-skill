@@ -6,7 +6,7 @@ ApexCharts supports three import strategies with different bundle sizes:
 
 | Strategy | Import | Includes |
 |---|---|---|
-| Full bundle | `import ApexCharts from 'apexcharts'` | All 16 chart types + all features |
+| Full bundle | `import ApexCharts from 'apexcharts'` | All chart types + all features |
 | Per-type entry | `import ApexCharts from 'apexcharts/line'` | Specific chart family + core (no optional features) |
 | Bare core | `import ApexCharts from 'apexcharts/core'` | Core class only — must manually register everything |
 
@@ -28,13 +28,16 @@ Each entry point registers a family of related chart types:
 | `apexcharts/rangeBar` | same as /bar |
 | `apexcharts/candlestick` | candlestick, boxPlot |
 | `apexcharts/boxPlot` | same as /candlestick |
+| `apexcharts/violin` | violin *(new in v6)* |
 | `apexcharts/pie` | pie, donut, polarArea |
 | `apexcharts/donut` | same as /pie |
 | `apexcharts/polarArea` | same as /pie |
-| `apexcharts/radialBar` | radialBar |
+| `apexcharts/radialBar` | radialBar, **gauge** *(v6 alias)* |
 | `apexcharts/radar` | radar |
 | `apexcharts/heatmap` | heatmap |
 | `apexcharts/treemap` | treemap |
+
+**v6 first-class aliases:** `funnel` and `pyramid` render through the bar engine, so `apexcharts/bar` covers them. `gauge` renders through radialBar, so `apexcharts/radialBar` covers it. There is no separate `apexcharts/funnel`, `apexcharts/pyramid`, or `apexcharts/gauge` entry.
 
 ### Using Multiple Chart Types
 
@@ -57,9 +60,22 @@ Features are optional modules that add functionality. When using per-type entrie
 | Annotations | `import 'apexcharts/features/annotations'` | X/Y/point/text/image annotations |
 | Exports | `import 'apexcharts/features/exports'` | `dataURI()`, `getSvgString()`, `exportToCSV()` |
 | Keyboard | `import 'apexcharts/features/keyboard'` | Keyboard navigation (accessibility) |
+| Morph *(v6)* | `import 'apexcharts/features/morph'` | Animated chart-type morphs |
+| Drilldown *(v6)* | `import 'apexcharts/features/drilldown'` | Hierarchical drill-down |
+| History / Rewind *(v6)* | `import 'apexcharts/features/history'` | Undo/redo (`chart.history`) |
+| Perspectives *(v6)* | `import 'apexcharts/features/perspectives'` | Shareable view state |
+| Storyboard *(v6)* | `import 'apexcharts/features/storyboard'` | Scrollytelling (includes perspectives) |
+| Facet *(v6)* | `import 'apexcharts/features/facet'` | Design tokens + OS-aware themes |
+| Weave *(v6)* | `import 'apexcharts/features/weave'` | Public plugin platform |
+| Renderer / Strata *(v6)* | `import 'apexcharts/features/renderer-canvas'` | Hybrid SVG + canvas renderer |
+| Marks *(v6)* | `import 'apexcharts/features/marks'` | Custom series types (`registerSeriesType`) |
+| Link *(v6)* | `import 'apexcharts/features/link'` | Crossfilter / linked views |
+| Ink *(v6)* | `import 'apexcharts/features/ink'` | On-chart annotation authoring |
+| Measure *(v6)* | `import 'apexcharts/features/measure'` | Measure / delta ruler |
+| Context menu *(v6)* | `import 'apexcharts/features/context-menu'` | Right-click / long-press context menu |
 | All | `import 'apexcharts/features/all'` | All of the above |
 
-**Important:** Tooltip is always included in core — it cannot be tree-shaken.
+**Important:** Tooltip is always included in core (it cannot be tree-shaken). Easing (Cadence) and real-time streaming are also core, so they need no feature import. See `v6-features.md` for the config and API of each v6 feature.
 
 ### What Happens If You Forget a Feature
 
