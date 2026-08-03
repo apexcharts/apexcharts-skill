@@ -46,6 +46,49 @@ Each series is a row; each data point is a cell. The `y` value determines the co
 }
 ```
 
+#### Continuous numeric / datetime x-axis (v6.4)
+
+By default a heatmap tiles one cell per column by index. On a **numeric or datetime** x-axis (`xaxis.type: 'numeric'` or `'datetime'`), cells are instead placed at their real x value, so irregular spacing and gaps render as real empty space: a missing hour is a gap in the grid, not a squeezed column, and the axis shows sparse proportional ticks rather than one label per cell. Rows stay categorical (one series per row).
+
+```js
+{
+  chart: { type: 'heatmap', height: 350 },
+  xaxis: { type: 'datetime' },
+  series: [{
+    name: 'Server 1',
+    data: [
+      { x: new Date('2024-01-01T09:00').getTime(), y: 20 },
+      { x: new Date('2024-01-01T11:00').getTime(), y: 80 }, // 10:00 is absent -> real gap
+      { x: new Date('2024-01-01T12:00').getTime(), y: 65 }
+    ]
+  }]
+}
+```
+
+#### Canvas rendering for large heatmaps (v6.4)
+
+With `chart.renderer: 'canvas'` (or `'auto'` past `chart.rendererThreshold`) and the canvas feature imported, heatmap cells paint to a single canvas instead of one `<rect>` per cell, which is several times faster for large grids (roughly 3x at 50,000+ cells).
+
+```js
+import ApexCharts from 'apexcharts'
+import 'apexcharts/features/renderer-canvas'
+
+const options = {
+  chart: {
+    type: 'heatmap',
+    renderer: 'canvas',   // 'svg' | 'canvas' | 'auto'
+  },
+}
+```
+
+#### Heatmap default changes (v6.4)
+
+Three heatmap defaults changed in 6.4.0. Each is a default, not a removal:
+
+- **Tooltip anchored above the cell.** The heatmap tooltip now sits centered above the hovered cell with a downward arrow pointing at it (flipping below when the cell is against the top edge), instead of following the cursor.
+- **Zoom is off by default.** Re-enable with `chart.zoom: { enabled: true }` if you need it.
+- **Y-axis label thinning.** Dense y-axis (row) labels are thinned to fit.
+
 ### Treemap
 
 Flat list of `{ x, y }` where `x` is the label and `y` is the value (determines area).

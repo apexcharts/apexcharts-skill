@@ -11,6 +11,45 @@ Also new by default: **`render()` is idempotent**: a repeated `render()` (e.g. a
 
 ---
 
+## Licensing: premium features and the trial watermark
+
+Introduced in **6.5.0**, tightened in **6.7.0**. Not every v6 feature is free. Seven feature modules plus the `unit` / `waffle` chart type are **premium** and run under a lightweight, offline license check. They keep working fully without a key (trial mode), but the chart shows an unobtrusive `APEXCHARTS` watermark until an entitled license is set.
+
+**The premium set (watermarked until entitled):**
+
+- `storyboard` (scrollytelling)
+- `link` (crossfilter / linked views)
+- `ink` (annotation authoring)
+- `measure` (delta ruler)
+- `context-menu` (`contextMenu`)
+- `perspectives` (shareable view state)
+- `history` (undo/redo, Rewind)
+- the `unit` / `waffle` chart type (premium since **6.6.0**, the first premium chart type)
+
+**Everything else is free and never gated**: every other chart type (including `sunburst`), and every other module (Weave, Strata / canvas, Marks, Facet / themes, Cadence, drilldown, streaming, exports, legend, toolbar, annotations, keyboard).
+
+### Setting a license
+
+```js
+// Static: applies to every chart on the page. Call before render().
+ApexCharts.setLicense('APEX-...')
+
+// Per-chart: overrides the static key and window.Apex.license for this chart.
+const options = { chart: { license: 'APEX-...' } }
+```
+
+Both are typed: `ApexCharts.setLicense(key: string)` (static) and `chart.license?: string`.
+
+- **In use, not bundled.** Importing a premium module without actually enabling it does not watermark; only *using* it does.
+- **Live.** A late `setLicense(validKey)` followed by an update clears an on-screen watermark; no full re-render needed. The watermark is re-evaluated on every render/update.
+- **One key across the family.** The key format is shared across the ApexCharts family (apexgantt, apextree, apexsankey, apex-grid-enterprise, apexstock), validated offline with no network call. SSR-safe.
+
+### Plan entitlement (6.7.0 behavior change)
+
+As of **6.7.0** the premium features clear the watermark only on a `premium` or `enterprise` plan. A valid `pro` key, or the free tier, keeps them in trial mode with the watermark and logs a one-time upgrade notice (it is **not** treated as an invalid key). **Existing `pro`-plan customers using these features will now see the watermark.** No functionality is blocked in any case, the watermark is the only effect.
+
+---
+
 ## Weave: public plugin platform
 
 `import 'apexcharts/features/weave'`
@@ -116,6 +155,8 @@ Dumbbell uses `dataType: 'rangeXY'` (datum `y` is `[start, end]`, both bounds fo
 
 `import 'apexcharts/features/history'`
 
+**Premium** (watermarked in trial mode until an entitled license is set, see Licensing above).
+
 Generic Ctrl-Z over a command journal. Zooms, series toggles, option changes, and annotation edits are recorded; high-frequency gestures coalesce into a single step.
 
 ```js
@@ -136,6 +177,8 @@ chart.history.entries()        // [{ id, label, at }]
 ## Perspectives: shareable view state
 
 `import 'apexcharts/features/perspectives'`
+
+**Premium** (watermarked in trial mode until an entitled license is set, see Licensing above).
 
 Serialize the exact view (zoom window, hidden series, selection, annotations, theme) into a compact token you can put in a URL and restore anywhere.
 
@@ -219,6 +262,8 @@ Built-in curve names: `linear`, `easeInSine`, `easeOutSine`, `easeInOutSine`, `e
 
 `import 'apexcharts/features/link'`
 
+**Premium** (watermarked in trial mode until an entitled license is set, see Licensing above).
+
 Coordinate a group of charts without wiring.
 
 ```js
@@ -255,6 +300,8 @@ const b = {
 
 `import 'apexcharts/features/ink'`
 
+**Premium** (watermarked in trial mode until an entitled license is set, see Licensing above).
+
 Annotations become draggable and resizable, with click-to-create, snap to gridlines, and a floating editor card (rename, recolor, bold, font size, marker size/shape, delete). Every edit is undoable when Rewind is enabled.
 
 ```js
@@ -276,6 +323,8 @@ const options = {
 ## Measure: delta ruler
 
 `import 'apexcharts/features/measure'`
+
+**Premium** (watermarked in trial mode until an entitled license is set, see Licensing above).
 
 Hold a key and drag to read the change, percent, range, and slope between two points; on release the ruler pins as a data-anchored overlay that re-projects on zoom and resize.
 
@@ -324,6 +373,8 @@ const options = {
 
 `import 'apexcharts/features/context-menu'`
 
+**Premium** (watermarked in trial mode until an entitled license is set, see Licensing above).
+
 Right-click or long-press a data point for actions that operate at that exact point.
 
 ```js
@@ -349,6 +400,8 @@ Built-in `annotate` / `xline` / `yline` items are ink-managed when the ink featu
 ## Storyboard: scroll-driven choreography (scrollytelling)
 
 `import 'apexcharts/features/storyboard'` (includes Perspectives)
+
+**Premium** (watermarked in trial mode until an entitled license is set, see Licensing above).
 
 Pair prose sections with saved views. Scrolling a beat past the viewport trigger applies its view; scrolling back reverses it. A beat can also merge an `options` payload to restyle or morph `chart.type` inside one animated transition.
 
@@ -420,6 +473,34 @@ chart.drillDown(id)   // Promise
 chart.drillUp()
 chart.drillToRoot()
 ```
+
+---
+
+## Point annotation tooltips (6.7.0)
+
+`import 'apexcharts/features/annotations'` (free, part of the standard annotations module)
+
+A point annotation can now show its own hover tooltip, so an annotated marker carries explanatory text without a separate custom element. Add `tooltip` to any entry in `annotations.points`:
+
+```js
+const options = {
+  annotations: {
+    points: [{
+      x: 'Mar',
+      y: 62,
+      marker: { size: 6, fillColor: '#FF4560' },
+      label: { text: 'Peak' },
+      tooltip: {
+        enabled: true,
+        text: 'All-time high: 62',   // string, or an array joined with line breaks; falls back to label.text
+        // formatter: (opts) => `<b>${opts.annotation.label.text}</b>`  // HTML, takes precedence over text
+      },
+    }],
+  },
+}
+```
+
+`tooltip.formatter` receives `{ annotation, seriesIndex, id, ... }` and returns HTML.
 
 ---
 

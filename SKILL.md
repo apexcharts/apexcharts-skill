@@ -4,7 +4,8 @@ description: >
   AI skill for building ApexCharts.js charts and data visualizations (targets v6).
   Use when the user asks to create, configure, or troubleshoot any chart using ApexCharts
   (line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot,
-  violin, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge). Covers
+  violin, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge, sunburst,
+  unit, waffle). Covers
   correct data formats, lifecycle, formatters, tree-shaking, SSR, and the v6 feature
   platform (plugins, canvas renderer, custom series, undo/redo, shareable views, themes,
   crossfilter, annotation authoring, storyboard, streaming, drilldown). In React /
@@ -12,8 +13,8 @@ description: >
   (`react-apexcharts`, `vue3-apexcharts`, `ng-apexcharts`) over the core API.
 metadata:
   author: ApexCharts
-  version: "2.0.1"
-  library_version: "6.2.0"
+  version: "2.1.0"
+  library_version: "6.7.0"
   category: data-visualization
   tags: [charts, visualization, javascript, typescript, svg, apexcharts]
   docs: https://apexcharts.com/docs/
@@ -31,6 +32,8 @@ metadata:
 > Wrappers handle `destroy()` automatically on unmount, accept reactive props, and forward events as idiomatic framework events. Use the core API directly only when no framework is detected, or when the user explicitly asks for vanilla. See `references/framework-wrappers.md`.
 
 > **Targets ApexCharts v6.** v6 is backward compatible: existing v5 configs keep working unchanged. Everything new (the plugin platform, canvas renderer, custom series, undo/redo, shareable views, themes, crossfilter, annotation authoring, storyboard, streaming, drilldown) is opt-in and tree-shakeable. Two behaviors changed *on by default* (both respect `prefers-reduced-motion`): (1) data updates that add/remove points now animate coherently, and (2) mobile pinch-zoom / two-finger pan gestures are enabled. See `references/v6-features.md` for the full v6 surface.
+>
+> **Premium features and licensing (6.5.0+).** Seven of the v6 features are premium: `storyboard`, `link` (crossfilter / linked views), `ink` (annotation authoring), `measure`, `context-menu`, `perspectives` (shareable views), and `history` (undo/redo). The `unit` / `waffle` chart type is also premium (6.6.0+). These still function fully, but render an `APEXCHARTS` trial watermark until an entitled license is set via `ApexCharts.setLicense(key)` (static) or per-chart `chart.license`. As of 6.7.0 they require a `premium` or `enterprise` plan; a `pro` key or the free tier keeps the watermark. Every other chart type and free module is never gated. See the Licensing section in `references/v6-features.md`.
 
 ## 1. Critical Rules
 
@@ -76,20 +79,43 @@ This is the most critical reference. Using the wrong data format is the #1 cause
 | Funnel *(v6)* | `'funnel'` | `[{ name, data: [number] }]` + `xaxis: { categories: [...] }`. Order values **largest→smallest**. | `series: [{ data: [1380, 990, 548, 200] }]` |
 | Pyramid *(v6)* | `'pyramid'` | Same as funnel; order values **smallest→largest** (wide base at bottom). | `series: [{ data: [200, 548, 990, 1380] }]` |
 
-### Non-Axis Charts (pie, donut, radialBar, polarArea, gauge)
+### Non-Axis Charts (pie, donut, radialBar, polarArea, gauge, unit, waffle)
 
 These use a **flat number array** for `series`, NOT the object format:
 
 ```js
 // CORRECT — flat number array + labels
 {
-  chart: { type: 'pie' },  // or 'donut', 'polarArea', 'radialBar', 'gauge'
+  chart: { type: 'pie' },  // or 'donut', 'polarArea', 'radialBar', 'gauge', 'unit', 'waffle'
   series: [44, 55, 13, 43, 22],
   labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E']
 }
 ```
 
 **Gauge *(v6)*** is a single-value radialBar alias: `series: [72]`, `labels: ['Progress']`. Configure the arc/needle, colored bands, ticks, and `min`/`max` domain through `plotOptions.radialBar` (see `references/circular-charts.md`).
+
+**Unit / Waffle *(v6.6, premium)*** render one mark per unit of value (dot clusters, pictograms, waffles, beeswarms). Same flat-array + `labels` shape as pie; layout is chosen through `plotOptions.unit.layout`. A per-mark object form (`series: [{ name, data: [{ value, x, z, name, fillColor, id }] }]`) gives each mark its own color, position, size, and tooltip. `waffle` is a preset alias of `unit` (grid layout). Both render an `APEXCHARTS` watermark until an entitled license is set. See `references/circular-charts.md`.
+
+### Hierarchical Charts (sunburst)
+
+**Sunburst *(v6.7, free)*** draws tree-structured data as concentric rings (a nested pie / donut). It uses the axis-style `[{ data: [...] }]` wrapper, but each datum is an `{ x, y, children }` node nested to any depth:
+
+```js
+{
+  chart: { type: 'sunburst' },
+  series: [{
+    data: [
+      { x: 'Mobile', y: 55, children: [
+        { x: 'iOS', y: 30, children: [{ x: 'iOS 17', y: 18 }, { x: 'iOS 16', y: 9 }] },
+        { x: 'Android', y: 23 }
+      ] },
+      { x: 'Desktop', y: 33, children: [{ x: 'Windows', y: 20 }, { x: 'macOS', y: 10 }] }
+    ]
+  }]
+}
+```
+
+Configure the centre hole, corner rounding, and inter-arc gap through `plotOptions.sunburst` (see `references/circular-charts.md`).
 
 ---
 
@@ -121,6 +147,8 @@ import ApexCharts from 'apexcharts/radialBar'     # radialBar + gauge (v6)
 import ApexCharts from 'apexcharts/radar'         # radar only
 import ApexCharts from 'apexcharts/heatmap'       # heatmap only
 import ApexCharts from 'apexcharts/treemap'       # treemap only
+import ApexCharts from 'apexcharts/sunburst'      # sunburst (v6.7, hierarchical)
+import ApexCharts from 'apexcharts/unit'          # unit + waffle (v6.6, premium)
 # funnel + pyramid (v6) render through the bar engine; use apexcharts/bar
 
 # Optional features (side-effect imports — just import, no default export needed)
@@ -531,6 +559,7 @@ await chart.updateOptions({ title: { text: 'New Title' } })
 |---|---|
 | `ApexCharts.exec(chartID, fn, ...args)` | Call method on chart by its `chart.id`. |
 | `ApexCharts.getChartByID(chartID)` | Get chart instance by id. |
+| `ApexCharts.setLicense(key)` | *(v6.5)* Set the license key that clears the premium-feature trial watermark. Static, family-shared, offline, SSR-safe; call before `render()`. Per-chart override is `chart.license`. As of 6.7.0 requires a `premium`/`enterprise` plan. |
 | `ApexCharts.merge(target, source)` | Deep-merge objects. |
 | `ApexCharts.use(typeMap)` | Register chart type constructors (tree-shaking). |
 | `ApexCharts.registerFeatures(featureMap)` | Register optional feature modules. |
@@ -632,7 +661,7 @@ For detailed chart-family-specific options, data format variants, and full worki
 | Line, Area, Scatter, Bubble, Range Area | `references/cartesian-charts.md` |
 | Bar, Column, Range Bar, Timeline/Gantt, Funnel, Pyramid | `references/bar-charts.md` |
 | Candlestick, Box Plot, Violin | `references/financial-charts.md` |
-| Pie, Donut, Polar Area, Radial Bar, Gauge | `references/circular-charts.md` |
+| Pie, Donut, Polar Area, Radial Bar, Gauge, Sunburst, Unit, Waffle | `references/circular-charts.md` |
 | Heatmap, Treemap | `references/grid-charts.md` |
 | Radar | `references/radar-charts.md` |
 | v6 feature platform (plugins, canvas, undo/redo, themes, crossfilter, storyboard, ...) | `references/v6-features.md` |

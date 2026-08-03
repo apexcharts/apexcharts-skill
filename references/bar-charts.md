@@ -213,6 +213,28 @@ plotOptions: {
 }
 ```
 
+### Bar Chart Race (v6.4)
+
+A reorder update animates into a bar chart race: when you re-sort the data and update the chart, the bars slide to their new ranks and their category labels ride along automatically (whenever `dynamicAnimation` is on). Two opt-in `dataLabels` flags complete the effect. Both are off by default and apply to **bar / column only**; their speed and easing follow `chart.animations.dynamicAnimation`.
+
+```js
+const options = {
+  chart: {
+    type: 'bar',
+    animations: { dynamicAnimation: { speed: 800 } },
+  },
+  plotOptions: { bar: { horizontal: true } },
+  dataLabels: {
+    enabled: true,
+    animate: { enabled: true },  // value labels ride to the new rank instead of snapping
+    countUp: { enabled: true },  // and count up/down from the previous value (formatter runs each frame)
+  },
+}
+// On each frame, re-sort your data and call updateOptions (or updateSeries) with the
+// new series and categories. Bars, category labels, and value labels animate together.
+// Rotated axis labels ride correctly too.
+```
+
 ### Goals / Target Markers
 
 ```js

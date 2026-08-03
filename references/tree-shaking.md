@@ -36,6 +36,8 @@ Each entry point registers a family of related chart types:
 | `apexcharts/radar` | radar |
 | `apexcharts/heatmap` | heatmap |
 | `apexcharts/treemap` | treemap |
+| `apexcharts/sunburst` | sunburst *(new in v6.7, free)* |
+| `apexcharts/unit` | unit, **waffle** *(new in v6.6, premium: watermarked until licensed)* |
 
 **v6 first-class aliases:** `funnel` and `pyramid` render through the bar engine, so `apexcharts/bar` covers them. `gauge` renders through radialBar, so `apexcharts/radialBar` covers it. There is no separate `apexcharts/funnel`, `apexcharts/pyramid`, or `apexcharts/gauge` entry.
 
