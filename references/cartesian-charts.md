@@ -242,6 +242,6 @@ xaxis: {
 
 1. **Bubble chart without z value** — renders with zero-size bubbles. Always provide `z` in data.
 2. **Using `xaxis.categories` with `{ x, y }` data** — categories are silently ignored when data contains x values. Choose one approach.
-3. **Datetime axis with string dates** — pass timestamps (`new Date(...).getTime()`) or `Date` objects, not raw strings like `'January 2024'`.
+3. **Datetime axis with string dates** — pass timestamps (`new Date(...).getTime()`) or `Date` objects, not raw strings like `'January 2024'`. Since v6.10 a `Date` object `x` is accepted by the types and keeps millisecond resolution (previously milliseconds were truncated, collapsing points within the same second).
 4. **`stroke.curve: 'smooth'` on sparse data** — can produce visual artifacts. Use `'monotoneCubic'` for mathematically smoother interpolation.
 5. **Range Area with single value instead of array** — `y` must be `[low, high]`, not a single number.

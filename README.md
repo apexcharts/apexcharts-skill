@@ -20,10 +20,10 @@ This skill targets **ApexCharts v6** (backward compatible with v5 configs).
 
 ### Coverage
 
-- **20 chart types**: line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot, violin, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge
+- **24 chart types**: line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot, violin, histogram, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge, sunburst, unit, waffle
 - **Correct data formats** for every chart type
 - **Common pitfalls** with wrong/correct code examples
-- **v6 feature platform**: plugins (Weave), canvas renderer (Strata), custom series (Marks), undo/redo (Rewind), shareable views (Perspectives), themes (Facet), easing (Cadence), crossfilter (Link), annotation authoring (Ink), measure ruler, context menu, storyboard, streaming, drilldown
+- **v6 feature platform**: plugins (Weave), canvas renderer (Strata), custom series (Marks), undo/redo (Rewind), shareable views (Perspectives), themes (Facet), easing (Cadence), crossfilter (Link), annotation authoring (Ink), measure ruler, context menu, storyboard, streaming, drilldown, raw-sample statistics (Stats), unit-chart shape kit (`apexcharts/unit-shapes`)
 - **Tree-shaking** and bundle optimization patterns
 - **SSR** (server-side rendering) and hydration
 - **Framework integration**: React, Vue 3, Angular
@@ -80,8 +80,8 @@ const barCharts = await readFile(referencePath('bar-charts.md'), 'utf8');
 ├── references/
 │   ├── cartesian-charts.md     # line, area, scatter, bubble, rangeArea
 │   ├── bar-charts.md           # bar, column, rangeBar, timeline/Gantt, funnel, pyramid
-│   ├── financial-charts.md     # candlestick, boxPlot, violin
-│   ├── circular-charts.md      # pie, donut, polarArea, radialBar, gauge
+│   ├── financial-charts.md     # candlestick, boxPlot, violin, histogram
+│   ├── circular-charts.md      # pie, donut, polarArea, radialBar, gauge, sunburst, unit, waffle
 │   ├── grid-charts.md          # heatmap, treemap
 │   ├── radar-charts.md         # radar
 │   ├── v6-features.md          # v6 feature platform (plugins, canvas, undo/redo, themes, ...)

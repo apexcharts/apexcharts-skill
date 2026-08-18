@@ -4,8 +4,8 @@ description: >
   AI skill for building ApexCharts.js charts and data visualizations (targets v6).
   Use when the user asks to create, configure, or troubleshoot any chart using ApexCharts
   (line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot,
-  violin, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge, sunburst,
-  unit, waffle). Covers
+  violin, histogram, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge,
+  sunburst, unit, waffle). Covers
   correct data formats, lifecycle, formatters, tree-shaking, SSR, and the v6 feature
   platform (plugins, canvas renderer, custom series, undo/redo, shareable views, themes,
   crossfilter, annotation authoring, storyboard, streaming, drilldown). In React /
@@ -13,8 +13,8 @@ description: >
   (`react-apexcharts`, `vue3-apexcharts`, `ng-apexcharts`) over the core API.
 metadata:
   author: ApexCharts
-  version: "2.1.0"
-  library_version: "6.7.0"
+  version: "2.2.0"
+  library_version: "6.10.0"
   category: data-visualization
   tags: [charts, visualization, javascript, typescript, svg, apexcharts]
   docs: https://apexcharts.com/docs/
@@ -50,8 +50,9 @@ metadata:
 11. **Color hex values must include the `#` prefix** (e.g., `'#FF5733'`, not `'FF5733'`).
 12. **Tree-shaking**: importing `apexcharts/core` gives you a bare class — you must also import chart-type entries and feature entries separately.
 13. **v6 first-class aliases**: `funnel` and `pyramid` render through the bar engine; `gauge` renders through radialBar. Use them as `chart.type` directly (no `plotOptions.bar.isFunnel` needed). They are covered by the `apexcharts/bar` and `apexcharts/radialBar` tree-shaking entries respectively.
-14. **`violin` (v6, statistical)** uses a per-point density profile: `data: [{ x, y: { density: [[value, weight], ...], points?: [number] } }]`, not a plain number.
+14. **`violin` (v6, statistical)** uses a per-point density profile: `data: [{ x, y: { density: [[value, weight], ...], points?: [number] } }]`, not a plain number. Since v6.9 a datum may instead supply only raw observations (`points: [number]`, no `y`) and the library derives the density via KDE (needs `apexcharts/features/stats` when tree-shaking).
 15. **`render()` is idempotent (v6)**: calling `render()` twice on the same instance returns the same promise instead of building a duplicate chart. You still must `destroy()` before creating a *new* instance on the same element.
+16. **`histogram` (v6.9)** series carry **raw observations** (one number per event), not pre-aggregated counts; the chart chooses bin edges and counts them. Binning ships behind the stats feature: use the `apexcharts/histogram` entry, or `import 'apexcharts/features/stats'` alongside `apexcharts/bar` (the full `apexcharts` bundle already includes it).
 
 ---
 
@@ -71,10 +72,11 @@ This is the most critical reference. Using the wrong data format is the #1 cause
 | Range Area | `'rangeArea'` | `[{ name, data: [{ x, y: [low, high] }] }]` | `series: [{ name: 'Temp', data: [{ x: 'Jan', y: [5, 15] }] }]` |
 | Range Bar | `'rangeBar'` | `[{ name, data: [{ x, y: [start, end] }] }]` — for timeline/Gantt, use timestamps | `series: [{ name: 'Tasks', data: [{ x: 'Design', y: [1, 5] }] }]` |
 | Candlestick | `'candlestick'` | `[{ data: [{ x, y: [O, H, L, C] }] }]` — array of 4: Open, High, Low, Close | `series: [{ data: [{ x: new Date('2024-01-01'), y: [51, 56, 48, 53] }] }]` |
-| Box Plot | `'boxPlot'` | `[{ data: [{ x, y: [min, Q1, median, Q3, max] }] }]` — array of 5 | `series: [{ data: [{ x: 'Group A', y: [10, 20, 30, 40, 50] }] }]` |
-| Violin *(v6)* | `'violin'` | `[{ name, data: [{ x, y: { density: [[value, weight], ...], points?: [number] } }] }]` | `series: [{ name: 'Sessions', data: [{ x: 'A', y: { density: [[20, 0.1], [30, 0.2]], points: [21, 29] } }] }]` |
+| Box Plot | `'boxPlot'` | `[{ data: [{ x, y: [min, Q1, median, Q3, max] }] }]` — array of 5. *(v6.9)* Or supply the raw sample instead: `[{ data: [{ x, points: [number] }] }]` and the quartiles are computed (R type 7; needs the stats feature). | `series: [{ data: [{ x: 'Group A', y: [10, 20, 30, 40, 50] }] }]` |
+| Violin *(v6)* | `'violin'` | `[{ name, data: [{ x, y: { density: [[value, weight], ...], points?: [number] } }] }]`. *(v6.9)* Or supply the raw sample instead: `[{ name, data: [{ x, points: [number] }] }]` and the density is derived via KDE (needs the stats feature). | `series: [{ name: 'Sessions', data: [{ x: 'A', y: { density: [[20, 0.1], [30, 0.2]], points: [21, 29] } }] }]` |
+| Histogram *(v6.9)* | `'histogram'` | `[{ name, data: [number] }]`: **raw observations**, one number per event, NOT pre-binned counts. The chart bins them (needs the stats feature). | `series: [{ name: 'Latency', data: [102, 87, 143, 91] }]` |
 | Heatmap | `'heatmap'` | `[{ name, data: [{ x, y: number }] }]` — y is the intensity value | `series: [{ name: 'Mon', data: [{ x: '10am', y: 45 }] }]` |
-| Treemap | `'treemap'` | `[{ data: [{ x, y: number }] }]` — y is the area/value | `series: [{ data: [{ x: 'Item A', y: 100 }, { x: 'Item B', y: 60 }] }]` |
+| Treemap | `'treemap'` | `[{ data: [{ x, y: number }] }]` — y is the area/value. *(v6.9)* A datum may carry `children` to any depth for a nested treemap (see `references/grid-charts.md`). | `series: [{ data: [{ x: 'Item A', y: 100 }, { x: 'Item B', y: 60 }] }]` |
 | Radar | `'radar'` | `[{ name, data: [number] }]` + `xaxis: { categories: [...] }` | `series: [{ name: 'Skill', data: [80, 50, 30, 40, 100] }]` |
 | Funnel *(v6)* | `'funnel'` | `[{ name, data: [number] }]` + `xaxis: { categories: [...] }`. Order values **largest→smallest**. | `series: [{ data: [1380, 990, 548, 200] }]` |
 | Pyramid *(v6)* | `'pyramid'` | Same as funnel; order values **smallest→largest** (wide base at bottom). | `series: [{ data: [200, 548, 990, 1380] }]` |
@@ -140,6 +142,7 @@ import ApexCharts from 'apexcharts/rangeBar'      # same as /bar
 import ApexCharts from 'apexcharts/candlestick'   # candlestick, boxPlot
 import ApexCharts from 'apexcharts/boxPlot'       # same as /candlestick
 import ApexCharts from 'apexcharts/violin'        # violin (v6)
+import ApexCharts from 'apexcharts/histogram'     # histogram (v6.9): bar engine + the stats feature
 import ApexCharts from 'apexcharts/pie'           # pie, donut, polarArea
 import ApexCharts from 'apexcharts/donut'         # same as /pie
 import ApexCharts from 'apexcharts/polarArea'     # same as /pie
@@ -151,12 +154,16 @@ import ApexCharts from 'apexcharts/sunburst'      # sunburst (v6.7, hierarchical
 import ApexCharts from 'apexcharts/unit'          # unit + waffle (v6.6, premium)
 # funnel + pyramid (v6) render through the bar engine; use apexcharts/bar
 
+# Unit-chart shape kit (v6.10): named exports, tree-shaken per shape (~4 KB gzipped each)
+import { heart, outlined, glyphs, preview } from 'apexcharts/unit-shapes'
+
 # Optional features (side-effect imports — just import, no default export needed)
 import 'apexcharts/features/exports'         # PNG/SVG/CSV export methods
 import 'apexcharts/features/legend'          # Interactive legend component
 import 'apexcharts/features/toolbar'         # Toolbar (zoom, pan, download buttons)
 import 'apexcharts/features/annotations'     # X/Y/point/text/image annotations
 import 'apexcharts/features/keyboard'        # Keyboard navigation (accessibility)
+import 'apexcharts/features/stats'           # Statistics (v6.9): histogram binning, boxPlot/violin raw samples, rowSeries()
 # v6 feature platform (all opt-in, all tree-shakeable)
 import 'apexcharts/features/morph'           # Animated chart-type morphs
 import 'apexcharts/features/drilldown'       # Hierarchical drill-down
@@ -179,6 +186,8 @@ import ApexCharts from 'apexcharts/client' # Browser: explicit client import for
 ```
 
 **Note:** When using `apexcharts` (full bundle), all chart types and features are included automatically. Tree-shaking entries (`/core`, `/line`, etc.) are for reducing bundle size.
+
+**Note (v6.9):** ApexCharts is no longer dependency-free: it depends on `apex-commons` at runtime. npm resolves it automatically and the browser (script-tag) bundles inline it, so no action is needed; it only matters for tooling that assumed zero dependencies.
 
 ---
 
@@ -242,6 +251,8 @@ chart.destroy()
 | `plotOptions.radialBar.dataLabels.value.formatter` | `(val: number) => string` | RadialBar center value |
 
 **Important:** All formatters must return a `string` (or `number` for `dataLabels.formatter`). Never return `undefined`.
+
+**Per-point data label offsets (v6.8):** `dataLabels.offsetX` and `dataLabels.offsetY` accept `number | ((opts) => number)`. The function receives `{ series, seriesIndex, dataPointIndex, w }` (same signature as `dataLabels.style.colors` functions), so colliding labels from two series at the same x can be pushed apart, e.g. `offsetY: ({ seriesIndex }) => (seriesIndex === 0 ? -12 : 12)`. Keep it pure; it may be called more than once per label.
 
 ---
 
@@ -536,6 +547,7 @@ await chart.updateOptions({ title: { text: 'New Title' } })
 | `exportToCSV(options?)` | Trigger CSV download. |
 | `setLocale(localeName)` | Switch locale. |
 | `toggleDataPointSelection(seriesIndex, dataPointIndex?)` | Select/deselect data point. |
+| `rowSeries(opts?)` | *(v6.9)* Returns the raw rows behind this chart's marks as a unit-chart series (one cluster per mark), or `null` when the type has no row source (works for histogram / boxPlot / violin, needs `apexcharts/features/stats`). `opts.maxRows` caps the output (default 3000). |
 | `getState()` | Returns snapshot of chart state. |
 | `addEventListener(name, handler)` | Subscribe to chart event. |
 | `removeEventListener(name, handler)` | Unsubscribe from chart event. |
@@ -567,6 +579,7 @@ await chart.updateOptions({ title: { text: 'New Title' } })
 | `ApexCharts.registerSeriesType(name, def) / unregisterSeriesType(name)` | *(v6, Marks)* Register a custom series type. |
 | `ApexCharts.registerTheme(name, def) / unregisterTheme(name)` | *(v6, Facet)* Register a named brand theme. |
 | `ApexCharts.registerEasing(name, fn)` | *(v6, Cadence)* Register a custom easing curve. |
+| `ApexCharts.registerUnitLayout(name, fn) / unregisterUnitLayout(name)` | *(v6.9)* Register a named unit-chart layout, referenceable via `plotOptions.unit.positions: '<name>'` with `layout: 'custom'`. |
 | `ApexCharts.crossfilter({ id, records }) / getCrossfilter(id)` | *(v6, Link)* Create / fetch a crossfilter engine. |
 | `ApexCharts.perspectives.fromURL(href)` | *(v6)* Decode a perspective token from a URL. |
 
@@ -624,6 +637,7 @@ await chart.updateOptions({ title: { text: 'New Title' } })
       drillDownStart: (info, chart, options) => {},// drilldown
       drillDownEnd: (info, chart, options) => {},  // drilldown
       drillUp: (info, chart, options) => {},       // drilldown
+      drillDownError: ({ id, error }, chart, options) => {}, // drilldown (v6.9): async level failed; view unchanged
     }
   }
 }
@@ -650,7 +664,8 @@ All of the following are new in v6, off by default, and each ships as a `apexcha
 | **Context menu** | `apexcharts/features/context-menu` | `chart: { contextMenu: { enabled, items } }` for point-specific right-click actions. |
 | **Storyboard** (scrollytelling) | `apexcharts/features/storyboard` | `chart.storyboard.bind({ beats })` pairs prose sections with saved views. |
 | **Streaming** | core | `chart: { streaming: { enabled, maxPoints } }` for constant-velocity rolling-window scroll. |
-| **Drilldown** | `apexcharts/features/drilldown` | `drilldown: { enabled, series }` + a `drilldown` id on data points; `chart.drillDown()/drillUp()`. |
+| **Drilldown** | `apexcharts/features/drilldown` | `drilldown: { enabled, series }` + a `drilldown` id on data points; `chart.drillDown()/drillUp()`. v6.9 adds line/area support, async levels (`onDrillDown` may return a Promise), a loading overlay, and the `drillDownError` event. |
+| **Stats** | `apexcharts/features/stats` | *(v6.9)* Statistics behind histogram binning, boxPlot/violin raw-sample summaries (R type 7 quartiles, KDE), and `chart.rowSeries()`. The `apexcharts/histogram` entry includes it. |
 
 ## 10. Reference Routing Table
 
@@ -660,7 +675,7 @@ For detailed chart-family-specific options, data format variants, and full worki
 |---|---|
 | Line, Area, Scatter, Bubble, Range Area | `references/cartesian-charts.md` |
 | Bar, Column, Range Bar, Timeline/Gantt, Funnel, Pyramid | `references/bar-charts.md` |
-| Candlestick, Box Plot, Violin | `references/financial-charts.md` |
+| Candlestick, Box Plot, Violin, Histogram | `references/financial-charts.md` |
 | Pie, Donut, Polar Area, Radial Bar, Gauge, Sunburst, Unit, Waffle | `references/circular-charts.md` |
 | Heatmap, Treemap | `references/grid-charts.md` |
 | Radar | `references/radar-charts.md` |

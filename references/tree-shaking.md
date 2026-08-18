@@ -29,6 +29,7 @@ Each entry point registers a family of related chart types:
 | `apexcharts/candlestick` | candlestick, boxPlot |
 | `apexcharts/boxPlot` | same as /candlestick |
 | `apexcharts/violin` | violin *(new in v6)* |
+| `apexcharts/histogram` | histogram *(new in v6.9)*: the bar engine plus the stats feature |
 | `apexcharts/pie` | pie, donut, polarArea |
 | `apexcharts/donut` | same as /pie |
 | `apexcharts/polarArea` | same as /pie |
@@ -38,8 +39,9 @@ Each entry point registers a family of related chart types:
 | `apexcharts/treemap` | treemap |
 | `apexcharts/sunburst` | sunburst *(new in v6.7, free)* |
 | `apexcharts/unit` | unit, **waffle** *(new in v6.6, premium: watermarked until licensed)* |
+| `apexcharts/unit-shapes` | *(new in v6.10)* not a chart entry: named shape exports for the unit chart (`heart`, `house`, ... plus `outlined`, `glyphs`, `preview`), tree-shaken per shape (~4 KB gzipped each). See `references/circular-charts.md`. |
 
-**v6 first-class aliases:** `funnel` and `pyramid` render through the bar engine, so `apexcharts/bar` covers them. `gauge` renders through radialBar, so `apexcharts/radialBar` covers it. There is no separate `apexcharts/funnel`, `apexcharts/pyramid`, or `apexcharts/gauge` entry.
+**v6 first-class aliases:** `funnel` and `pyramid` render through the bar engine, so `apexcharts/bar` covers them. `gauge` renders through radialBar, so `apexcharts/radialBar` covers it. There is no separate `apexcharts/funnel`, `apexcharts/pyramid`, or `apexcharts/gauge` entry. `histogram` also renders through the bar engine but has its own `apexcharts/histogram` entry because it bundles the stats feature; `apexcharts/bar` + `import 'apexcharts/features/stats'` is equivalent.
 
 ### Using Multiple Chart Types
 
@@ -62,6 +64,7 @@ Features are optional modules that add functionality. When using per-type entrie
 | Annotations | `import 'apexcharts/features/annotations'` | X/Y/point/text/image annotations |
 | Exports | `import 'apexcharts/features/exports'` | `dataURI()`, `getSvgString()`, `exportToCSV()` |
 | Keyboard | `import 'apexcharts/features/keyboard'` | Keyboard navigation (accessibility) |
+| Stats *(v6.9)* | `import 'apexcharts/features/stats'` | Histogram binning, boxPlot/violin raw-sample summaries, `rowSeries()` |
 | Morph *(v6)* | `import 'apexcharts/features/morph'` | Animated chart-type morphs |
 | Drilldown *(v6)* | `import 'apexcharts/features/drilldown'` | Hierarchical drill-down |
 | History / Rewind *(v6)* | `import 'apexcharts/features/history'` | Undo/redo (`chart.history`) |
@@ -78,6 +81,8 @@ Features are optional modules that add functionality. When using per-type entrie
 | All | `import 'apexcharts/features/all'` | All of the above |
 
 **Important:** Tooltip is always included in core (it cannot be tree-shaken). Easing (Cadence) and real-time streaming are also core, so they need no feature import. See `v6-features.md` for the config and API of each v6 feature.
+
+**Runtime dependency (v6.9):** ApexCharts is no longer dependency-free: it depends on `apex-commons` at runtime (license manager, crossfilter engine, spring primitives shared across the ApexCharts family). npm resolves it automatically, and the browser (script-tag) bundles inline it, so no configuration is needed; bundlers just see one more resolvable package. The `apexcharts/unit` and `apexcharts/unit-shapes` sub-entry points resolve for bundlers and script tags alike (from a script tag, `dist/unit-shapes.js` exposes the global `ApexUnitShapes`).
 
 ### What Happens If You Forget a Feature
 

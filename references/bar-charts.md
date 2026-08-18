@@ -19,6 +19,8 @@ import ApexCharts from 'apexcharts/bar'
 
 **v6 note:** `funnel` and `pyramid` are first-class `chart.type` aliases that render through the bar engine. Use them directly as `chart.type`; you do **not** need `plotOptions.bar.isFunnel`. `plotOptions.funnel` carries the funnel-specific shape options.
 
+**Histogram (v6.9):** `chart.type: 'histogram'` also renders through the bar pathway, but its series carry raw observations that the chart bins itself, and the binning needs the stats feature (`apexcharts/histogram` entry, or `apexcharts/features/stats` alongside `apexcharts/bar`). It is documented with the other statistical charts in `references/financial-charts.md`.
+
 ---
 
 ## Data Formats

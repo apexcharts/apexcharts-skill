@@ -133,6 +133,55 @@ Flat list of `{ x, y }` where `x` is the label and `y` is the value (determines 
 }
 ```
 
+### Nested Treemap (v6.9)
+
+A datum may carry `children` to any depth; every branch is drawn as a real container with a header strip and its children inset below it, and a container's area is exactly the sum of its children. A branch normally omits `y` and takes the sum of its children; a leaf supplies one. Flat inputs are untouched and render identically to before.
+
+```js
+{
+  chart: { type: 'treemap', height: 400 },
+  series: [{
+    data: [
+      { x: 'Technology', children: [
+        { x: 'Software', children: [
+          { x: 'Acme Corp', y: 120 },
+          { x: 'Initech', y: 80 }
+        ] },
+        { x: 'Hardware', y: 95 }
+      ] },
+      { x: 'Energy', children: [
+        { x: 'Solar Co', y: 60 },
+        { x: 'Wind Ltd', y: 45 }
+      ] }
+    ]
+  }]
+}
+```
+
+Nested-specific options under `plotOptions.treemap`:
+
+```js
+plotOptions: {
+  treemap: {
+    nested: {
+      enabled: true,           // 'auto' behavior: parents appear as soon as the data is nested;
+                               // false forces the flat two-level layout
+      drilldownAsLevels: false // read `drilldown: '<id>'` ids on data points as extra levels
+                               // instead of as click targets for the drilldown feature.
+                               // Default false ("descend on click" is the historical meaning)
+    },
+    parents: {                 // how branch containers are drawn once the data is nested
+      show: 'auto'             // 'auto' (on when the data carries children) | true | false
+      // plus header/label styling and a tooltip.formatter receiving
+      // { name, value, depth, leafCount, percentOfParent, percentOfTotal, node, w }
+    },
+    levels: [ /* per-depth overrides of `parents`, indexed from the outermost drawn group */ ]
+  }
+}
+```
+
+The hierarchy resolver is shared with sunburst, including the `drilldown: '<id>'` adapter (opted into via `nested.drilldownAsLevels`).
+
 ---
 
 ## Key plotOptions
@@ -239,3 +288,4 @@ plotOptions: {
 2. **Inconsistent x-values across heatmap series** — all series should have the same set of x-values to form a proper grid. Missing cells show as gaps.
 3. **Treemap with negative values** — treemap `y` values must be positive (they represent area). Negative values cause rendering issues.
 4. **Confusing heatmap `y` with position** — in heatmap data `{ x, y }`, the `y` is the VALUE (color intensity), NOT the y-axis position. The series `name` determines the row.
+5. **Nested treemap branch carrying its own `y` (v6.9)**: a branch node normally omits `y`; its area is the sum of its children. Only leaves supply values. Flattening a hierarchy by hand is no longer necessary; pass `children` instead.

@@ -9,6 +9,11 @@ Two behaviors changed *on by default* (both respect `prefers-reduced-motion`):
 
 Also new by default: **`render()` is idempotent**: a repeated `render()` (e.g. a framework double-invoking an effect) returns the same promise instead of building a duplicate chart. `destroy()` clears it so an instance can render fresh.
 
+Two update behaviors worth knowing (both 6.9/6.10):
+
+- **Function-valued options are compared by identity (6.10)**: `update()` skips a redundant render by comparing the incoming options with the previous ones. Passing a *different* function (a new `dataLabels.formatter`, custom tooltip, `plotOptions.unit.positions`) gets the render it asked for; passing the *same* function twice still skips. Building a fresh closure on every update means a render every time.
+- **A type change re-chooses type defaults (6.9)**: `updateOptions({ chart: { type } })` now re-picks the defaults that decide what a chart reads, says, hit-tests, or offers as interaction (e.g. a boxPlot-to-violin switch gets the right tooltip formatter). Deliberate paint choices and anything you set yourself are never re-chosen.
+
 ---
 
 ## Licensing: premium features and the trial watermark
@@ -439,7 +444,7 @@ const options = { chart: { streaming: { enabled: true, maxPoints: 100000 } } }
 
 `import 'apexcharts/features/drilldown'` (add `import 'apexcharts/features/morph'` for animated cross-type transitions)
 
-Data points reference a child level via a `drilldown` id; clicking drills in, with an optional breadcrumb.
+Data points reference a child level via a `drilldown` id; clicking drills in, with an optional breadcrumb. Since **v6.9** drilldown also works on **line and area** charts, and levels can be resolved **async** against a backend.
 
 ```js
 import 'apexcharts/features/drilldown'
@@ -457,14 +462,23 @@ const options = {
     series: [
       { id: '2021', name: '2021 by Channel', data: [/* ... */], chart: { type: 'bar' } },
     ],
-    // or resolve lazily:
-    onDrillDown: (ctx) => ({ id: ctx.point.drilldown, name: '...', data: [] }),
+    // or resolve lazily; may return a Promise (v6.9):
+    onDrillDown: async (ctx) => ({ id: ctx.point.drilldown, name: '...', data: await fetchLevel(ctx) }),
+    loading: { show: true, text: 'Loading' }, // (v6.9) overlay while an async level resolves;
+                                              // false disables it. role="status", aria-live="polite",
+                                              // spinner flattens to a pulse under prefers-reduced-motion
+    cache: true,                              // (v6.9) cache onDrillDown results by id (default true);
+                                              // clear with the drilldown module's clearCache()
+    // (v6.9) line/area only: the dot marking a drillable point when the chart
+    // draws no markers. Only drillable points get one, so it reads as "these open".
+    marker: { show: true, size: 6, shape: 'circle', fillColor: undefined, strokeColor: '#fff' },
   },
   chart: {
     events: {
       drillDownStart: (info, chart, options) => {},
       drillDownEnd: (info, chart, options) => {},
       drillUp: (info, chart, options) => {},
+      drillDownError: ({ id, error }, chart, options) => {}, // (v6.9) async level failed
     },
   },
 }
@@ -473,6 +487,22 @@ chart.drillDown(id)   // Promise
 chart.drillUp()
 chart.drillToRoot()
 ```
+
+**Async failure semantics (v6.9):** a failed fetch never strands the view. On a throw, a rejection, or a resolver returning something without a `data` array, the chart stays where it was, the breadcrumb is untouched, nothing is cached, and `drillDownError` fires. A second click while one resolve is in flight is ignored rather than starting a second request.
+
+---
+
+## Stats: raw-sample statistics (6.9.0)
+
+`import 'apexcharts/features/stats'`
+
+Free. The statistics behind three things, kept out of core so they cost nothing unless used:
+
+- **Histogram binning**: `chart.type: 'histogram'` bins raw observations (the `apexcharts/histogram` entry includes this feature automatically).
+- **Raw samples for boxPlot and violin**: a datum supplying `points: [number]` instead of a summary `y` gets its quartiles (R type 7) or KDE density computed.
+- **`chart.rowSeries(opts?)`**: returns the rows behind the chart's marks as a unit-chart series (one cluster per mark), or `null` when the type has no row source. `chart.updateOptions({ chart: { type: 'unit' }, series: chart.rowSeries() })` opens a summary into its observations; with the `morph` feature loaded each dot leaves from the part of the mark that stood for it.
+
+Full data shapes and options are in `references/financial-charts.md`. The full `apexcharts` bundle includes it.
 
 ---
 

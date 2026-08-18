@@ -8,7 +8,7 @@
 - **Radial Bar** (`'radialBar'`): Circular progress chart (one or more concentric tracks)
 - **Gauge** (`'gauge'`, **new in v6**): Single-value gauge with arc/needle shapes, colored bands, and ticks
 - **Sunburst** (`'sunburst'`, **new in v6.7, free**): Hierarchical nested pie/donut; concentric rings, one per level
-- **Unit / Waffle** (`'unit'` / `'waffle'`, **new in v6.6, premium**): One mark per unit of value (dot clusters, pictograms, waffles, beeswarms, parliament)
+- **Unit / Waffle** (`'unit'` / `'waffle'`, **new in v6.6, premium**): One mark per unit of value (dot clusters, pictograms, waffles, beeswarms, parliament, custom layouts and the v6.10 shape kit)
 
 ## Tree-Shakeable Import
 
@@ -26,6 +26,9 @@ import ApexCharts from 'apexcharts/sunburst'
 
 import ApexCharts from 'apexcharts/unit'
 // Registers: unit + waffle (v6.6). Premium: watermarked until a license is set.
+
+import { heart, outlined, glyphs, preview } from 'apexcharts/unit-shapes'
+// Unit-chart shape kit (v6.10), named exports tree-shaken per shape. See "Unit shapes" below.
 ```
 
 ---
@@ -168,10 +171,63 @@ Data is the same flat number array + `labels` shape as pie:
 - `packed`: one shared blob, coloured by group (`sortByGroup: true` nests the minority in the centre).
 - `columns`: each category is a vertical bar built from stacked dots (a waffle column).
 - `grid`: one waffle lattice, a part-to-whole square "pie" (`grid.total: 100` rounds it to a fixed cell budget for a percentage waffle; `grid.split: true` makes small-multiple mini-waffles).
-- `scatter`: a beeswarm on real value axes (`scatter.y: 'lanes'` default, or `'value'` for a 2D value-value plot; `scatter.sizeRange` for area-scaled bubbles).
+- `scatter`: a beeswarm on real value axes (`scatter.y: 'lanes'` default, or `'value'` for a 2D value-value plot; `scatter.sizeRange` for area-scaled bubbles). Since **v6.7.1** `scatter.orientation: 'horizontal' | 'vertical'` picks the beeswarm axis (lanes mode only): `'horizontal'` (default) puts the value on X with category lanes on Y; `'vertical'` puts the value on Y with lanes as columns. The value-axis keys (`xMin`/`xMax`/`xTitle`/`xFormatter`/`tickAmount`) describe the value axis in both orientations.
 - `arc` (**v6.7**): a parliament / hemicycle, seats in concentric arced rows across an annulus, filled in category order.
+- `custom` (**v6.9**): positions come from you. `plotOptions.unit.positions` is either a function `(objects, rect) => [{ id, x, y, r? }]` or the name of a layout registered with `ApexCharts.registerUnitLayout(name, fn)`. `objects` carries identity and data per mark (`{ id, index, seriesIndex, dataPointIndex, label, value, datum, r }`), `rect` is the plot area in pixels. A layout is objects in, positions out; the engine already tweens position, radius, and colour and keeps mark identity across a relayout. Marks whose id the provider omits animate out; unknown ids are ignored.
 
 **Also available:** `shape` (`'circle'` | `'square'` | `'image'` pictogram with `image.tint`); per-mark object data `series: [{ name, data: [{ value, x, z, name, fillColor, id }] }]`; `transition` (`'group'` default | `'flow'` crowd migration | `'identity'` keyed by `id`/`name`); numeric or `'auto'` dot `size`; `sizeByValue` bubbles; `unitValue` (1 mark = N units); `maxUnits` cap; per-cluster `clusterLabels`; and per-mark `tooltip.formatter`.
+
+**Motion (v6.9):** marks travel on a damped spring by default, so an update landing mid-flight retargets with the marks' velocity instead of restarting them (a dragged slider reads as continuous motion, not stutter). Configure via `plotOptions.unit.gather`: `motion: 'auto' | 'spring' | 'tween'`, `spring: 'crisp' | 'gentle' | 'snappy'`, `easing: 'outCubic' | 'inOutCubic' | 'outBack'` (setting `easing` implies tween), and `enter: 'burst' | 'fade' | 'rise'`.
+
+### Unit shapes (`apexcharts/unit-shapes`, v6.10)
+
+A companion kit of **39 shapes** a count can take (a heart, a house, a globe, the figure 1,024 drawn in 1,024 dots). Each shape is a plain callable layout, so it plugs straight into `plotOptions.unit.positions` with `layout: 'custom'`; no registration step. The entry point is tree-shaken per shape (about 4 KB gzipped each). Dots are packed to fill the outline, so one shape serves 40 dots in a sparkline and 3,000 in a poster.
+
+```js
+import ApexCharts from 'apexcharts'
+import { heart } from 'apexcharts/unit-shapes'
+
+new ApexCharts(el, {
+  chart: { type: 'unit' },
+  series: [57600, 16800, 4200, 3400],
+  labels: ['Repeat donors', 'First-time', 'Workplace drives', 'Emergency call-ups'],
+  plotOptions: {
+    unit: { layout: 'custom', positions: heart, unitValue: 100 },
+  },
+}).render()
+```
+
+Three kinds:
+
+- **Silhouettes** (29, filled outlines): `heart`, `house`, `tree`, `leaf`, `flame`, `droplet`, `fish`, `sun`, `human`, `group`, `star`, `crown`, `trophy`, `moneybag`, `funnel`, `shield`, `gear`, `robot`, `bulb`, `flask`, `car`, `plane`, `rocket`, `battery`, `pin`, `mountain`, `cross`, `bolt`, `arrow`.
+- **Strokes** (7, packed centrelines for things with no interior): `check`, `wifi`, `pulse`, `xmark`, `percent`, `question`, `spiral`.
+- **Generated** (3, positions from maths, no outline): `globe`, `target`, `pyramid`.
+
+Composition helpers (also exported from `apexcharts/unit-shapes`):
+
+```js
+outlined(heart)                  // hollow twin: trace the outline instead of filling it (silhouettes only)
+heart.with({ order: 'cols' })    // variant: where each series band lands ('rows' | 'rowsUp' | 'cols' |
+                                 // 'colsRev' | 'centerOut' | 'centerIn'); battery fills like a charge
+                                 // meter because its order is 'cols'
+glyphs('1,024')                  // a number, drawn in that many dots (digits plus '-', '.', ',', ':')
+preview(heart, { series })       // render to a standalone SVG string, no chart and no DOM (build-time galleries)
+shapeFrom(path, opts?)           // your own outline, packed like the catalog's
+strokeFrom(path, opts?)          // your own centreline
+registerShapes([...])            // register so positions: '<name>' resolves by string
+```
+
+Every shape carries metadata on `shape` (category, kind, and `minUnits`: the count below which it stops being recognisable; asking for fewer logs a console warning naming the shape). From a script tag, `dist/unit-shapes.js` exposes the kit as the global `ApexUnitShapes` with every shape pre-registered, so `positions: 'heart'` works by name.
+
+**Outer name labels (v6.10):** a shape packed with several categories can name them in the margin with a leader line to their own dots (the pie/donut outer-label mechanism), instead of needing a legend:
+
+```js
+plotOptions: {
+  unit: { clusterLabels: { external: { show: true } } },
+}
+```
+
+`clusterLabels.external` also takes `connector: { show, width, color, gap, length }`, `offsetX`, `offsetY`. It applies to `layout: 'custom'` only and reads best on silhouettes whose category bands stack vertically. The gutter is reserved before the dot size is chosen, so the shape stays centred but renders slightly smaller.
 
 `waffle` is a thin alias of `unit` that presets the `grid` layout with square cells. With `grid.total: 100` the values are largest-remainder rounded to exactly 100 cells, so the grid reads as percentages. The original alias is preserved on the read-only `chart.requestedType`; an explicit `layout` or `shape` still wins.
 
@@ -211,7 +267,17 @@ plotOptions: {
   pie: {
     startAngle: 0,
     endAngle: 360,
-    expandOnClick: true,       // expand slice on click
+    expandOnClick: true,       // react to a slice click at all
+    expandOffset: 10,          // (v6.9) how far the clicked slice slides out (px) along its mid-angle.
+                               // The slice is translated, not redrawn bigger, so the quantity it
+                               // encodes is unchanged. 0 keeps it in place. Ignored for polarArea.
+    hoverOutline: {            // (v6.9) hover traces a translucent band outside the slice rim
+      show: true,              // instead of lightening the fill
+      size: 8,                 // band thickness (px)
+      gap: 0,                  // clearance between slice rim and band (px)
+      opacity: 0.3,
+      color: undefined         // defaults to the hovered slice's own color
+    },
     offsetX: 0,
     offsetY: 0,
 
@@ -377,3 +443,5 @@ plotOptions: {
 8. **Gauge value outside `min`/`max`**: unlike a plain radialBar (fixed 0-100), a gauge maps its value to the `min..max` domain you set. A value beyond that domain saturates at the arc ends.
 9. **Legend click now toggles the slice (v6.7 behavior change)**: on pie, donut, and polarArea a legend click hides and shows the slice (like other chart types). Previously it darkened and expanded the slice. If your app relied on the old darken-and-expand behavior, review this.
 10. **Expecting `unit` / `waffle` without a license to be watermark-free**: they are premium and render an `APEXCHARTS` watermark until an entitled `premium`/`enterprise` license is set. Sunburst, by contrast, is free.
+11. **Slice click behavior changed (v6.9)**: clicking a pie/donut slice now slides it out along its own mid-angle (`plotOptions.pie.expandOffset`, default 10 px) instead of darkening it and redrawing it at a larger radius, and hover traces an outline band (`plotOptions.pie.hoverOutline`) instead of lightening the fill. Set `expandOffset: 0` to keep slices in place; set `states.hover.filter.type: 'none'` to suppress the hover band.
+12. **Unit shapes below `minUnits`**: each `apexcharts/unit-shapes` shape declares the minimum dot count at which it still reads. Feeding fewer units logs a console warning naming the shape; pick a simpler shape or raise `unitValue` so the count lands above the threshold.
