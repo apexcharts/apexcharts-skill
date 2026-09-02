@@ -6,6 +6,7 @@
 - **Box Plot** (`'boxPlot'`) — Statistical distribution chart showing min, Q1, median, Q3, max
 - **Violin** (`'violin'`, **new in v6**): Statistical distribution chart showing a density curve per category, optionally with the raw sample points overlaid as jitter
 - **Histogram** (`'histogram'`, **new in v6.9**): Bins raw observations into columns; the series carries the sample, the chart does the aggregating
+- **Raincloud** (`'raincloud'`, **new in v7.1, premium, Tier 2**): A distribution shown three ways at once: a half-violin for the shape, a box for the summary, and the observations themselves as "rain" underneath
 
 ## Tree-Shakeable Import
 
@@ -20,11 +21,16 @@ import ApexCharts from 'apexcharts/violin'
 import ApexCharts from 'apexcharts/histogram'
 // Registers: histogram (v6.9), the bar engine plus the stats feature
 
+import ApexCharts from 'apexcharts/raincloud'
+// Registers: raincloud (v7.1), the violin engine plus the raincloud feature
+
 // The statistics (histogram binning, boxPlot/violin raw-sample summaries,
 // rowSeries()) live behind one optional feature. apexcharts/histogram already
 // includes it; boxPlot/violin raw samples need it explicitly when tree-shaking:
 import 'apexcharts/features/stats'
 ```
+
+**⚠️ Raincloud is Tier 2 (v7.1).** Unlike every other chart type, it is **not in the default `apexcharts` bundle**. On the full bundle add `import 'apexcharts/raincloud'` (or `import 'apexcharts/features/raincloud'`); from a script tag add `dist/features/raincloud.js` after `apexcharts.js`. It is also premium, so it renders an `APEXCHARTS` watermark until an entitled license is set.
 
 **Raw samples (v6.9):** boxPlot, violin, and histogram can all take the raw observations and compute the statistics themselves (quartiles for boxPlot, KDE density for violin, bin counts for histogram). Precomputed summaries keep working exactly as before. With the full `apexcharts` bundle the stats feature is always present; with tree-shaking entries it must be imported (without it, a raw-sample boxPlot/violin datum has nothing to summarize and a histogram warns and draws nothing).
 
@@ -216,6 +222,65 @@ The series carries **raw observations** (a flat number array, or `{ y }` objects
 - `overlap: true` (the default with multiple series) also softens the fill and drops the bin separator stroke so the overlapping region reads; both remain overridable. A single series is unaffected either way.
 - Do NOT pass pre-aggregated counts; that is a plain `bar` chart. The histogram's job is the binning.
 
+### Raincloud (v7.1, premium, Tier 2)
+
+`chart.type: 'raincloud'` shows a distribution three ways at once: the **half-violin** is the shape, the **box** is the summary, and the **rain** underneath is the observations themselves. You hand it the raw values and it does the rest.
+
+```js
+import ApexCharts from 'apexcharts'
+import 'apexcharts/raincloud'   // Tier 2: required even on the full bundle
+
+new ApexCharts(el, {
+  chart: { type: 'raincloud', height: 350 },
+  series: [{
+    name: 'Weight gain',
+    data: [
+      { x: 'Control',   points: [3.1, 4.7, 2.9, 5.2, 3.8, 4.1] },
+      { x: 'Treatment', points: [6.4, 7.1, 5.8, 6.9, 7.6, 6.2] },
+    ],
+  }],
+}).render()
+```
+
+Raincloud is a **preset over the violin engine**, so it is configured through `plotOptions.violin`. The type sets three of those defaults for you:
+
+| `plotOptions.violin` key | Raincloud preset | Plain violin default |
+|---|---|---|
+| `side` | `'right'` (or `'top'` when horizontal), a half-violin | `'both'` |
+| `box.show` | `true` (the "umbrella") | `false` |
+| `box.whiskers` | `'tukey'` (1.5×IQR fences clamped to the data) | `'minmax'` |
+| `points.position` | `'left'` (or `'bottom'` when horizontal), the "rain" gets its own lane | `'center'` |
+
+Everything else is the violin surface, so override it there:
+
+```js
+plotOptions: {
+  violin: {
+    box: {
+      width: '15%',        // fraction of the category slot reserved for the box lane
+      capWidth: 0.5,       // whisker cap length, 0..1 of the box lane width
+      fillColor: undefined,// defaults to the series colour
+      strokeWidth: 1,
+    },
+    points: {
+      laneWidth: '40%',    // fraction of the category slot for the off-centre lane
+      jitter: 0.5,         // 0..1 of the half-width to scatter within
+      size: 3,
+      maxPoints: undefined,// cap per violin; observations beyond it are stride-thinned
+      fillColor: 'series-dark', // or 'series', or any literal colour
+      strokeColor: '#fff',
+      strokeWidth: 1,
+    },
+    kde: { bandwidth: undefined, resolution: 64 },
+    normalize: 'individual',  // or 'group' to keep widths proportional across categories
+  },
+}
+```
+
+The rain **is** the outlier display, so the box draws no outlier dots of its own. Off-centre dots ignore `constrainToViolin`. A `y.summary` supplied by hand as `[whiskerLow, q1, median, q3, whiskerHigh]` is drawn exactly as given rather than derived.
+
+**The alias rewrites `chart.type` to `'violin'` at runtime.** Code that reads the live config (a formatter reading `w.config.chart.type`, a `chart.getState()` consumer, a plugin) sees `'violin'`, not `'raincloud'`; the requested type is kept on `chart.requestedType`. Branch on `requestedType` if you need to tell a raincloud from a plain violin. This is also how licensing distinguishes them: plain violins are free and never watermark.
+
 ### `rowSeries()`: the rows behind a summary mark (v6.9)
 
 A histogram bin, a box, and a violin all stand for rows the chart is already holding. `chart.rowSeries()` returns them as a unit-chart series (one cluster per mark, one datum per row), so a summary can be opened into its observations:
@@ -318,3 +383,6 @@ plotOptions: {
 8. **Feeding a histogram pre-binned counts**: the series must carry raw observations. If you already have counts per bucket, use a `bar` chart; a histogram would bin your counts as if they were measurements.
 9. **`whiskers: 'tukey'` on a precomputed boxPlot summary**: `plotOptions.boxPlot.whiskers` only applies when the summary is derived from `points`. A five-number `y` is drawn exactly as given.
 10. **Raw samples with tree-shaking but no stats feature**: `apexcharts/candlestick` and `apexcharts/violin` alone cannot summarize `points`. Add `import 'apexcharts/features/stats'` (the `apexcharts/histogram` entry and the full bundle already include it).
+11. **Expecting `raincloud` to work on the full bundle** *(v7.1)*: it is the one chart type that is Tier 2. `import ApexCharts from 'apexcharts'` alone gives you a console warning and no raincloud. Add `import 'apexcharts/raincloud'`.
+12. **Looking for `plotOptions.raincloud`**: there is none. Raincloud is a preset over the violin engine, so configure it through `plotOptions.violin` (`side`, `box`, `points`, `kde`, `normalize`).
+13. **Giving a raincloud a `y`**: it takes the raw sample per category: `data: [{ x, points: [number] }]`. A precomputed `y.summary` is honored for the box, but the density and the rain need the observations.

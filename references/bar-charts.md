@@ -7,6 +7,8 @@
 - **Range Bar** (`'rangeBar'`) — Bars with start/end values (used for timelines, Gantt charts)
 - **Funnel** (`'funnel'`, **new in v6**): Stage-by-stage drop-off chart
 - **Pyramid** (`'pyramid'`, **new in v6**): A funnel with the wide base at the bottom
+- **Waterfall** (`'waterfall'`, **new in v7.1**): Deltas that accumulate into a running total
+- **Dumbbell** (`'dumbbell'`, **new in v7.1**): Two or more measures per category, joined by a connector
 
 ## Tree-Shakeable Import
 
@@ -14,10 +16,16 @@
 import ApexCharts from 'apexcharts/bar'
 // Registers: bar, column, rangeBar
 // Aliases: apexcharts/column, apexcharts/rangeBar
-// Also covers funnel + pyramid (they normalize to the bar engine in v6)
+// Also covers funnel + pyramid (they normalize to the bar engine)
+
+// waterfall and dumbbell (v7.1) each add a feature module on top of the bar engine:
+import ApexCharts from 'apexcharts/waterfall'  // == apexcharts/bar + features/waterfall
+import ApexCharts from 'apexcharts/dumbbell'   // == apexcharts/bar + features/dumbbell
 ```
 
-**v6 note:** `funnel` and `pyramid` are first-class `chart.type` aliases that render through the bar engine. Use them directly as `chart.type`; you do **not** need `plotOptions.bar.isFunnel`. `plotOptions.funnel` carries the funnel-specific shape options.
+Both are **Tier 1**, so the default `apexcharts` bundle already has them and no import is needed there.
+
+**Alias note:** `funnel` and `pyramid` are first-class `chart.type` aliases that render through the bar engine. Use them directly as `chart.type`; you do **not** need `plotOptions.bar.isFunnel`. `plotOptions.funnel` carries the funnel-specific shape options.
 
 **Histogram (v6.9):** `chart.type: 'histogram'` also renders through the bar pathway, but its series carry raw observations that the chart bins itself, and the binning needs the stats feature (`apexcharts/histogram` entry, or `apexcharts/features/stats` alongside `apexcharts/bar`). It is documented with the other statistical charts in `references/financial-charts.md`.
 
@@ -184,6 +192,105 @@ Same shape as funnel, but order values **smallest → largest** so the wide base
 }
 ```
 
+### Waterfall (v7.1)
+
+`chart.type: 'waterfall'` **accumulates the running total for you**. The series holds the **deltas**; a row flagged `isSubtotal` or `isTotal` draws the running total from zero at that position and carries **no `y` of its own**. Connectors bridge each bar's finish to the next one's start, and rising, falling and total bars take their own colors.
+
+```js
+{
+  chart: { type: 'waterfall', height: 350 },
+  series: [{
+    name: 'Operating income',
+    data: [
+      { x: 'Net revenue',        y:  8786000 },
+      { x: 'Cost of sales',      y: -2786000 },
+      { x: 'Gross profit',       isSubtotal: true },   // no y: measured for you
+      { x: 'Operating expenses', y: -1786000 },
+      { x: 'Operating income',   isTotal: true },      // no y: sum from zero
+    ],
+  }],
+}
+```
+
+**Row shape** (`ApexWaterfallPoint`, every field optional so a series can mix the two kinds freely):
+
+| Field | Meaning |
+|---|---|
+| `x` | Category label, timestamp, or `Date` |
+| `y` | The **step**: the signed amount it moves the running total by. Omit on a subtotal / total row. |
+| `isSubtotal` | Sum of the steps since the previous subtotal / total bar |
+| `isTotal` | Sum of every step from zero |
+| `fillColor` | Overrides the semantic fill for this row |
+
+**`plotOptions.waterfall`:**
+
+```js
+plotOptions: {
+  waterfall: {
+    colors: {
+      positive: '#00A86F',   // a step that raises the running total
+      negative: '#FF4560',   // a step that lowers it
+      subtotal: undefined,   // defaults to the series color from the active palette
+      total: undefined,      // same default, so running totals stay distinct from steps
+    },
+    connectors: {
+      show: true,            // without them the floating columns read as unrelated bars
+      color: undefined,      // defaults to grid.borderColor, so it is theme-aware
+      strokeWidth: 1,
+      strokeDashArray: 3,
+    },
+  },
+}
+```
+
+A datum's own `fillColor` always wins over `plotOptions.waterfall.colors`.
+
+### Dumbbell (v7.1)
+
+`chart.type: 'dumbbell'` compares two or more measures per category. **Each series is one measure**, and the chart joins them with a connector per category. You do not zip the values into `[low, high]` pairs.
+
+```js
+{
+  chart: { type: 'dumbbell', height: 350 },
+  series: [
+    { name: '2020', data: [{ x: 'Backend', y: 92 }, { x: 'Frontend', y: 78 }] },
+    { name: '2025', data: [{ x: 'Backend', y: 118 }, { x: 'Frontend', y: 96 }] },
+  ],
+  plotOptions: { bar: { horizontal: true } },  // rows; omit for columns
+}
+```
+
+The connector's thickness is `plotOptions.bar.barHeight` (rows) or `columnWidth` (columns), and the size of the marked ends is `markers.size`: they are the bar and its markers, so they are configured as such.
+
+**`plotOptions.bar.dumbbell`:**
+
+```js
+plotOptions: {
+  bar: {
+    dumbbell: {
+      connector: {
+        color: undefined,   // undefined = a gradient between the two endpoint colours,
+                            // resolved per row so a row where the measures cross runs the right way
+        opacity: 0.55,      // the join is context for the marked ends, not a third mark
+      },
+      dataLabels: {
+        enabled: true,      // default on for chart.type 'dumbbell', off for the bare isDumbbell flag
+        offset: 6,          // px clear of the marked end, outward from the connector
+        colorFromMarker: true,
+        // formatter(value, { seriesIndex, dataPointIndex, endpointIndex, w })
+        // NOTE: defaults to the value axis' label formatter, NOT dataLabels.formatter
+        // (on a range bar that one reads out end - start, which is the gap, not the endpoint)
+      },
+      tooltip: { differenceLabel: 'Difference' },
+    },
+  },
+}
+```
+
+With three or more measures only the two extremes are labelled: anything between them sits on the connector, where a label has nowhere to go that is not over the line or over its neighbour.
+
+**Versus the older range-bar form.** `plotOptions.bar.isDumbbell` on a `rangeBar` with `y: [lo, hi]` pairs still works and is a different chart: one series, endpoint colours from `plotOptions.bar.dumbbellColors` (`[[startColor, endColor]]`). `chart.type: 'dumbbell'` takes one series per measure and colours each dot after the series it belongs to, from `colors`. Prefer the type unless you already have paired data.
+
 ---
 
 ## Key plotOptions.bar Options
@@ -197,7 +304,7 @@ plotOptions: {
     distributed: false,       // true = different color per data point
     borderRadius: 4,          // rounded corners (number or object)
     borderRadiusApplication: 'end',  // 'end' | 'around'
-    borderRadiusWhenStacked: 'last', // 'all' | 'last'
+    // borderRadiusWhenStacked was REMOVED in v7.0, see the note below
 
     dataLabels: {
       position: 'top',        // 'top' | 'center' | 'bottom'
@@ -213,6 +320,14 @@ plotOptions: {
     }
   }
 }
+```
+
+**⚠️ `borderRadiusWhenStacked` was removed in v7.0.** Rounded corners on a stacked bar are no longer a setting: corner ownership follows the **outer edge** of the stack, which is what `'last'` approximated and what `'all'` got wrong on any stack whose last series was empty. An unknown option is ignored, so leaving it in a config is harmless but does nothing. Delete it. Related v7.0 fixes: a stacked bar's bottom cap is now the top-rounded path mirrored (caps no longer invert or pop when a series collapses and rises again), and grouped stacked charts resolve caps per group rather than chart-wide, so every group gets its own bottom and top radius.
+
+**⚠️ `dataLabels.animate.enabled` now defaults to `true` (v7.0), bar/column only.** Labels ride to their new position on a data-change update instead of snapping there, so they reflow on the same clock as the bars, markers and axis ticks. A label that has not moved is a per-label no-op; speed and easing follow `chart.animations.dynamicAnimation`. For the pre-v7 behavior:
+
+```js
+dataLabels: { animate: { enabled: false } }
 ```
 
 ### Bar Chart Race (v6.4)
@@ -309,4 +424,9 @@ series: [{
 4. **Timeline without `xaxis.type: 'datetime'`** — date-based range bars need `xaxis: { type: 'datetime' }` to render correctly.
 5. **`distributed: true` with multiple series** — distributed coloring applies to each data point independently. With multiple series, each point gets a unique color which is usually not desired. Use `distributed: true` only with single-series charts.
 6. **Funnel/pyramid value ordering**: funnel expects values ordered largest-to-smallest and pyramid smallest-to-largest. The renderer does not sort for you; unsorted data produces a jagged shape. Stage labels come from `xaxis.categories`, and per-stage labels in `dataLabels.formatter` are read via `opt.w.globals.labels[opt.dataPointIndex]`.
-7. **Reaching for `plotOptions.bar.isFunnel` in v6**: unnecessary. Set `chart.type: 'funnel'` (or `'pyramid'`) and use `plotOptions.funnel` for shape options.
+7. **Reaching for `plotOptions.bar.isFunnel`**: unnecessary. Set `chart.type: 'funnel'` (or `'pyramid'`) and use `plotOptions.funnel` for shape options.
+8. **Pre-computing the running total for a waterfall** *(v7.1)*: the series carries the **deltas**; the chart accumulates. Feeding it cumulative values draws each bar from zero to the total, which is a column chart with extra steps.
+9. **Giving a waterfall subtotal row a `y`** *(v7.1)*: `isSubtotal` / `isTotal` rows are measured for you. Supply `x` and the flag, nothing else.
+10. **Zipping dumbbell values into `y: [lo, hi]`** *(v7.1)*: that is the older `plotOptions.bar.isDumbbell` range-bar form. `chart.type: 'dumbbell'` wants one series per measure, each with plain `{ x, y }` points.
+11. **Setting `borderRadiusWhenStacked`**: removed in v7.0. The option is ignored; stacked corner ownership follows the stack's outer edge automatically.
+12. **Expecting data labels to snap on update** *(v7.0)*: `dataLabels.animate.enabled` now defaults to `true` on bar/column. Set it to `false` for the old behavior.

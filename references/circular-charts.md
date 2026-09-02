@@ -29,7 +29,12 @@ import ApexCharts from 'apexcharts/unit'
 
 import { heart, outlined, glyphs, preview } from 'apexcharts/unit-shapes'
 // Unit-chart shape kit (v6.10), named exports tree-shaken per shape. See "Unit shapes" below.
+
+import { person, registerMarks } from 'apexcharts/pictograms'
+// Pictogram glyph collection (v7.0), one drawn mark per unit. See "Pictograms" below.
 ```
+
+All of these are **Tier 1** (in the default `apexcharts` bundle). Nothing in the circular family is Tier 2.
 
 ---
 
@@ -152,7 +157,7 @@ Colours, `stroke`, `legend`, and `title` behave as they do on pie and donut. A s
 
 ### Unit / Waffle (v6.6, premium)
 
-A `unit` chart renders one discrete mark for every unit of value instead of a single bar or slice, so "37 of 200" reads as a countable quantity. It is a **non-axis** chart (dispatched like pie or treemap) and is **premium**: it renders fully in trial mode with an `APEXCHARTS` watermark until an entitled license is set (see `references/v6-features.md`). On every update each mark tweens from its old position to its new one, so re-grouping, filtering, or a changing count re-forms the marks.
+A `unit` chart renders one discrete mark for every unit of value instead of a single bar or slice, so "37 of 200" reads as a countable quantity. It is a **non-axis** chart (dispatched like pie or treemap) and is **premium**: it renders fully in trial mode with an `APEXCHARTS` watermark until an entitled license is set (see `references/feature-platform.md`). On every update each mark tweens from its old position to its new one, so re-grouping, filtering, or a changing count re-forms the marks.
 
 Data is the same flat number array + `labels` shape as pie:
 
@@ -218,6 +223,45 @@ registerShapes([...])            // register so positions: '<name>' resolves by 
 ```
 
 Every shape carries metadata on `shape` (category, kind, and `minUnits`: the count below which it stops being recognisable; asking for fewer logs a console warning naming the shape). From a script tag, `dist/unit-shapes.js` exposes the kit as the global `ApexUnitShapes` with every shape pre-registered, so `positions: 'heart'` works by name.
+
+### Pictograms (`apexcharts/pictograms`, v7.0)
+
+A **shape** is where the units go; a **pictogram** is what one unit looks like. They are independent, so `positions: heart` with `shape: 'pictogram'` arranges glyphs into a heart, and every other pairing is equally valid.
+
+```js
+import ApexCharts from 'apexcharts'
+import { person, registerMarks } from 'apexcharts/pictograms'
+
+registerMarks([person])   // so pictogram.mark: 'person' resolves by name
+
+const options = {
+  chart: { type: 'unit' },
+  series: [120, 80],
+  labels: ['Employed', 'Unemployed'],
+  plotOptions: {
+    unit: {
+      shape: 'pictogram',
+      pictogram: {
+        mark: 'person',      // a registered name, a { path, viewBox?, fillRule? } object,
+                             // raw path data, or an array (one per series).
+                             // A datum's own `mark` overrides all of it, so one crowd can mix glyphs.
+        fit: 'contain',      // which side of the glyph binds to the dot's box: 'contain' | 'width' | 'height'
+        scale: 1,            // nudge for glyphs that read light
+        padding: 0,          // 0..0.9 of the pitch, opening the lattice up
+        fallback: 'circle',  // drawn when a mark cannot be resolved
+      },
+    },
+  },
+}
+```
+
+A glyph is drawn as one `<path>` per unit, filled in that unit's own colour: no request, no decode, no recolour filter, which is why `'pictogram'` is the shape that scales to thousands of units. There is deliberately **no size**: a glyph is fitted to the box the dot itself would have occupied, so `plotOptions.unit.size` and `spacing` size a pictogram exactly as they size a dot.
+
+**Shipped glyphs** (each a named export, so import the one you use): `person`, `house`, `heart`, `tree`, `droplet`, `star`, `car`, `bag`, `book`, `cup`, `bulb`, `plane`. `catalog` is every glyph and ships all of them, so avoid it in an app bundle.
+
+**Custom glyphs:** `definePictogram({ name, path, viewBox?, fillRule?, category?, source? })` builds one, `registerMarks(defs)` registers them by name, `unregisterMarks(names)` removes them, and `registeredMarkNames()` lists what resolves. Any glyph also has `.with(overrides)` for a variant with some metadata replaced.
+
+**Versus `shape: 'image'`:** `'image'` fetches a raster or multi-colour icon (`plotOptions.unit.image.src`, with `tint: true` to recolour a monochrome icon to the category colour). Use it for multi-colour marks that should keep their own colours; use `'pictogram'` for anything that has to scale or follow the palette.
 
 **Outer name labels (v6.10):** a shape packed with several categories can name them in the margin with a leader line to their own dots (the pie/donut outer-label mechanism), instead of needing a legend:
 
@@ -445,3 +489,6 @@ plotOptions: {
 10. **Expecting `unit` / `waffle` without a license to be watermark-free**: they are premium and render an `APEXCHARTS` watermark until an entitled `premium`/`enterprise` license is set. Sunburst, by contrast, is free.
 11. **Slice click behavior changed (v6.9)**: clicking a pie/donut slice now slides it out along its own mid-angle (`plotOptions.pie.expandOffset`, default 10 px) instead of darkening it and redrawing it at a larger radius, and hover traces an outline band (`plotOptions.pie.hoverOutline`) instead of lightening the fill. Set `expandOffset: 0` to keep slices in place; set `states.hover.filter.type: 'none'` to suppress the hover band.
 12. **Unit shapes below `minUnits`**: each `apexcharts/unit-shapes` shape declares the minimum dot count at which it still reads. Feeding fewer units logs a console warning naming the shape; pick a simpler shape or raise `unitValue` so the count lands above the threshold.
+13. **Confusing a shape with a pictogram** *(v7.0)*: `plotOptions.unit.positions` (from `apexcharts/unit-shapes`) is **where** the units go; `plotOptions.unit.shape: 'pictogram'` + `pictogram.mark` (from `apexcharts/pictograms`) is **what one unit looks like**. They compose freely.
+14. **Setting a size on a pictogram** *(v7.0)*: there is no `pictogram.size`. A glyph is fitted to the box the dot would have occupied, so use `plotOptions.unit.size` and `spacing`. Use `pictogram.scale` only to nudge a glyph that reads light.
+15. **Pie / radial charts pinned to the top of a tall container** *(fixed v7.1)*: the centre came from `min(width, height)`, so a tall, narrow container put the circle at the top with the leftover space below it. The circle now centres in the height it actually has. If you carried a manual `offsetY` to work around this, remove it.

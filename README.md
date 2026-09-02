@@ -11,20 +11,24 @@ AI coding skill for building [ApexCharts.js](https://apexcharts.com/) charts and
 > | **ApexTree** — hierarchy / org charts | `apextree` | [`apextree-skill`](https://github.com/apexcharts/apextree-skill) |
 > | **ApexSankey** — flow / Sankey | `apexsankey` | [`apexsankey-skill`](https://github.com/apexcharts/apexsankey-skill) |
 > | **Apex Grid** — data grid | `apex-grid` | [`apexgrid-skill`](https://github.com/apexcharts/apexgrid-skill) |
+| **ApexStock**: financial / OHLC | `apexstock` | [`apexstock-skill`](https://github.com/apexcharts/apexstock-skill) |
+| **ApexMaps**: maps / geo | `apexmaps` | [`apexmaps-skill`](https://github.com/apexcharts/apexmaps-skill) |
 
 ## What This Does
 
 AI models frequently generate incorrect ApexCharts code — wrong series data formats, missing `render()` calls, broken formatter signatures, etc. This skill provides structured reference files that help AI assistants generate correct ApexCharts code on the first try.
 
-This skill targets **ApexCharts v6** (backward compatible with v5 configs).
+This skill targets **ApexCharts v7** (v5 and v6 configs keep working, apart from two v7.0 breaking changes the skill documents).
+
+> **The v7.0 change to know about:** the default bundle no longer ships every feature. Nine features (trellis, storyboard, perspectives, ink, canvas renderer, link, measure, history, context menu) plus the `raincloud` chart type now need an explicit `import 'apexcharts/features/<name>'` **even on the full bundle**. This is the most common v6 → v7 upgrade failure, so the skill leads with it.
 
 ### Coverage
 
-- **24 chart types**: line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot, violin, histogram, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge, sunburst, unit, waffle
+- **28 chart types**: line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot, violin, histogram, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge, sunburst, unit, waffle, waterfall, dumbbell, streamgraph, raincloud
 - **Correct data formats** for every chart type
 - **Common pitfalls** with wrong/correct code examples
-- **v6 feature platform**: plugins (Weave), canvas renderer (Strata), custom series (Marks), undo/redo (Rewind), shareable views (Perspectives), themes (Facet), easing (Cadence), crossfilter (Link), annotation authoring (Ink), measure ruler, context menu, storyboard, streaming, drilldown, raw-sample statistics (Stats), unit-chart shape kit (`apexcharts/unit-shapes`)
-- **Tree-shaking** and bundle optimization patterns
+- **Feature platform**: small multiples (Trellis), plugins (Weave), canvas renderer (Strata), custom series (Marks), undo/redo (Rewind), shareable views (Perspectives), themes (Facet), easing (Cadence), crossfilter (Link), annotation authoring (Ink), measure ruler, context menu, storyboard, streaming, drilldown, raw-sample statistics (Stats), unit-chart shape kit (`apexcharts/unit-shapes`), pictogram glyphs (`apexcharts/pictograms`)
+- **Bundle tiers** (which features are in the default v7 bundle and which are not), tree-shaking, and the lean-core script-tag channel
 - **SSR** (server-side rendering) and hydration
 - **Framework integration**: React, Vue 3, Angular
 
@@ -78,14 +82,14 @@ const barCharts = await readFile(referencePath('bar-charts.md'), 'utf8');
 ├── SKILL.md                    # Main entry point — read this first
 ├── .cursorrules                # Self-contained version for Cursor/Windsurf
 ├── references/
-│   ├── cartesian-charts.md     # line, area, scatter, bubble, rangeArea
-│   ├── bar-charts.md           # bar, column, rangeBar, timeline/Gantt, funnel, pyramid
-│   ├── financial-charts.md     # candlestick, boxPlot, violin, histogram
-│   ├── circular-charts.md      # pie, donut, polarArea, radialBar, gauge, sunburst, unit, waffle
+│   ├── cartesian-charts.md     # line, area, scatter, bubble, rangeArea, streamgraph
+│   ├── bar-charts.md           # bar, column, rangeBar, timeline/Gantt, funnel, pyramid, waterfall, dumbbell
+│   ├── financial-charts.md     # candlestick, boxPlot, violin, histogram, raincloud
+│   ├── circular-charts.md      # pie, donut, polarArea, radialBar, gauge, sunburst, unit, waffle, pictograms
 │   ├── grid-charts.md          # heatmap, treemap
 │   ├── radar-charts.md         # radar
-│   ├── v6-features.md          # v6 feature platform (plugins, canvas, undo/redo, themes, ...)
-│   ├── tree-shaking.md         # bundle optimization
+│   ├── feature-platform.md     # feature platform + bundle tiers (trellis, plugins, canvas, undo/redo, ...)
+│   ├── tree-shaking.md         # bundle tiers and optimization
 │   ├── ssr.md                  # server-side rendering
 │   └── framework-wrappers.md   # React, Vue, Angular
 └── install/

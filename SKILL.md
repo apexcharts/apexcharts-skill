@@ -1,20 +1,22 @@
 ---
 name: apexcharts
 description: >
-  AI skill for building ApexCharts.js charts and data visualizations (targets v6).
+  AI skill for building ApexCharts.js charts and data visualizations (targets v7).
   Use when the user asks to create, configure, or troubleshoot any chart using ApexCharts
   (line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot,
   violin, histogram, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge,
-  sunburst, unit, waffle). Covers
-  correct data formats, lifecycle, formatters, tree-shaking, SSR, and the v6 feature
-  platform (plugins, canvas renderer, custom series, undo/redo, shareable views, themes,
-  crossfilter, annotation authoring, storyboard, streaming, drilldown). In React /
+  sunburst, unit, waffle, waterfall, dumbbell, streamgraph, raincloud). Covers
+  correct data formats, lifecycle, formatters, tree-shaking, SSR, and the feature
+  platform (plugins, canvas renderer, custom series, small multiples, undo/redo,
+  shareable views, themes, crossfilter, annotation authoring, storyboard, streaming,
+  drilldown). Knows which features ship in the default v7 bundle and which are an
+  explicit import. In React /
   Vue / Angular projects, prefer the framework wrapper packages
   (`react-apexcharts`, `vue3-apexcharts`, `ng-apexcharts`) over the core API.
 metadata:
   author: ApexCharts
-  version: "2.2.0"
-  library_version: "6.10.0"
+  version: "3.0.0"
+  library_version: "7.1.0"
   category: data-visualization
   tags: [charts, visualization, javascript, typescript, svg, apexcharts]
   docs: https://apexcharts.com/docs/
@@ -31,9 +33,40 @@ metadata:
 >
 > Wrappers handle `destroy()` automatically on unmount, accept reactive props, and forward events as idiomatic framework events. Use the core API directly only when no framework is detected, or when the user explicitly asks for vanilla. See `references/framework-wrappers.md`.
 
-> **Targets ApexCharts v6.** v6 is backward compatible: existing v5 configs keep working unchanged. Everything new (the plugin platform, canvas renderer, custom series, undo/redo, shareable views, themes, crossfilter, annotation authoring, storyboard, streaming, drilldown) is opt-in and tree-shakeable. Two behaviors changed *on by default* (both respect `prefers-reduced-motion`): (1) data updates that add/remove points now animate coherently, and (2) mobile pinch-zoom / two-finger pan gestures are enabled. See `references/v6-features.md` for the full v6 surface.
+> **Targets ApexCharts v7.** Read the next box before writing any feature code: v7's headline change is that the default bundle no longer contains every feature.
 >
-> **Premium features and licensing (6.5.0+).** Seven of the v6 features are premium: `storyboard`, `link` (crossfilter / linked views), `ink` (annotation authoring), `measure`, `context-menu`, `perspectives` (shareable views), and `history` (undo/redo). The `unit` / `waffle` chart type is also premium (6.6.0+). These still function fully, but render an `APEXCHARTS` trial watermark until an entitled license is set via `ApexCharts.setLicense(key)` (static) or per-chart `chart.license`. As of 6.7.0 they require a `premium` or `enterprise` plan; a `pro` key or the free tier keeps the watermark. Every other chart type and free module is never gated. See the Licensing section in `references/v6-features.md`.
+> **⚠️ v7.0 breaking change: nine features left the default bundle.** In v6, `import ApexCharts from 'apexcharts'` gave you every feature. In v7 it does not. These nine are **Tier 2**: present in the package, absent from the default bundle, and reachable only through an explicit import.
+>
+> ```js
+> import ApexCharts from 'apexcharts'
+> import 'apexcharts/features/trellis'      // ESM
+> ```
+> ```html
+> <script src=".../dist/apexcharts.js"></script>
+> <script src=".../dist/features/trellis.js"></script>  <!-- script tag -->
+> ```
+>
+> | Tier 2 feature | Import | gzip |
+> |---|---|---|
+> | Trellis (small multiples) | `apexcharts/features/trellis` | 25.7 KB |
+> | Storyboard (scrollytelling) | `apexcharts/features/storyboard` | 8.0 KB |
+> | Perspectives (shareable views) | `apexcharts/features/perspectives` | 6.7 KB |
+> | Ink (annotation authoring) | `apexcharts/features/ink` | 6.2 KB |
+> | Canvas renderer (Strata) | `apexcharts/features/renderer-canvas` | 6.0 KB |
+> | Linked views & crossfilter | `apexcharts/features/link` | 5.3 KB |
+> | Measure ruler | `apexcharts/features/measure` | 4.6 KB |
+> | Rewind (undo / redo) | `apexcharts/features/history` | 3.2 KB |
+> | Context menu | `apexcharts/features/context-menu` | 2.3 KB |
+>
+> The `raincloud` chart type (7.1) is Tier 2 on the same terms: `import 'apexcharts/raincloud'`. Storyboard registers Perspectives, so importing both costs no more than Storyboard alone. **Nothing fails silently**: each warns in the console when its config is present but the module is not, and degrades where it can (a trellis renders as one chart; `renderer: 'canvas'` falls back to SVG). Default bundle: 291,654 B gzipped in 6.10, 252,005 B in 7.0, 264,326 B in 7.1.
+>
+> Everything else stays in the default bundle: **all chart types except raincloud**, axes, tooltips, legend, toolbar, exports, annotations, keyboard navigation, stats, morph, drilldown, themes (Facet), plugins (Weave) and custom series (Marks). See `references/tree-shaking.md` for the full tier table and `references/feature-platform.md` for each feature's API.
+>
+> **Other v7.0 breaking changes.** (1) `plotOptions.bar.borderRadiusWhenStacked` is **removed**; corner ownership now follows the stack's outer edge automatically. An unknown option is ignored, so leaving it in a config is harmless but does nothing. (2) `dataLabels.animate.enabled` now defaults to `true` (bar/column only): labels ride to their new position on a data update instead of snapping. Set `dataLabels: { animate: { enabled: false } }` for the old behavior. Everything else from v5 and v6 keeps working unchanged.
+>
+> **Behaviors that are on by default** (both respect `prefers-reduced-motion`): data updates that add/remove points animate coherently, and mobile pinch-zoom / two-finger pan gestures are enabled.
+>
+> **Premium features and licensing.** Eight features are premium: `trellis` (small multiples, 7.0), `storyboard`, `link` (crossfilter / linked views), `ink` (annotation authoring), `measure`, `context-menu`, `perspectives` (shareable views), and `history` (undo/redo). Two chart types are premium: `unit` / `waffle`, and `raincloud` (7.1). These still function fully, but render an `APEXCHARTS` trial watermark until an entitled license is set via `ApexCharts.setLicense(key)` (static) or per-chart `chart.license`. They require a `premium` or `enterprise` plan; a `pro` key or the free tier keeps the watermark. Every other chart type and free module is never gated. Note that premium and Tier 2 are independent axes: `waterfall`, `dumbbell` and `streamgraph` are free *and* in the default bundle, while `trellis` is both premium *and* an explicit import. See the Licensing section in `references/feature-platform.md`.
 
 ## 1. Critical Rules
 
@@ -48,11 +81,15 @@ metadata:
 9. **For mixed/combo charts**, set `type` on each individual series object, not just on `chart.type`.
 10. **RadialBar values must be 0–100** (they represent percentages).
 11. **Color hex values must include the `#` prefix** (e.g., `'#FF5733'`, not `'FF5733'`).
-12. **Tree-shaking**: importing `apexcharts/core` gives you a bare class — you must also import chart-type entries and feature entries separately.
-13. **v6 first-class aliases**: `funnel` and `pyramid` render through the bar engine; `gauge` renders through radialBar. Use them as `chart.type` directly (no `plotOptions.bar.isFunnel` needed). They are covered by the `apexcharts/bar` and `apexcharts/radialBar` tree-shaking entries respectively.
-14. **`violin` (v6, statistical)** uses a per-point density profile: `data: [{ x, y: { density: [[value, weight], ...], points?: [number] } }]`, not a plain number. Since v6.9 a datum may instead supply only raw observations (`points: [number]`, no `y`) and the library derives the density via KDE (needs `apexcharts/features/stats` when tree-shaking).
-15. **`render()` is idempotent (v6)**: calling `render()` twice on the same instance returns the same promise instead of building a duplicate chart. You still must `destroy()` before creating a *new* instance on the same element.
-16. **`histogram` (v6.9)** series carry **raw observations** (one number per event), not pre-aggregated counts; the chart chooses bin edges and counts them. Binning ships behind the stats feature: use the `apexcharts/histogram` entry, or `import 'apexcharts/features/stats'` alongside `apexcharts/bar` (the full `apexcharts` bundle already includes it).
+12. **Nine features are NOT in the v7 default bundle.** Before writing config for `trellis`, `storyboard`, `perspectives`, `ink`, `renderer: 'canvas'`, `link`, `measure`, `history` or the context menu, add its `apexcharts/features/*` import. Same for the `raincloud` chart type. Full-bundle users need this too, not just tree-shakers. See the box above.
+13. **Tree-shaking**: importing `apexcharts/core` gives you a bare class, and you must also import chart-type entries and feature entries separately.
+14. **First-class aliases**: `funnel` and `pyramid` render through the bar engine; `gauge` renders through radialBar. Use them as `chart.type` directly (no `plotOptions.bar.isFunnel` needed). They are covered by the `apexcharts/bar` and `apexcharts/radialBar` tree-shaking entries respectively.
+15. **`violin` (statistical)** uses a per-point density profile: `data: [{ x, y: { density: [[value, weight], ...], points?: [number] } }]`, not a plain number. Since v6.9 a datum may instead supply only raw observations (`points: [number]`, no `y`) and the library derives the density via KDE (needs `apexcharts/features/stats` when tree-shaking).
+16. **`render()` is idempotent**: calling `render()` twice on the same instance returns the same promise instead of building a duplicate chart. You still must `destroy()` before creating a *new* instance on the same element.
+17. **`histogram` (v6.9)** series carry **raw observations** (one number per event), not pre-aggregated counts; the chart chooses bin edges and counts them. Binning ships behind the stats feature: use the `apexcharts/histogram` entry, or `import 'apexcharts/features/stats'` alongside `apexcharts/bar` (the full `apexcharts` bundle already includes it).
+18. **`waterfall` (v7.1) accumulates for you.** The series carries the **deltas**, not the running total. A row that should show the running total carries `isSubtotal` or `isTotal` and **no `y`**; the library measures it. Do not pre-compute cumulative values.
+19. **`dumbbell` (v7.1) takes one series per measure**, each with the same `x` categories: `[{ name: '2020', data: [{ x, y }] }, { name: '2025', data: [{ x, y }] }]`. Do **not** zip the values into `y: [low, high]` pairs; that is the older `plotOptions.bar.isDumbbell` range-bar form, which still works but is a different chart.
+20. **`raincloud` (v7.1) takes the raw sample**, one datum per category: `data: [{ x, points: [number] }]`. It is a premium Tier 2 type, so it needs `import 'apexcharts/raincloud'` on top of the default bundle.
 
 ---
 
@@ -80,6 +117,10 @@ This is the most critical reference. Using the wrong data format is the #1 cause
 | Radar | `'radar'` | `[{ name, data: [number] }]` + `xaxis: { categories: [...] }` | `series: [{ name: 'Skill', data: [80, 50, 30, 40, 100] }]` |
 | Funnel *(v6)* | `'funnel'` | `[{ name, data: [number] }]` + `xaxis: { categories: [...] }`. Order values **largest→smallest**. | `series: [{ data: [1380, 990, 548, 200] }]` |
 | Pyramid *(v6)* | `'pyramid'` | Same as funnel; order values **smallest→largest** (wide base at bottom). | `series: [{ data: [200, 548, 990, 1380] }]` |
+| Waterfall *(v7.1)* | `'waterfall'` | `[{ name, data: [{ x, y }] }]` where **`y` is the signed delta**, not a running total. A running-total row carries `isSubtotal` (sum since the last cut) or `isTotal` (sum from zero) and **omits `y`**. | `series: [{ data: [{ x: 'Revenue', y: 8786 }, { x: 'Costs', y: -2786 }, { x: 'Gross', isSubtotal: true }] }]` |
+| Dumbbell *(v7.1)* | `'dumbbell'` | **One series per measure**, sharing x categories: `[{ name, data: [{ x, y }] }, ...]`. Not `[low, high]` pairs. | `series: [{ name: '2020', data: [{ x: 'Backend', y: 92 }] }, { name: '2025', data: [{ x: 'Backend', y: 118 }] }]` |
+| Streamgraph *(v7.1)* | `'streamgraph'` | Same as area: `[{ name, data: [{ x, y }] }]`. Stacking, baseline and band order are the chart's job, so do **not** set `chart.stacked`. | `series: [{ name: 'Drama', data: [{ x: '2024-01-01', y: 32 }] }]` |
+| Raincloud *(v7.1, premium, Tier 2)* | `'raincloud'` | `[{ name, data: [{ x, points: [number] }] }]`: the **raw sample** per category; the density, box and rain are derived. Needs `import 'apexcharts/raincloud'`. | `series: [{ name: 'Weight gain', data: [{ x: 'Control', points: [3.1, 4.7, 2.9] }] }]` |
 
 ### Non-Axis Charts (pie, donut, radialBar, polarArea, gauge, unit, waffle)
 
@@ -124,7 +165,7 @@ Configure the centre hole, corner rounding, and inter-arc gap through `plotOptio
 ## 3. Package / Module Map
 
 ```
-# Full bundle (all chart types + all features)
+# Default bundle (every chart type except raincloud, plus the Tier 1 features)
 import ApexCharts from 'apexcharts'
 
 # Bare core (no chart types, no optional features — must register manually)
@@ -139,53 +180,68 @@ import ApexCharts from 'apexcharts/rangeArea'     # same as /line
 import ApexCharts from 'apexcharts/bar'           # bar, column, rangeBar
 import ApexCharts from 'apexcharts/column'        # same as /bar
 import ApexCharts from 'apexcharts/rangeBar'      # same as /bar
+import ApexCharts from 'apexcharts/waterfall'     # waterfall (v7.1): bar engine + the waterfall feature
+import ApexCharts from 'apexcharts/dumbbell'      # dumbbell (v7.1): bar engine + the dumbbell feature
+import ApexCharts from 'apexcharts/streamgraph'   # streamgraph (v7.1): rangeArea engine + the streamgraph feature
 import ApexCharts from 'apexcharts/candlestick'   # candlestick, boxPlot
 import ApexCharts from 'apexcharts/boxPlot'       # same as /candlestick
-import ApexCharts from 'apexcharts/violin'        # violin (v6)
+import ApexCharts from 'apexcharts/violin'        # violin
+import ApexCharts from 'apexcharts/raincloud'     # raincloud (v7.1, premium): violin engine + the raincloud feature
 import ApexCharts from 'apexcharts/histogram'     # histogram (v6.9): bar engine + the stats feature
 import ApexCharts from 'apexcharts/pie'           # pie, donut, polarArea
 import ApexCharts from 'apexcharts/donut'         # same as /pie
 import ApexCharts from 'apexcharts/polarArea'     # same as /pie
-import ApexCharts from 'apexcharts/radialBar'     # radialBar + gauge (v6)
+import ApexCharts from 'apexcharts/radialBar'     # radialBar + gauge
 import ApexCharts from 'apexcharts/radar'         # radar only
 import ApexCharts from 'apexcharts/heatmap'       # heatmap only
 import ApexCharts from 'apexcharts/treemap'       # treemap only
 import ApexCharts from 'apexcharts/sunburst'      # sunburst (v6.7, hierarchical)
 import ApexCharts from 'apexcharts/unit'          # unit + waffle (v6.6, premium)
-# funnel + pyramid (v6) render through the bar engine; use apexcharts/bar
+# funnel + pyramid render through the bar engine; use apexcharts/bar
 
 # Unit-chart shape kit (v6.10): named exports, tree-shaken per shape (~4 KB gzipped each)
 import { heart, outlined, glyphs, preview } from 'apexcharts/unit-shapes'
 
-# Optional features (side-effect imports — just import, no default export needed)
+# Pictogram glyphs (v7.0): one drawn mark per unit, independent of the layout
+import { person, registerMarks } from 'apexcharts/pictograms'
+
+# TIER 1 features: already in the default `apexcharts` bundle.
+# Import these only when you started from /core or a per-type entry.
 import 'apexcharts/features/exports'         # PNG/SVG/CSV export methods
 import 'apexcharts/features/legend'          # Interactive legend component
 import 'apexcharts/features/toolbar'         # Toolbar (zoom, pan, download buttons)
 import 'apexcharts/features/annotations'     # X/Y/point/text/image annotations
 import 'apexcharts/features/keyboard'        # Keyboard navigation (accessibility)
 import 'apexcharts/features/stats'           # Statistics (v6.9): histogram binning, boxPlot/violin raw samples, rowSeries()
-# v6 feature platform (all opt-in, all tree-shakeable)
 import 'apexcharts/features/morph'           # Animated chart-type morphs
 import 'apexcharts/features/drilldown'       # Hierarchical drill-down
-import 'apexcharts/features/history'         # Undo/redo (Rewind)
-import 'apexcharts/features/perspectives'    # Shareable view state
-import 'apexcharts/features/storyboard'      # Scrollytelling (includes perspectives)
 import 'apexcharts/features/facet'           # Design tokens + OS-aware themes
 import 'apexcharts/features/weave'           # Public plugin platform
-import 'apexcharts/features/renderer-canvas' # Hybrid SVG + canvas renderer (Strata)
 import 'apexcharts/features/marks'           # Custom series types (registerSeriesType)
-import 'apexcharts/features/link'            # Crossfilter / linked views
-import 'apexcharts/features/ink'             # On-chart annotation authoring
-import 'apexcharts/features/measure'         # Measure / delta ruler
-import 'apexcharts/features/context-menu'    # Right-click / long-press context menu
-import 'apexcharts/features/all'             # All features at once
+import 'apexcharts/features/waterfall'       # (v7.1) waterfall chart type
+import 'apexcharts/features/dumbbell'        # (v7.1) dumbbell chart type
+import 'apexcharts/features/streamgraph'     # (v7.1) streamgraph chart type
+
+# TIER 2 features: NOT in the default bundle. Required even on the full bundle.
+import 'apexcharts/features/trellis'         # (v7.0) Small multiples (premium)
+import 'apexcharts/features/storyboard'      # Scrollytelling (premium; registers perspectives)
+import 'apexcharts/features/perspectives'    # Shareable view state (premium)
+import 'apexcharts/features/ink'             # On-chart annotation authoring (premium)
+import 'apexcharts/features/renderer-canvas' # Hybrid SVG + canvas renderer (Strata)
+import 'apexcharts/features/link'            # Crossfilter / linked views (premium)
+import 'apexcharts/features/measure'         # Measure / delta ruler (premium)
+import 'apexcharts/features/history'         # Undo/redo (Rewind, premium)
+import 'apexcharts/features/context-menu'    # Right-click / long-press context menu (premium)
+import 'apexcharts/features/raincloud'       # (v7.1) raincloud chart type (premium)
+
+import 'apexcharts/features/all'             # Tier 1 only. Does NOT pull in Tier 2.
 
 # SSR (server-side rendering)
 import ApexCharts from 'apexcharts/ssr'    # Node.js: renderToString, renderToHTML
 import ApexCharts from 'apexcharts/client' # Browser: explicit client import for hydration
 ```
 
-**Note:** When using `apexcharts` (full bundle), all chart types and features are included automatically. Tree-shaking entries (`/core`, `/line`, etc.) are for reducing bundle size.
+**Note (v7):** `apexcharts` gives you every chart type except `raincloud`, plus the Tier 1 features. The nine Tier 2 features and `raincloud` need their own import **whatever entry point you started from**. `apexcharts/features/all` is the Tier 1 set, so it is not a shortcut past this. Tree-shaking entries (`/core`, `/line`, etc.) are for reducing bundle size below the default.
 
 **Note (v6.9):** ApexCharts is no longer dependency-free: it depends on `apex-commons` at runtime. npm resolves it automatically and the browser (script-tag) bundles inline it, so no action is needed; it only matters for tooling that assumed zero dependencies.
 
@@ -463,7 +519,9 @@ Also: do NOT use `xaxis.categories` when your data already has `{ x, y }` format
 { responsive: [{ breakpoint: 480, options: {...} }, { breakpoint: 1024, options: {...} }] }
 ```
 
-### Pitfall 14: Tree-shaking — missing feature imports
+### Pitfall 14: Missing feature imports
+
+Two distinct versions of this. **(a) Per-type entries carry no features:**
 
 ❌ **WRONG** — toolbar/legend/annotations silently missing:
 ```js
@@ -478,6 +536,22 @@ import 'apexcharts/features/legend'
 import 'apexcharts/features/toolbar'
 import 'apexcharts/features/annotations'
 ```
+
+**(b) *(v7)* The full bundle no longer carries the nine Tier 2 features.** This one catches people who never tree-shook anything, and it is the most common v6 → v7 upgrade failure.
+
+❌ **WRONG**: the config is right, the module is absent, so the chart renders as one plain chart and logs a warning:
+```js
+import ApexCharts from 'apexcharts'
+new ApexCharts(el, { chart: { type: 'line' }, series, trellis: { by: 'region' } })
+```
+
+✅ **CORRECT**:
+```js
+import ApexCharts from 'apexcharts'
+import 'apexcharts/features/trellis'
+```
+
+Same for `storyboard`, `perspectives`, `ink`, `renderer: 'canvas'`, `link`, `measure`, `history`, `contextMenu`, and the `raincloud` chart type. Check the console: each one names both import routes when its config is present without it.
 
 ### Pitfall 15: SSR — wrong import path
 
@@ -552,10 +626,12 @@ await chart.updateOptions({ title: { text: 'New Title' } })
 | `addEventListener(name, handler)` | Subscribe to chart event. |
 | `removeEventListener(name, handler)` | Unsubscribe from chart event. |
 
-### v6 Instance Methods (require the matching feature import)
+### Feature Instance Methods (require the matching feature import)
 
 | Method | Feature | Description |
 |---|---|---|
+| `chart.getPanels() / getPanel(key)` | trellis | *(v7.0)* The grid's panels, and one panel's own ApexCharts instance by facet key. Empty / `null` on a chart that is not a trellis host. |
+| `chart.promotePanel(key) / restorePanels()` | trellis | *(v7.0)* Expand one panel to the grid's full width, and go back. |
 | `chart.history.undo() / redo() / jump(id) / transaction(fn)` | history | Undo/redo over the command journal. |
 | `chart.perspectives.capture() / toURL() / apply(token)` | perspectives | Serialize / restore the exact view. |
 | `chart.getActiveRenderer()` | renderer-canvas | Returns `'svg' \| 'canvas'` currently in use. |
@@ -582,6 +658,8 @@ await chart.updateOptions({ title: { text: 'New Title' } })
 | `ApexCharts.registerUnitLayout(name, fn) / unregisterUnitLayout(name)` | *(v6.9)* Register a named unit-chart layout, referenceable via `plotOptions.unit.positions: '<name>'` with `layout: 'custom'`. |
 | `ApexCharts.crossfilter({ id, records }) / getCrossfilter(id)` | *(v6, Link)* Create / fetch a crossfilter engine. |
 | `ApexCharts.perspectives.fromURL(href)` | *(v6)* Decode a perspective token from a URL. |
+| `ApexCharts.trellis(el, options)` | *(v7.0, Trellis)* Imperative entry point: creates a trellis host (options must carry `trellis.by`). Throws if the trellis feature is not imported. |
+| `registerMarks(defs) / definePictogram(meta)` from `apexcharts/pictograms` | *(v7.0)* Register glyphs so `plotOptions.unit.pictogram.mark: 'person'` resolves. |
 
 ### SSR Static Methods (available with `apexcharts/ssr`)
 
@@ -645,27 +723,31 @@ await chart.updateOptions({ title: { text: 'New Title' } })
 
 ---
 
-## 9. v6 Feature Platform (opt-in, tree-shakeable)
+## 9. Feature Platform
 
-All of the following are new in v6, off by default, and each ships as a `apexcharts/features/*` entry. Full config shapes, APIs, and examples are in `references/v6-features.md`. Quick map:
+Every feature below is off by default in config terms. The **Tier** column is about the *bundle*: Tier 1 is already in `import ApexCharts from 'apexcharts'` and needs a `features/*` import only if you started from `/core` or a per-type entry; **Tier 2 needs its import no matter which entry point you used**. Full config shapes, APIs, and examples are in `references/feature-platform.md`.
 
-| Feature | Opt-in | One-liner |
-|---|---|---|
-| **Weave** (plugins) | `apexcharts/features/weave` | Publish reusable chart plugins against a stable `ApexCharts.registerPlugin({ name, setup })` API; activate per chart with `plugins: [{ name }]`. |
-| **Strata** (canvas) | `apexcharts/features/renderer-canvas` | `chart: { renderer: 'auto', rendererThreshold }` paints the dense series layer to canvas while axes/tooltips/exports stay SVG. |
-| **Marks** (custom series) | `apexcharts/features/marks` | `ApexCharts.registerSeriesType(name, { renderItem })` for first-class custom marks (lollipop, dumbbell, bullet). Baseline is `scales.y(0)`, **not** `api.zeroY`. |
-| **Rewind** (undo/redo) | `apexcharts/features/history` | `chart: { history: { enabled: true } }`, then `chart.history.undo()/redo()/jump()/transaction()`. |
-| **Perspectives** (view state) | `apexcharts/features/perspectives` | `chart.perspectives.capture()/toURL()/apply()` to serialize and restore the exact view. |
-| **Facet** (themes/tokens) | `apexcharts/features/facet` | `theme: { follow: 'os', name }`, `--apx-*` CSS custom props, `ApexCharts.registerTheme`. |
-| **Cadence** (easing) | core | `chart.animations.easing` accepts a named curve, cubic-bezier array, or function; `ApexCharts.registerEasing`. |
-| **Link** (crossfilter) | `apexcharts/features/link` | `chart: { group, link: { enabled, mode } }` for highlight linking; `ApexCharts.crossfilter({ id, records })` for a filter engine. |
-| **Ink** (annotation authoring) | `apexcharts/features/ink` | `chart: { ink: { enabled: true } }` makes annotations draggable/resizable with a floating editor. |
-| **Measure** (ruler) | `apexcharts/features/measure` | `chart: { measure: { enabled, mode } }`; hold a key and drag to read change/percent/slope. v6.1 adds a toolbar tool (`toolbar.tools.measure`, `toolbar.autoSelected: 'measure'`). |
-| **Context menu** | `apexcharts/features/context-menu` | `chart: { contextMenu: { enabled, items } }` for point-specific right-click actions. |
-| **Storyboard** (scrollytelling) | `apexcharts/features/storyboard` | `chart.storyboard.bind({ beats })` pairs prose sections with saved views. |
-| **Streaming** | core | `chart: { streaming: { enabled, maxPoints } }` for constant-velocity rolling-window scroll. |
-| **Drilldown** | `apexcharts/features/drilldown` | `drilldown: { enabled, series }` + a `drilldown` id on data points; `chart.drillDown()/drillUp()`. v6.9 adds line/area support, async levels (`onDrillDown` may return a Promise), a loading overlay, and the `drillDownError` event. |
-| **Stats** | `apexcharts/features/stats` | *(v6.9)* Statistics behind histogram binning, boxPlot/violin raw-sample summaries (R type 7 quartiles, KDE), and `chart.rowSeries()`. The `apexcharts/histogram` entry includes it. |
+| Feature | Tier | Import | One-liner |
+|---|---|---|---|
+| **Weave** (plugins) | 1 | `apexcharts/features/weave` | Publish reusable chart plugins against a stable `ApexCharts.registerPlugin({ name, setup })` API; activate per chart with `plugins: [{ name }]`. |
+| **Marks** (custom series) | 1 | `apexcharts/features/marks` | `ApexCharts.registerSeriesType(name, { renderItem })` for first-class custom marks (lollipop, bullet). Baseline is `scales.y(0)`, **not** `api.zeroY`. |
+| **Facet** (themes/tokens) | 1 | `apexcharts/features/facet` | `theme: { follow: 'os', name }`, `--apx-*` CSS custom props, `ApexCharts.registerTheme`. |
+| **Drilldown** | 1 | `apexcharts/features/drilldown` | `drilldown: { enabled, series }` + a `drilldown` id on data points; `chart.drillDown()/drillUp()`. v6.9 adds line/area support, async levels (`onDrillDown` may return a Promise), a loading overlay, and the `drillDownError` event. |
+| **Morph** | 1 | `apexcharts/features/morph` | Animated transitions between chart types. |
+| **Stats** | 1 | `apexcharts/features/stats` | *(v6.9)* Statistics behind histogram binning, boxPlot/violin raw-sample summaries (R type 7 quartiles, KDE), and `chart.rowSeries()`. The `apexcharts/histogram` entry includes it. |
+| **Cadence** (easing) | core | none | `chart.animations.easing` accepts a named curve, cubic-bezier array, or function; `ApexCharts.registerEasing`. |
+| **Streaming** | core | none | `chart: { streaming: { enabled, maxPoints } }` for constant-velocity rolling-window scroll. |
+| **Print layout** | core | none | *(v7.1)* `chart: { print: { enabled, width } }`. The paper box cannot be measured from JS (`clientWidth` and `matchMedia` both report the screen during `beforeprint`), so the chart is re-laid out at a known width for the sheet and restored after. **On by default** at `width: 700` (suits A4 / Letter portrait); a chart already narrower is left alone. `print: false` restores the pre-7.1 behavior. |
+| **Marker batching** | core | none | *(v7.0)* `markers: { largeDatasetThreshold: n }`. Above `n` points, a series' markers are drawn as one path per marker size instead of one element per point. **Opt-in, default `0` (off)**, because merged marker paths are not pixel-identical: overlapping markers lose their individual outlines and dense clusters read flatter. Also covers the markers `showNullDataPoints` adds, which is what makes a null-heavy series slow even at `size: 0`. |
+| **Trellis** (small multiples) | **2** | `apexcharts/features/trellis` | *(v7.0, premium)* `trellis: { by: 'region', minPanelWidth }` splits the series into a grid of real charts sharing one scale, legend, toolbar and crosshair. Also `row` × `column` for 2-D grids. |
+| **Strata** (canvas) | **2** | `apexcharts/features/renderer-canvas` | `chart: { renderer: 'auto', rendererThreshold }` paints the dense series layer to canvas while axes/tooltips/exports stay SVG. Falls back to SVG if the module is missing. |
+| **Rewind** (undo/redo) | **2** | `apexcharts/features/history` | *(premium)* `chart: { history: { enabled: true } }`, then `chart.history.undo()/redo()/jump()/transaction()`. |
+| **Perspectives** (view state) | **2** | `apexcharts/features/perspectives` | *(premium)* `chart.perspectives.capture()/toURL()/apply()` to serialize and restore the exact view. |
+| **Link** (crossfilter) | **2** | `apexcharts/features/link` | *(premium)* `chart: { group, link: { enabled, mode } }` for highlight linking; `ApexCharts.crossfilter({ id, records })` for a filter engine. |
+| **Ink** (annotation authoring) | **2** | `apexcharts/features/ink` | *(premium)* `chart: { ink: { enabled: true } }` makes annotations draggable/resizable with a floating editor. |
+| **Measure** (ruler) | **2** | `apexcharts/features/measure` | *(premium)* `chart: { measure: { enabled, mode } }`; hold a key and drag to read change/percent/slope. v6.1 adds a toolbar tool (`toolbar.tools.measure`, `toolbar.autoSelected: 'measure'`). |
+| **Context menu** | **2** | `apexcharts/features/context-menu` | *(premium)* `chart: { contextMenu: { enabled, items } }` for point-specific right-click actions. |
+| **Storyboard** (scrollytelling) | **2** | `apexcharts/features/storyboard` | *(premium)* `chart.storyboard.bind({ beats })` pairs prose sections with saved views. Registers Perspectives too. |
 
 ## 10. Reference Routing Table
 
@@ -673,13 +755,13 @@ For detailed chart-family-specific options, data format variants, and full worki
 
 | Topic | Reference File |
 |---|---|
-| Line, Area, Scatter, Bubble, Range Area | `references/cartesian-charts.md` |
-| Bar, Column, Range Bar, Timeline/Gantt, Funnel, Pyramid | `references/bar-charts.md` |
-| Candlestick, Box Plot, Violin, Histogram | `references/financial-charts.md` |
-| Pie, Donut, Polar Area, Radial Bar, Gauge, Sunburst, Unit, Waffle | `references/circular-charts.md` |
+| Line, Area, Scatter, Bubble, Range Area, Streamgraph | `references/cartesian-charts.md` |
+| Bar, Column, Range Bar, Timeline/Gantt, Funnel, Pyramid, Waterfall, Dumbbell | `references/bar-charts.md` |
+| Candlestick, Box Plot, Violin, Histogram, Raincloud | `references/financial-charts.md` |
+| Pie, Donut, Polar Area, Radial Bar, Gauge, Sunburst, Unit, Waffle, Pictograms | `references/circular-charts.md` |
 | Heatmap, Treemap | `references/grid-charts.md` |
 | Radar | `references/radar-charts.md` |
-| v6 feature platform (plugins, canvas, undo/redo, themes, crossfilter, storyboard, ...) | `references/v6-features.md` |
-| Tree-shaking, Bundle optimization | `references/tree-shaking.md` |
+| Feature platform (small multiples, plugins, canvas, undo/redo, themes, crossfilter, storyboard, ...) | `references/feature-platform.md` |
+| Bundle tiers, Tree-shaking, Bundle optimization | `references/tree-shaking.md` |
 | Server-side rendering, Hydration | `references/ssr.md` |
 | React, Vue, Angular integration | `references/framework-wrappers.md` |

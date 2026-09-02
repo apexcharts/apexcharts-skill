@@ -20,13 +20,13 @@ export const referenceFiles = [
   'bar-charts.md',
   'cartesian-charts.md',
   'circular-charts.md',
+  'feature-platform.md',
   'financial-charts.md',
   'framework-wrappers.md',
   'grid-charts.md',
   'radar-charts.md',
   'ssr.md',
   'tree-shaking.md',
-  'v6-features.md',
 ];
 
 /** Resolve a reference file by its filename. Throws if not in the known list. */
