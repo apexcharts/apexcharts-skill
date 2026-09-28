@@ -155,6 +155,10 @@ A sunburst draws a hierarchy as concentric rings: the first level fills a donut 
 
 Colours, `stroke`, `legend`, and `title` behave as they do on pie and donut. A sunburst can also adapt an existing `drilldown` config instead of a native `children` hierarchy.
 
+A branch may **omit its own `y`** and be the sum of its children. That is the documented shape, but it only began working in v7.6: before that the non-axis parser required every datum to carry `x` and `y`, so a branch with only `children` was dropped, the series came back empty, and the chart drew nothing while warning about pie data. The samples all gave their top-level nodes a `y`, which is what hid it from the moment sunburst shipped.
+
+**The same tree in cartesian coordinates** is the `icicle` type *(v7.6)*: one band per depth level instead of concentric rings, labels horizontal at every depth, and `direction: 'up'` for flame graphs. It is an opt-in import. See `references/grid-charts.md`.
+
 ### Unit / Waffle (v6.6, premium)
 
 A `unit` chart renders one discrete mark for every unit of value instead of a single bar or slice, so "37 of 200" reads as a countable quantity. It is a **non-axis** chart (dispatched like pie or treemap) and is **premium**: it renders fully in trial mode with an `APEXCHARTS` watermark until an entitled license is set (see `references/feature-platform.md`). On every update each mark tweens from its old position to its new one, so re-grouping, filtering, or a changing count re-forms the marks.

@@ -254,6 +254,25 @@ xaxis: {
 }
 ```
 
+### A way out of a zoom when the toolbar is hidden (v7.4)
+
+Hiding the toolbar does not disable drag-to-zoom (a drag is a deliberate gesture, unlike the wheel and the pinch), so a viewer can zoom a bare chart and then have nothing on screen that puts the range back.
+
+```js
+chart: {
+  toolbar: { show: false },
+  zoom: { enabled: true, resetControl: 'auto' }   // 'auto' is the default
+}
+```
+
+While the chart **is** zoomed and nothing else can reset it, one reset control is drawn where the toolbar would have been, and it goes when the range does. `Escape` resets under the same gate, and the event is left alone so a page listening for it still hears it.
+
+- `'auto'` (default): supply both only where there is no reset button already. A chart nobody zooms is untouched, so `toolbar: { show: false }` still means an empty chart for every viewer who does not zoom.
+- `true`: also force the control on where `toolbar.tools.reset` is off, which is the same dead end as a hidden toolbar.
+- `false`: turn off both the control and the key, for a page that supplies its own reset.
+
+Requires `zoom.enabled: true`. A completed drag-zoom now also focuses the chart, so the `+`, `-` and `0` keys are reachable straight after a mouse zoom.
+
 ---
 
 ## Complete Working Example — Line Chart with Datetime

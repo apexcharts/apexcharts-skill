@@ -52,7 +52,7 @@ const htmlString = await ApexCharts.renderToHTML(
   {
     chart: {
       type: 'bar',
-      id: 'my-chart'   // id is important for hydration targeting
+      id: 'my-chart'   // for chart.exec() targeting; NOT what hydration looks for
     },
     series: [{ data: [44, 55, 41, 67] }],
     xaxis: { categories: ['A', 'B', 'C', 'D'] }
@@ -60,7 +60,12 @@ const htmlString = await ApexCharts.renderToHTML(
   { width: 600, height: 350 }
 )
 
-// htmlString is <div id="my-chart" data-apexcharts>...<svg>...</svg></div>
+// htmlString is:
+//   <div class="apexcharts-ssr-wrapper" data-apexcharts-hydrate data-apexcharts-config="...">
+//     <svg>...</svg>
+//   </div>
+// The wrapper carries NO id. `chart.id` is not copied onto it, and the config
+// travels in data-apexcharts-config, which is what hydration reads.
 ```
 
 ---
@@ -74,14 +79,17 @@ After the server-rendered HTML is in the DOM, hydrate it to make it interactive:
 ```js
 import ApexCharts from 'apexcharts'
 
-// Hydrate a specific chart element (optionally merge client-only options)
-const chart = ApexCharts.hydrate(document.querySelector('#my-chart'))
+// Hydrate a specific chart element (optionally merge client-only options).
+// Select the emitted wrapper, not a chart id: `#my-chart` matches nothing.
+const chart = ApexCharts.hydrate(document.querySelector('[data-apexcharts-hydrate]'))
 ```
 
 ### hydrateAll(selector?, clientOptions?)
 
 ```js
-// Hydrate all server-rendered charts on the page (optionally scope by selector)
+// Hydrate all server-rendered charts on the page (optionally scope by selector).
+// The selector defaults to '[data-apexcharts-hydrate]', which is why this works
+// with no argument and a #id selector does not.
 ApexCharts.hydrateAll()
 ```
 
@@ -210,7 +218,8 @@ onMounted(async () => {
 
 ## Common Pitfalls
 
-1. **Using `apexcharts` in Node.js without SSR methods** — the default export auto-resolves based on environment, but `renderToString` is only available via `apexcharts/ssr`.
-2. **Forgetting to hydrate on the client** — server-rendered charts are static SVGs. Without `hydrate()`, they have no interactivity (no tooltips, zoom, click events).
-3. **Missing width/height**: SSR has no DOM to measure. Pass explicit dimensions in the **second** argument: `renderToString(options, { width, height })` / `renderToHTML(options, { width, height })`.
-4. **Hydrating before DOM is ready** — call `hydrate()` after the server-rendered HTML is in the DOM (use `onMounted`, `useEffect`, or `DOMContentLoaded`).
+1. **Assuming `apexcharts` has no SSR methods in Node** — it does: the `"."` export's `node` condition resolves to the SSR bundle, so `renderToString` and `renderToHTML` are there. Import `apexcharts/ssr` explicitly anyway, because a bundler told to target Node can still resolve the `browser` condition, and then they really are missing.
+2. **Hydrating by chart id** — `renderToHTML` emits `<div class="apexcharts-ssr-wrapper" data-apexcharts-hydrate data-apexcharts-config="...">` with no `id`, so `querySelector('#my-chart')` returns null. Use `hydrateAll()`, or select `[data-apexcharts-hydrate]`.
+3. **Forgetting to hydrate on the client** — server-rendered charts are static SVGs. Without `hydrate()`, they have no interactivity (no tooltips, zoom, click events).
+4. **Missing width/height**: SSR has no DOM to measure. Pass explicit dimensions in the **second** argument: `renderToString(options, { width, height })` / `renderToHTML(options, { width, height })`.
+5. **Hydrating before DOM is ready** — call `hydrate()` after the server-rendered HTML is in the DOM (use `onMounted`, `useEffect`, or `DOMContentLoaded`).

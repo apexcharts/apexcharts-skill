@@ -7,7 +7,7 @@ ApexCharts ships an opt-in feature platform on top of the chart core. **Every v5
 Whether you need the `features/*` import depends on the feature's **tier**, and this changed in v7.0.
 
 - **Tier 1** is in the default `import ApexCharts from 'apexcharts'` bundle: `exports`, `legend`, `toolbar`, `annotations`, `keyboard`, `morph`, `drilldown`, `weave`, `marks`, `facet`, `stats`, and the v7.1 `waterfall` / `dumbbell` / `streamgraph` chart types. Import these only if you started from `apexcharts/core` or a per-type entry.
-- **Tier 2 is not in any bundle.** Nine features (`trellis`, `storyboard`, `perspectives`, `ink`, `renderer-canvas`, `link`, `measure`, `history`, `context-menu`) plus the `raincloud` chart type require an explicit import **whatever entry point you used**, the full bundle included.
+- **Tier 2 is not in any bundle.** Nine features (`trellis`, `storyboard`, `perspectives`, `ink`, `renderer-canvas`, `link`, `measure`, `history`, `context-menu`) plus the `raincloud` (premium) and `icicle` (free) chart types require an explicit import **whatever entry point you used**, the full bundle included.
 
 ```js
 import ApexCharts from 'apexcharts'
@@ -20,11 +20,11 @@ import 'apexcharts/features/trellis'   // Tier 2: required even here
 
 Nothing fails silently: each Tier 2 module warns in the console when its configuration is present but the module is not, and names both import routes. Where the chart can still draw something sensible it does and says what it did: a trellis renders as a single chart, `renderer: 'canvas'` falls back to SVG. `apexcharts/features/all` is the **Tier 1** set and is not a shortcut past this.
 
-Why: 24% of the 6.10.0 default bundle was licence-gated premium code that an unlicensed user could only run watermarked, and everybody downloaded it. The default bundle went 291,654 B gzipped (6.10.0) to 252,005 B (7.0.0), and 264,326 B in 7.1.0 with the three new free chart types. See `references/tree-shaking.md` for the full tier table and per-module sizes.
+Why: 24% of the 6.10.0 default bundle was licence-gated premium code that an unlicensed user could only run watermarked, and everybody downloaded it. The default bundle went 291,654 B gzipped (6.10.0) to 252,005 B (7.0.0), and 264,326 B in 7.1.0 with the three new free chart types. It is about 270 KB at 7.6.1 (measured on the shipped dist with gzip -9; the upstream build report gzips at a different level and prints a few hundred bytes more). See `references/tree-shaking.md` for the full tier table and per-module sizes.
 
 ## Two v7.0 breaking changes
 
-1. **`plotOptions.bar.borderRadiusWhenStacked` is removed.** Rounded corners on a stacked bar are no longer a setting: corner ownership follows the **outer edge** of the stack, which is what `'last'` approximated and what `'all'` got wrong on any stack whose last series was empty. An unknown option is ignored, so leaving it in place is harmless but does nothing.
+1. **`plotOptions.bar.borderRadiusWhenStacked` was dropped in v7.0, and came back working in v7.4.** In v7.0 it had not been read for some time and was removed as dead config, with corner ownership following the stack's **outer edge** automatically. v7.4 made it a real option again: `'all'` (the default) keeps that look with both stack ends rounded, and `'last'` rounds only the far end and leaves the baseline square. A one-point stack no longer rounds its baseline either. Treat it as live, not as legacy.
 2. **`dataLabels.animate.enabled` now defaults to `true`** (bar and column only). Labels ride to their new position on a data-change update instead of snapping there, so they reflow on the same clock as the bars, markers and axis ticks. Speed and easing follow `chart.animations.dynamicAnimation`. A label that has not moved is a per-label no-op. Set `dataLabels: { animate: { enabled: false } }` for the old behavior.
 
 ## Behaviors that are on by default
@@ -32,7 +32,7 @@ Why: 24% of the 6.10.0 default bundle was licence-gated premium code that an unl
 Carried over from v6, both respecting `prefers-reduced-motion`:
 
 1. **Coherent variable-length data transitions**: updates that add/remove data points animate as one coordinated motion instead of popping. Appended bars grow from the baseline, removed bars shrink and fade, line/area fills reshape over the union of old and new points, and markers/bubbles/axis labels ride along. Scatter and bubble now animate on dynamic updates for the first time. Disable per chart with `chart.animations.dynamicAnimation.enabled: false`; auto-skipped above `chart.animations.largeDatasetThreshold` (default 1000) and under `prefers-reduced-motion`.
-2. **Native-feeling mobile gestures**: two-finger pinch-zoom, two-finger pan, and kinetic inertia after a flick, with axis rails so a vertical swipe still scrolls the page. Configure via `chart.zoom.pinch` (default `true`) and `chart.pan.inertia` (default `true`, `friction` default `0.92`).
+2. **Native-feeling mobile gestures**: two-finger pinch-zoom, two-finger pan, and kinetic inertia after a flick, with axis rails so a vertical swipe still scrolls the page. Configure via `chart.zoom.pinch` (default `'auto'`) and `chart.pan.inertia` (default `true`, `friction` default `0.92`). **`'auto'` is not the same as `true`**: it enables pinch only where the toolbar reset button is present, so a zoom is always undoable. A chart with `toolbar: { show: false }` gets no pinch zoom until `pinch: true` forces it. `chart.zoom.allowMouseWheelZoom` is gated the same way, and `chart.zoom.resetControl` (v7.4) is the other half of that bargain.
 
 Also new by default: **`render()` is idempotent**: a repeated `render()` (e.g. a framework double-invoking an effect) returns the same promise instead of building a duplicate chart. `destroy()` clears it so an instance can render fresh.
 
@@ -60,7 +60,7 @@ Introduced in **6.5.0**, tightened in **6.7.0**. Not every feature is free. Eigh
 - the `unit` / `waffle` chart type (premium since **6.6.0**, the first premium chart type)
 - the `raincloud` chart type (premium since **7.1.0**)
 
-**Everything else is free and never gated**: every other chart type (`sunburst`, and the v7.1 `waterfall` / `dumbbell` / `streamgraph`), and every other module (Weave, Strata / canvas, Marks, Facet / themes, Cadence, drilldown, streaming, exports, legend, toolbar, annotations, keyboard, stats).
+**Everything else is free and never gated**: every other chart type (`sunburst`, the v7.1 `waterfall` / `dumbbell` / `streamgraph`, and the v7.6 `icicle`, which is an opt-in import but free), and every other module (Weave, Strata / canvas, Marks, Facet / themes, Cadence, drilldown, streaming, exports, legend, toolbar, annotations, keyboard, stats).
 
 **Premium and Tier 2 are independent axes.** Premium is about the watermark; Tier 2 is about the bundle. `renderer-canvas` is Tier 2 and free. `waterfall`, `dumbbell` and `streamgraph` are Tier 1 and free. `unit` / `waffle` is premium but Tier 1 (it is a chart type in the default bundle). `trellis` and `raincloud` are both.
 
@@ -181,13 +181,117 @@ The `setup(api)` facade:
 
 - `api.on(hook, fn)` / `api.off(hook, fn)`: hooks: `'afterParse' | 'afterScales' | 'draw' | 'afterUpdate' | 'destroy'`.
 - `api.layer(opts?)`: a plugin-owned drawing surface (`path`, `line`, `rect`, `circle`, `text`, `clear`); call it inside draw handlers only, layers are wiped each pass.
-- `api.scales` (readonly): `x(v)`, `y(v, axis?)`, `domainX`, `domainY(axis?)`, `gridWidth`, `gridHeight`, `ratios`.
-- `api.data` (readonly): `[{ name?, hidden, color?, points: [{ x, y }] }]`.
+- `api.scales` (readonly): `x(v)`, `y(v, axis?)`, `domainX`, `domainY(axis?)`, `gridWidth`, `gridHeight`, `ratios`. **`null` on a non-axis chart**, so it is a fact about the chart rather than about the host and is deliberately not a capability.
+- `api.data` (readonly): `[{ name?, hidden, color?, points: [{ x, y }], raw }]`.
 - `api.theme`: `{ mode, foreColor, seriesColor(i), token(name) }`.
 - `api.store`: per-instance mutable state bag.
 - `api.emit(name, detail?)`: dispatches `plugin:<name>:<event>` on the chart; `api.chart`, `api.el`, `api.name`, `api.version`, `api.options` round out the facade.
 
-`apiVersion` gates the contract so raw internals can keep changing safely.
+### Declare the lowest version you can run on, then feature-detect (v2+)
+
+`apiVersion` gates the contract so raw internals can keep changing safely, but it is **not** how you ask for a newer member. A plugin declaring a version **newer than the host is skipped outright**, so declaring the latest is how one build stops working on older hosts. Declare the lowest version your plugin can actually run on, and discover anything above that:
+
+```js
+// v6 hosts: ask by name.
+if (api.can('claim')) { /* ... */ }
+api.capabilities            // the whole frozen list, for logging and support
+
+// Older hosts, or a plugin that must run on both: probe the member.
+if (typeof api.pointer === 'function') { /* ... */ }
+```
+
+Each capability name is probed off the facade that was actually built, so a member that is ever made conditional drops out of the list instead of being advertised and then missing. Names are permanent once published.
+
+The version gate was an exact-match check before v2, which would have disabled every v1 plugin on the first additive change. It is forward-compatible now: an older plugin is served, and only one needing a newer host is skipped.
+
+### v2: know what you are attached to
+
+```js
+api.info          // { type, axisChart, datetimeX, horizontalBars,
+                  //   dataLabels: { enabled, enabledOnSeries },
+                  //   stroke: { dashArray },   // v5
+                  //   title }                  // v6, '' when untitled
+api.categories    // display labels per x position, resolved config-first
+api.data[0].raw   // the caller's own data array for that series, unparsed
+api.markDerived(['Revenue (forecast)'])   // these series are mine, not the caller's
+```
+
+- **`info` is how a plugin decides whether it applies at all**, instead of adding a series and letting the core warn at the user.
+- **Read `categories`, never `globals.categoryLabels`.** The globals are populated after a mount and empty after an `updateSeries()`, so reading them directly gives real labels on first paint and ordinals after any update.
+- **`raw` is fine to read and wrong to copy**: the three accepted data shapes are not interchangeable, so the normalised `points` are what you compute from.
+- **`markDerived` is not optional if the plugin adds series.** The core cannot tell a plugin's series from the caller's, and the host uses this to keep them out of the initial-series snapshot. Without it, `resetSeries()` hands the user the plugin's computed output as if it were their own data. It is idempotent; pass `[]` when the plugin's series are gone. It is also what puts the plugin's name on those series in `drawn()`.
+
+Also fixed in v2: every Weave plugin silently did nothing on a pie, donut or radialBar, because those hold one number per entry and the snapshot called `.map` on it. Each slice is presented as a one-point series now.
+
+### v3: reserve room for the plugin's own UI
+
+```js
+api.reserve({ right: 120 })   // px; pass null (or all zeros) to give it back
+```
+
+A plugin rendering beside the chart cannot make room for itself: the chart sizes from the element the caller handed it, so a sibling inserted there does not narrow it. Reservations are per plugin and summed, so two plugins each asking for a right-hand gutter get one each, and the total is clamped so the chart keeps at least half the container on each axis. An unchanged box does nothing, so calling it on every render is free.
+
+### v4: what the viewer is pointing at
+
+```js
+const off = api.pointer((e) => {
+  // e.type            'enter' | 'leave' | 'select'
+  // e.seriesIndex / e.dataPointIndex
+  // e.category        resolved display label ('Mar'), not an index
+  // e.seriesName      undefined on a pie
+  // e.selected        on 'select' only: is the point now in or out
+  // e.modifiers       { shift, ctrl, alt, meta } (v6)
+})
+off()   // pointer() returns its unsubscribe
+```
+
+Forwards the chart's own `dataPointMouseEnter`, `dataPointMouseLeave` and `dataPointSelection` as one payload, so a plugin does not hit-test the SVG and then disagree with the tooltip on the same pixel. **Nothing here can intercept or cancel**: the tooltip, the selection state and the caller's own `dataPoint*` events are unaffected, and a handler that throws is contained.
+
+`category` is the resolved label because a plugin coordinating two charts keys on the label; an index means something different on every chart. `modifiers` is always all four booleans, never partial and never undefined (all false where there was no DOM event), because a plugin reads `e.modifiers.shift` inside a viewer's click and a sometimes-missing key is how that becomes a crash.
+
+### v6: set a positional option for your own series (`claim`)
+
+`stroke.dashArray` and `dataLabels.enabledOnSeries` are indexed by series position with no per-series form, so a plugin wanting one value for its own series used to write the array covering every series and put the caller's back afterwards.
+
+```js
+const claim = api.claim('stroke.dashArray', [
+  { series: 'Revenue (forecast)', value: 6 },
+])
+claim.update([{ series: 'Revenue (forecast)', value: 4 }])
+claim.release()
+```
+
+The host resolves a claim **where the option is read**, so nothing is written: there is nothing to restore, releasing is a deletion, and the caller's own `updateOptions` composes with the claim instead of reverting it. Claims resolve in order, so two plugins on one series produce a defined winner rather than whichever ran last.
+
+- **Name the series rather than its position where you can.** A name is resolved each time the option is read, so the claim follows that series when the caller adds, removes or reorders others.
+- **Claimable options are an allowlist** (`stroke.dashArray`, `dataLabels.enabledOnSeries` to begin with), each declaring its value type so a wrong one is dropped rather than drawn. An option that is not on the list returns **`null` rather than throwing**, so a plugin built against a newer host degrades instead of breaking. Check the return.
+- Every claim is released on teardown, on destroy, and if the host disables the plugin after repeated errors, so none can outlive the plugin holding it.
+
+`api.info.stroke` (v5) exists for the older read-and-restore pattern and reports what is configured, a scalar or one entry per series, copied on the way out. Prefer `claim()` where the host has it: the restore is stale the moment the caller calls `updateOptions`, it leaks if the plugin throws in between, and two plugins doing it at once fight.
+
+### v6: an inventory of what is on the chart (`drawn` / `declare`)
+
+```js
+api.drawn()   // [{ id, kind: 'series' | 'annotation' | 'overlay', label, owner, visible }, ...]
+
+api.on('draw', () => {
+  api.declare({ id: 'trend-1', label: 'Trend' })   // declare from the draw handler
+})
+```
+
+`drawn()` reports the series, the caller's annotations and whatever plugins have declared. An ink stroke a viewer drew is an annotation too, but reports `owner: 'ink'` rather than `'core'` (fixed in v7.6.1): crediting a viewer's note to the caller is the one case the `owner` field exists to get right. **Every entry names its `owner`**, and that is the point rather than decoration: the list is only ever as complete as the features that opted in, so a layers panel or an export summary can say what its inventory covers instead of presenting a partial list as everything.
+
+- **Read only, deliberately.** Removing or hiding another feature's output would mean one plugin reaching into another's state with no way for the owner to refuse.
+- **Declare from the draw handler.** Declarations are cleared with the layers at the start of every draw, so an inventory cannot outlive the drawing it describes. Declaring the same id twice replaces it rather than growing a duplicate row.
+- **Annotations carry no caller id.** The `id` on a point annotation is the key of a deferred-execution entry rather than a handle on the drawing, so entries fall back to `annotation:<type>:<index>` and take their label from `label.text` where the caller wrote one.
+
+### The types a plugin author works with
+
+Declared in the shipped `apexcharts.d.ts`: `ApexPluginAPI` (the `setup(api)` facade), `ApexPluginSeries`, `ApexPluginScales`, `ApexPluginLayer`, `ApexPluginHook`, `ApexPluginPayload`, and for the v6 additions `ApexPluginChartInfo` (`api.info`), `ApexPluginPointerEvent` (the `pointer` payload), `ApexPluginClaim` (`{ release(), update(entries) }`) and `ApexDrawnItem` (a `drawn()` row).
+
+### Typing gap at 7.6.1
+
+`api.categories` and `data[].raw` are real at runtime (both shipped in v2) but are **not declared** in the shipped `apexcharts.d.ts`: `ApexPluginAPI` has no `categories` member and `ApexPluginSeries` is typed as `{ name?, hidden, color?, points }`. TypeScript rejects both. Cast the facade where you need them, and do not read the absence as "removed".
 
 ---
 
@@ -204,7 +308,7 @@ import 'apexcharts/features/renderer-canvas'
 const options = {
   chart: {
     renderer: 'auto',        // 'svg' | 'canvas' | 'auto'
-    rendererThreshold: 5000, // point count above which 'auto' picks canvas
+    rendererThreshold: 8000, // point count above which 'auto' picks canvas (default 8000)
   },
 }
 // chart.getActiveRenderer()  // => 'svg' | 'canvas'
@@ -261,7 +365,7 @@ Generic Ctrl-Z over a command journal. Zooms, series toggles, option changes, an
 
 ```js
 const options = {
-  chart: { history: { enabled: true, maxDepth: 50, coalesceMs: 300, keyboard: true } },
+  chart: { history: { enabled: true, maxDepth: 100, coalesceMs: 250, keyboard: true } },  // those are the defaults
 }
 
 chart.history.undo(animate?)   // and .redo(animate?)
@@ -563,7 +667,8 @@ const options = {
                                               // false disables it. role="status", aria-live="polite",
                                               // spinner flattens to a pulse under prefers-reduced-motion
     cache: true,                              // (v6.9) cache onDrillDown results by id (default true);
-                                              // clear with the drilldown module's clearCache()
+                                              // clear with chart.clearDrilldownCache(id?), the public
+                                              // typed method (it delegates to the module's clearCache())
     // (v6.9) line/area only: the dot marking a drillable point when the chart
     // draws no markers. Only drillable points get one, so it reads as "these open".
     marker: { show: true, size: 6, shape: 'circle', fillColor: undefined, strokeColor: '#fff' },
@@ -631,7 +736,7 @@ const options = {
 
 ## Common Pitfalls
 
-1. **Assuming the full bundle still carries everything *(the #1 v6 → v7 mistake)*.** In v6, `import ApexCharts from 'apexcharts'` was enough for every feature. In v7 the nine Tier 2 features and the `raincloud` type need their own import on top of it. Read the console: each one names both routes when its config is present without it.
+1. **Assuming the full bundle still carries everything *(the #1 v6 → v7 mistake)*.** In v6, `import ApexCharts from 'apexcharts'` was enough for every feature. In v7 the nine Tier 2 features and the `raincloud` and `icicle` types need their own import on top of it. Read the console: each one names both routes when its config is present without it.
 2. **Forgetting the feature import on a tree-shaken build**: a Tier 1 feature is in the default bundle but not in `apexcharts/core` or a per-type entry, so those builds still need `import 'apexcharts/features/<name>'`.
 3. **Reaching for `apexcharts/features/all` to fix either of the above**: it is the Tier 1 set only, by design (`tests/unit/feature-tier-budget.spec.js` upstream fails the build if a Tier 2 feature reappears in it).
 4. **Using `api.zeroY` in a custom mark**: it does not exist. Use `ctx.scales.y(0)` for the baseline.

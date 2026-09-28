@@ -304,7 +304,7 @@ plotOptions: {
     distributed: false,       // true = different color per data point
     borderRadius: 4,          // rounded corners (number or object)
     borderRadiusApplication: 'end',  // 'end' | 'around'
-    // borderRadiusWhenStacked was REMOVED in v7.0, see the note below
+    borderRadiusWhenStacked: 'all',  // 'all' (default) | 'last'; stacked bars only, see the note below
 
     dataLabels: {
       position: 'top',        // 'top' | 'center' | 'bottom'
@@ -322,7 +322,12 @@ plotOptions: {
 }
 ```
 
-**⚠️ `borderRadiusWhenStacked` was removed in v7.0.** Rounded corners on a stacked bar are no longer a setting: corner ownership follows the **outer edge** of the stack, which is what `'last'` approximated and what `'all'` got wrong on any stack whose last series was empty. An unknown option is ignored, so leaving it in a config is harmless but does nothing. Delete it. Related v7.0 fixes: a stacked bar's bottom cap is now the top-rounded path mirrored (caps no longer invert or pop when a series collapses and rises again), and grouped stacked charts resolve caps per group rather than chart-wide, so every group gets its own bottom and top radius.
+**⚠️ `borderRadiusWhenStacked`: dropped in v7.0, restored working in v7.4.** v7.0 removed it as dead config (it had not been read for some time) and let corner ownership follow the stack's **outer edge** automatically. v7.4 made it a real option again, so at v7.4+ it is live and must not be deleted from a config:
+
+- `'all'` (the default) keeps the v7.0 look, both ends of the stack rounded. Existing charts are unchanged.
+- `'last'` rounds only the far end and leaves the baseline square.
+
+A stack of a single data point also stopped rounding its baseline in v7.4, which on a horizontal 100% stack with one category used to round the first segment on its inner edge. Related v7.0 fixes: a stacked bar's bottom cap is now the top-rounded path mirrored (caps no longer invert or pop when a series collapses and rises again), and grouped stacked charts resolve caps per group rather than chart-wide, so every group gets its own bottom and top radius.
 
 **⚠️ `dataLabels.animate.enabled` now defaults to `true` (v7.0), bar/column only.** Labels ride to their new position on a data-change update instead of snapping there, so they reflow on the same clock as the bars, markers and axis ticks. A label that has not moved is a per-label no-op; speed and easing follow `chart.animations.dynamicAnimation`. For the pre-v7 behavior:
 
@@ -332,7 +337,7 @@ dataLabels: { animate: { enabled: false } }
 
 ### Bar Chart Race (v6.4)
 
-A reorder update animates into a bar chart race: when you re-sort the data and update the chart, the bars slide to their new ranks and their category labels ride along automatically (whenever `dynamicAnimation` is on). Two opt-in `dataLabels` flags complete the effect. Both are off by default and apply to **bar / column only**; their speed and easing follow `chart.animations.dynamicAnimation`.
+A reorder update animates into a bar chart race: when you re-sort the data and update the chart, the bars slide to their new ranks and their category labels ride along automatically (whenever `dynamicAnimation` is on). Two `dataLabels` flags complete the effect, both **bar / column only**: `animate.enabled` is **on by default** since v7.0 (it was opt-in before), and `countUp.enabled` is off. their speed and easing follow `chart.animations.dynamicAnimation`.
 
 ```js
 const options = {
@@ -428,5 +433,5 @@ series: [{
 8. **Pre-computing the running total for a waterfall** *(v7.1)*: the series carries the **deltas**; the chart accumulates. Feeding it cumulative values draws each bar from zero to the total, which is a column chart with extra steps.
 9. **Giving a waterfall subtotal row a `y`** *(v7.1)*: `isSubtotal` / `isTotal` rows are measured for you. Supply `x` and the flag, nothing else.
 10. **Zipping dumbbell values into `y: [lo, hi]`** *(v7.1)*: that is the older `plotOptions.bar.isDumbbell` range-bar form. `chart.type: 'dumbbell'` wants one series per measure, each with plain `{ x, y }` points.
-11. **Setting `borderRadiusWhenStacked`**: removed in v7.0. The option is ignored; stacked corner ownership follows the stack's outer edge automatically.
+11. **Assuming `borderRadiusWhenStacked` is still removed**: it was dead config in v7.0 through v7.3 and is a working option again from v7.4 (`'all'` default, `'last'` to leave the baseline square). Guidance written for v7.0 says to delete it; on v7.4+ that silently reverts a deliberate `'last'` to `'all'`.
 12. **Expecting data labels to snap on update** *(v7.0)*: `dataLabels.animate.enabled` now defaults to `true` on bar/column. Set it to `false` for the old behavior.

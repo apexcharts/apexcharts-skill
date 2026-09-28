@@ -236,7 +236,7 @@ updateChart() {
 
 ```
 https://cdn.jsdelivr.net/npm/apexcharts
-https://cdn.jsdelivr.net/npm/apexcharts@5/dist/apexcharts.min.js
+https://cdn.jsdelivr.net/npm/apexcharts@7/dist/apexcharts.min.js
 https://unpkg.com/apexcharts
 ```
 

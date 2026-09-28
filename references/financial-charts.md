@@ -30,7 +30,7 @@ import ApexCharts from 'apexcharts/raincloud'
 import 'apexcharts/features/stats'
 ```
 
-**⚠️ Raincloud is Tier 2 (v7.1).** Unlike every other chart type, it is **not in the default `apexcharts` bundle**. On the full bundle add `import 'apexcharts/raincloud'` (or `import 'apexcharts/features/raincloud'`); from a script tag add `dist/features/raincloud.js` after `apexcharts.js`. It is also premium, so it renders an `APEXCHARTS` watermark until an entitled license is set.
+**⚠️ Raincloud is Tier 2 (v7.1).** It is **not in the default `apexcharts` bundle**, one of only two chart types that are not (the other is `icicle`, v7.6, which is free). On the full bundle add `import 'apexcharts/raincloud'` (or `import 'apexcharts/features/raincloud'`); from a script tag add `dist/features/raincloud.js` after `apexcharts.js`. It is also premium, so it renders an `APEXCHARTS` watermark until an entitled license is set.
 
 **Raw samples (v6.9):** boxPlot, violin, and histogram can all take the raw observations and compute the statistics themselves (quartiles for boxPlot, KDE density for violin, bin counts for histogram). Precomputed summaries keep working exactly as before. With the full `apexcharts` bundle the stats feature is always present; with tree-shaking entries it must be imported (without it, a raw-sample boxPlot/violin datum has nothing to summarize and a histogram warns and draws nothing).
 
@@ -383,6 +383,6 @@ plotOptions: {
 8. **Feeding a histogram pre-binned counts**: the series must carry raw observations. If you already have counts per bucket, use a `bar` chart; a histogram would bin your counts as if they were measurements.
 9. **`whiskers: 'tukey'` on a precomputed boxPlot summary**: `plotOptions.boxPlot.whiskers` only applies when the summary is derived from `points`. A five-number `y` is drawn exactly as given.
 10. **Raw samples with tree-shaking but no stats feature**: `apexcharts/candlestick` and `apexcharts/violin` alone cannot summarize `points`. Add `import 'apexcharts/features/stats'` (the `apexcharts/histogram` entry and the full bundle already include it).
-11. **Expecting `raincloud` to work on the full bundle** *(v7.1)*: it is the one chart type that is Tier 2. `import ApexCharts from 'apexcharts'` alone gives you a console warning and no raincloud. Add `import 'apexcharts/raincloud'`.
+11. **Expecting `raincloud` to work on the full bundle** *(v7.1)*: it is one of two chart types outside the default bundle (the other is `icicle`, v7.6). `import ApexCharts from 'apexcharts'` alone gives you a console warning and no raincloud, because `raincloud` aliases the violin engine and degrades; an unregistered `icicle` throws instead. Add `import 'apexcharts/raincloud'`.
 12. **Looking for `plotOptions.raincloud`**: there is none. Raincloud is a preset over the violin engine, so configure it through `plotOptions.violin` (`side`, `box`, `points`, `kde`, `normalize`).
 13. **Giving a raincloud a `y`**: it takes the raw sample per category: `data: [{ x, points: [number] }]`. A precomputed `y.summary` is honored for the box, but the density and the rain need the observations.

@@ -4,13 +4,17 @@
 
 - **Heatmap** (`'heatmap'`) — Color-coded grid cells representing data intensity
 - **Treemap** (`'treemap'`) — Nested rectangles with area proportional to value
+- **Icicle** (`'icicle'`) *(v7.6)* — A hierarchy as stacked bands, one per depth level
 
 ## Tree-Shakeable Import
 
 ```js
 import ApexCharts from 'apexcharts/heatmap'   # heatmap only
 import ApexCharts from 'apexcharts/treemap'    # treemap only
+import ApexCharts from 'apexcharts/icicle'     # icicle (v7.6): opt-in, see below
 ```
+
+`icicle` is **not in the default bundle**. Unlike every other type here, `import ApexCharts from 'apexcharts'` does not carry its class, so `chart.type: 'icicle'` throws until the sub-entry (or `dist/icicle.js` after the ApexCharts script) has registered it. Loading the full bundle is not a workaround, which is what the v7.6.1 error message was corrected to stop suggesting.
 
 ---
 
@@ -182,6 +186,33 @@ plotOptions: {
 
 The hierarchy resolver is shared with sunburst, including the `drilldown: '<id>'` adapter (opted into via `nested.drilldownAsLevels`).
 
+### Icicle (v7.6)
+
+Same hierarchy as the sunburst, drawn in cartesian coordinates: one band per depth level, each child sized inside its parent's extent along the value axis. Axis-style `[{ data: [...] }]` wrapper, `{ x, y, children }` nodes to any depth.
+
+```js
+import ApexCharts from 'apexcharts/icicle'   // required: not in the default bundle
+
+const options = {
+  chart: { type: 'icicle' },
+  series: [{
+    data: [
+      { x: 'Mobile', y: 55, children: [
+        { x: 'iOS', y: 30, children: [{ x: 'iOS 17', y: 18 }, { x: 'iOS 16', y: 9 }] },
+        { x: 'Android', y: 23 }
+      ] },
+      { x: 'Desktop', y: 33, children: [{ x: 'Windows', y: 20 }, { x: 'macOS', y: 10 }] }
+    ]
+  }]
+}
+```
+
+- A branch may **omit its own `y`** and be the sum of its children. This is the documented shape for both partition types, and it only started working in v7.6: before that the non-axis parser dropped any node carrying `children` without `x` and `y`, and the chart drew nothing at all while warning about pie data.
+- A node may carry `drilldown: '<id>'` instead of `children`, and the matching `drilldown.series` entry is read as the next level. It is read as plain data, so no drilldown feature import is needed.
+- Sibling order follows the array by default (`sort: 'none'`). Set `plotOptions.icicle.sort` to `'value'` or `'name'` to override it.
+
+**Choosing between icicle and sunburst.** Both resolve the same tree. An icicle keeps labels horizontal at every depth and puts depth on a straight axis, so same-depth siblings line up across branches and deep trees stay readable; a sunburst spends its area radially and reads better for shallow, wide trees. `direction: 'up'` is the flame-graph orientation, for call stacks and path funnels.
+
 ---
 
 ## Key plotOptions
@@ -191,7 +222,8 @@ The hierarchy resolver is shared with sunburst, including the `drilldown: '<id>'
 ```js
 plotOptions: {
   heatmap: {
-    radius: 0,                    // border radius of cells
+    shape: 'rect',                // 'rect' (default) | 'hexagon' | 'circle' | 'diamond' (v7.2)
+    radius: 0,                    // border radius of cells ('rect' only)
     enableShades: true,           // shade intensity based on value
     shadeIntensity: 0.5,          // shade range (0-1)
     distributed: false,           // different color per series
@@ -211,6 +243,21 @@ plotOptions: {
   }
 }
 ```
+
+#### Cell shapes (v7.2)
+
+`shape` changes what a cell is drawn as, without changing the data format or anything else about the chart:
+
+- `'circle'` and `'diamond'` are inscribed in the cell box the heatmap already lays out.
+- `'hexagon'` is a real honeycomb tilemap: pointy-top hexagons, alternate rows offset half a cell so neighbours share a full edge, with the lattice's overhang reserved as extra grid padding so offset rows never cover the axis labels.
+
+Three constraints worth knowing before choosing one:
+
+- **`radius` applies to `'rect'` only.** Corner rounding is ignored by the other three.
+- **`'hexagon'` is categorical-layout only.** On a numeric or datetime x axis it falls back to `'rect'` silently.
+- **Non-rect shapes always render as SVG.** The canvas renderer declines them the same way it declines image fills, so a large heatmap that needs `renderer: 'canvas'` for its cell count has to stay on `'rect'`.
+
+Shaped cells keep the `apexcharts-heatmap-rect` class and the same attribute contract, so tooltips, keyboard navigation, legend range highlighting and the color tween on a data update all behave unchanged.
 
 ### Treemap
 
@@ -232,6 +279,46 @@ plotOptions: {
   }
 }
 ```
+
+### Icicle (v7.6)
+
+```js
+plotOptions: {
+  icicle: {
+    direction: 'down',        // 'down' (root on top, default) | 'up' (flame graph) | 'right' | 'left'
+    levelSize: 'equal',       // 'equal' | px number | '%' string: thickness of one depth band
+    maxDepth: 'auto',         // 'auto' (whole tree) | number of levels from the focused one
+    spacing: 1,               // gap between adjacent cells (px)
+    borderRadius: 0,          // corner rounding (px)
+    leaf: 'stop',             // 'stop' (default): a shallow branch ends at its own band
+                              // 'extend': it stretches to the far edge
+    partition: 'normalize',   // 'normalize' | 'strict'
+    sort: 'none',             // 'none' | 'value' | 'name'
+    tint: 0,                  // per-depth lightening of the parent colour (0 = same, 1 = white)
+    zoomOnClick: true,        // click a cell to zoom into its branch (breadcrumb to go back)
+    zoomType: 'value',        // 'value' (default) | 'both'
+    dataLabels: {
+      show: true,
+      minSizeToShow: 30,      // hide the label on cells shorter than this (px)
+      align: 'center',        // 'left' | 'center' | 'right'; a flame graph wants 'left'
+      rotate: 'auto',         // 'auto' | 'always' | 'never'
+      showValue: false,
+      style: { fontSize: '12px', fontFamily: undefined, fontWeight: 400, colors: undefined }
+    }
+  }
+}
+```
+
+Four defaults differ from the sunburst's, each for a reason worth knowing before overriding it:
+
+- **`leaf: 'stop'`** leaves the white space that shows how deep each branch goes. `'extend'` fills the plot, which is what a treemap does and makes an icicle stop reading as a hierarchy.
+- **`tint: 0`** keeps one hue per branch, so the eye can follow a branch down the levels.
+- **The palette lands on the shallowest level that branches.** A single-root tree is the normal shape here, and colouring by root would paint everything one hue.
+- **The legend is off**, since every cell carries its own label.
+
+**`zoomType` is the one to understand.** `'value'` (the default) rescales the value axis only: the clicked branch stretches to fill the width, its subtree stretches with it, and no level moves. The ancestors stay above it, clamped to the plot, which is what makes them read as context. `'both'` also re-bands the depth axis, promoting the branch to the top level, which spends the whole plot on it at the cost of the reader's place in the tree. The values are not called `'x'` and `'y'` because `direction` decides which screen axis the value axis is.
+
+A click that would not change the view is refused rather than performed: clicking a lone root, or a leaf inside the focused branch, leaves the chart alone, and the cursor reads `pointer` only on cells where a zoom would actually move something.
 
 ---
 
@@ -289,3 +376,6 @@ plotOptions: {
 3. **Treemap with negative values** — treemap `y` values must be positive (they represent area). Negative values cause rendering issues.
 4. **Confusing heatmap `y` with position** — in heatmap data `{ x, y }`, the `y` is the VALUE (color intensity), NOT the y-axis position. The series `name` determines the row.
 5. **Nested treemap branch carrying its own `y` (v6.9)**: a branch node normally omits `y`; its area is the sum of its children. Only leaves supply values. Flattening a hierarchy by hand is no longer necessary; pass `children` instead.
+6. **`chart.type: 'icicle'` on the default bundle (v7.6)** — icicle is opt-in and the default build carries no class for it, so this throws. Add `import ApexCharts from 'apexcharts/icicle'` (or load `dist/icicle.js` after the ApexCharts script). Loading the full `apexcharts.js` does **not** help: it does not carry the class either.
+7. **Reaching for `zoomType: 'both'` to make a branch fill the plot** — `'value'` already stretches the branch across the full width; what `'both'` additionally does is move every level, which costs the reader their place in the tree. Change it only when the ancestors genuinely do not matter.
+8. **Expecting `sort: 'value'` on a flame graph** — `'name'` is the flame-graph convention, because it holds a frame in the same place across profiles so two runs of one program can be compared by eye.

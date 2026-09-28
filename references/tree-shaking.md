@@ -23,7 +23,7 @@ ApexCharts supports four import strategies with different bundle sizes:
 
 | Strategy | Import | Includes |
 |---|---|---|
-| Default bundle | `import ApexCharts from 'apexcharts'` | Every chart type except `raincloud`, plus the **Tier 1** features. **Not** the nine Tier 2 features. |
+| Default bundle | `import ApexCharts from 'apexcharts'` | Every chart type except `raincloud` and `icicle`, plus the **Tier 1** features. **Not** the nine Tier 2 features. |
 | Per-type entry | `import ApexCharts from 'apexcharts/line'` | Specific chart family + core (no optional features at all) |
 | Bare core | `import ApexCharts from 'apexcharts/core'` | Core class only — must manually register everything |
 | Lean core, no bundler *(v7.0)* | `<script src=".../dist/apexcharts.core.js">` | Script-tag equivalent of bare core, assembled from separate tags. See below. |
@@ -50,7 +50,7 @@ Each entry point registers a family of related chart types:
 | `apexcharts/candlestick` | candlestick, boxPlot |
 | `apexcharts/boxPlot` | same as /candlestick |
 | `apexcharts/violin` | violin *(new in v6)* |
-| `apexcharts/raincloud` | raincloud *(new in v7.1, premium)*: the violin engine plus the raincloud feature. **Tier 2**: the only chart type absent from the default bundle. |
+| `apexcharts/raincloud` | raincloud *(new in v7.1, premium)*: the violin engine plus the raincloud feature. **Tier 2**: absent from the default bundle (with `icicle`, the two that are). |
 | `apexcharts/histogram` | histogram *(new in v6.9)*: the bar engine plus the stats feature |
 | `apexcharts/pie` | pie, donut, polarArea |
 | `apexcharts/donut` | same as /pie |
@@ -60,6 +60,7 @@ Each entry point registers a family of related chart types:
 | `apexcharts/heatmap` | heatmap |
 | `apexcharts/treemap` | treemap |
 | `apexcharts/sunburst` | sunburst *(new in v6.7, free)* |
+| `apexcharts/icicle` | icicle *(new in v7.6, free)*: the sunburst's partition in cartesian coordinates. **Opt-in**: the default bundle carries no icicle class, only the settings literals and a few string branches, so `chart.type: 'icicle'` throws until this entry, or `dist/icicle.js` after the ApexCharts script, has registered it. Loading the full `apexcharts.js` is **not** a way around that. The entry contains no other chart class. |
 | `apexcharts/unit` | unit, **waffle** *(new in v6.6, premium: watermarked until licensed)* |
 | `apexcharts/unit-shapes` | *(new in v6.10)* not a chart entry: named shape exports for the unit chart (`heart`, `house`, ... plus `outlined`, `glyphs`, `preview`), tree-shaken per shape (~4 KB gzipped each). See `references/circular-charts.md`. |
 | `apexcharts/pictograms` | *(new in v7.0)* not a chart entry: a drawn glyph per unit for the unit chart (`person`, `house`, `heart`, `tree`, `droplet`, `star`, `car`, `bag`, `book`, `cup`, `bulb`, `plane`), plus `definePictogram` / `registerMarks` / `catalog`. Import the glyph you use, not `catalog`, which ships all of them. |
@@ -152,7 +153,9 @@ Tree-shaking only ever helped people with a build step. A page using a `<script>
 <script src=".../dist/features/legend.js"></script>
 ```
 
-**136,921 B gzipped**, against 252,005 for the full bundle. Purely additive: `apexcharts.js` is unchanged, and a page that wants everything should keep loading it rather than assembling it from parts.
+**About 144 KB gzipped**, against about 270 KB for the full bundle (`dist/apexcharts.core.min.js` and `dist/apexcharts.min.js` at 7.6.1, gzip -9). Treat both as approximate: the upstream build report gzips at a different level and prints figures a few hundred bytes apart from these, and the numbers move every release. Purely additive: `apexcharts.js` is unchanged, and a page that wants everything should keep loading it rather than assembling it from parts.
+
+The two opt-in chart types are not in that table, because neither is a `features/*` module: `raincloud` is reached through `apexcharts/raincloud` and `icicle` through `apexcharts/icicle` (see the entry table above).
 
 Every Tier 2 feature has a `dist/features/<name>.js` artifact for this channel too, and a full-bundle page still needs it:
 
@@ -256,7 +259,7 @@ export default {
 
 ## Common Pitfalls
 
-1. **Assuming the default bundle still has everything *(v7)***: the nine Tier 2 features and the `raincloud` type need their own import on top of `import ApexCharts from 'apexcharts'`. This is the most common v6 → v7 upgrade failure.
+1. **Assuming the default bundle still has everything *(v7)***: the nine Tier 2 features and the `raincloud` and `icicle` types need their own import on top of `import ApexCharts from 'apexcharts'`. This is the most common v6 → v7 upgrade failure.
 2. **Reaching for `apexcharts/features/all` to fix it**: that is the Tier 1 set by design and pulls in no Tier 2 module.
 3. **Missing feature imports on a tree-shaken build**: Tier 1 features fail silently. If legend/toolbar/annotations don't appear, check imports.
 4. **Importing `apexcharts` AND `apexcharts/line`**: creates duplicate bundles. Use one strategy. *(v7.0 fixed the related internal bug where the default bundle inlined its own core copy while add-ons resolved `apexcharts/core`, so an app importing both got two classes, ~130 KB gzipped of duplicate core, and a feature that never registered. They now share one core.)*
