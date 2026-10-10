@@ -2,7 +2,7 @@
 
 ## Chart Types Covered
 
-- **Column** (`'bar'`) — Vertical column chart (the default for `type: 'bar'`)
+- **Column** (`'bar'`, or `'column'` since v7.9): Vertical column chart (the default for `type: 'bar'`). `chart.type: 'column'` is a plain synonym, rewritten to `'bar'` on the way in, so `w.config.chart.type` reads `'bar'`. Before v7.9 it broke the chart, so write `'bar'` for older versions.
 - **Bar** (`'bar'` + `plotOptions.bar.horizontal: true`) — Horizontal bar chart
 - **Range Bar** (`'rangeBar'`) — Bars with start/end values (used for timelines, Gantt charts)
 - **Funnel** (`'funnel'`, **new in v6**): Stage-by-stage drop-off chart
@@ -23,7 +23,7 @@ import ApexCharts from 'apexcharts/waterfall'  // == apexcharts/bar + features/w
 import ApexCharts from 'apexcharts/dumbbell'   // == apexcharts/bar + features/dumbbell
 ```
 
-Both are **Tier 1**, so the default `apexcharts` bundle already has them and no import is needed there.
+**⚠️ Waterfall and dumbbell are Tier 2 since v8.0.** The default bundle no longer carries their features. Next to `import ApexCharts from 'apexcharts'` add only the feature, `import 'apexcharts/features/waterfall'` or `import 'apexcharts/features/dumbbell'` (script tag: `dist/features/waterfall.js` or `dist/features/dumbbell.js`). The bar renderer is already in the default bundle, and the `apexcharts/waterfall` / `apexcharts/dumbbell` entries above would add a second copy of it, so keep those for a tree-shaken build. Or use the full bundle (`apexcharts/full`, `dist/apexcharts.full.min.js`). Without the feature the chart draws an empty plot and the console names the import to add.
 
 **Alias note:** `funnel` and `pyramid` are first-class `chart.type` aliases that render through the bar engine. Use them directly as `chart.type`; you do **not** need `plotOptions.bar.isFunnel`. `plotOptions.funnel` carries the funnel-specific shape options.
 
@@ -197,6 +197,8 @@ Same shape as funnel, but order values **smallest → largest** so the wide base
 `chart.type: 'waterfall'` **accumulates the running total for you**. The series holds the **deltas**; a row flagged `isSubtotal` or `isTotal` draws the running total from zero at that position and carries **no `y` of its own**. Connectors bridge each bar's finish to the next one's start, and rising, falling and total bars take their own colors.
 
 ```js
+import 'apexcharts/features/waterfall'   // Tier 2 since v8.0: not in the default bundle
+
 {
   chart: { type: 'waterfall', height: 350 },
   series: [{
@@ -245,18 +247,22 @@ plotOptions: {
 
 A datum's own `fillColor` always wins over `plotOptions.waterfall.colors`.
 
+**Data labels (v7.8):** each step is written on its bar with no background chip, in ink that follows `chart.foreColor`, so it reads in either theme and on a small step whose label sits outside the bar. `dataLabels: { background: { enabled: true } }` brings the chip back.
+
 ### Dumbbell (v7.1)
 
 `chart.type: 'dumbbell'` compares two or more measures per category. **Each series is one measure**, and the chart joins them with a connector per category. You do not zip the values into `[low, high]` pairs.
 
 ```js
+import 'apexcharts/features/dumbbell'   // Tier 2 since v8.0: not in the default bundle
+
 {
   chart: { type: 'dumbbell', height: 350 },
   series: [
     { name: '2020', data: [{ x: 'Backend', y: 92 }, { x: 'Frontend', y: 78 }] },
     { name: '2025', data: [{ x: 'Backend', y: 118 }, { x: 'Frontend', y: 96 }] },
   ],
-  plotOptions: { bar: { horizontal: true } },  // rows; omit for columns
+  plotOptions: { bar: { horizontal: true } },  // rows, the default for dumbbell; set false for columns
 }
 ```
 
@@ -335,6 +341,8 @@ A stack of a single data point also stopped rounding its baseline in v7.4, which
 dataLabels: { animate: { enabled: false } }
 ```
 
+**⚠️ `dataLabels.avoidOverlap` is on by default (v7.8).** Labels that land on each other, across series too, are nudged apart along the value axis (left and right on a horizontal bar), each by at most about its own size. A pair that cannot be separated stays overlapping unless you pass `{ hide: true }`. Tune it with `{ gap, maxShift, hide }`, or set `false` to keep every label where it was placed. Rotated labels (`orientation: 'vertical'`) are never moved. A manual `offsetY` that only separated labels may no longer be needed.
+
 ### Bar Chart Race (v6.4)
 
 A reorder update animates into a bar chart race: when you re-sort the data and update the chart, the bars slide to their new ranks and their category labels ride along automatically (whenever `dynamicAnimation` is on). Two `dataLabels` flags complete the effect, both **bar / column only**: `animate.enabled` is **on by default** since v7.0 (it was opt-in before), and `countUp.enabled` is off. their speed and easing follow `chart.animations.dynamicAnimation`.
@@ -376,6 +384,10 @@ series: [{
   ]
 }]
 ```
+
+### Part-of-whole overlay (v7.9, premium)
+
+Bar, column, funnel and pyramid charts take `highlightFilter`, which draws each value faded with a part of it solid in front (`highlightData` on a series, or `highlight` on a point), after `import 'apexcharts/features/highlight-filter'`. See "Highlight filter" in `references/feature-platform.md`.
 
 ---
 
@@ -424,7 +436,7 @@ series: [{
 ## Family-Specific Pitfalls
 
 1. **Assuming `type: 'bar'` renders horizontal bars** — it defaults to **vertical columns** (`horizontal: false`). Set `plotOptions.bar.horizontal: true` when you actually want horizontal bars.
-2. **Stacking with `chart.stacked: true` but missing on bar type** — stacking only works on `type: 'bar'` (and `'area'`). It does NOT work on line, scatter, etc.
+2. **Expecting stacking to be bar-only**: `chart.stacked: true` stacks `bar`, `area` and `line` series. In a mixed chart only the bar/column series stack by default (`chart.stackOnlyBar: true`); set `stackOnlyBar: false` to stack the line and area series too.
 3. **Range Bar with single value instead of array** — `y` must be `[start, end]`, not a single number.
 4. **Timeline without `xaxis.type: 'datetime'`** — date-based range bars need `xaxis: { type: 'datetime' }` to render correctly.
 5. **`distributed: true` with multiple series** — distributed coloring applies to each data point independently. With multiple series, each point gets a unique color which is usually not desired. Use `distributed: true` only with single-series charts.
@@ -435,3 +447,4 @@ series: [{
 10. **Zipping dumbbell values into `y: [lo, hi]`** *(v7.1)*: that is the older `plotOptions.bar.isDumbbell` range-bar form. `chart.type: 'dumbbell'` wants one series per measure, each with plain `{ x, y }` points.
 11. **Assuming `borderRadiusWhenStacked` is still removed**: it was dead config in v7.0 through v7.3 and is a working option again from v7.4 (`'all'` default, `'last'` to leave the baseline square). Guidance written for v7.0 says to delete it; on v7.4+ that silently reverts a deliberate `'last'` to `'all'`.
 12. **Expecting data labels to snap on update** *(v7.0)*: `dataLabels.animate.enabled` now defaults to `true` on bar/column. Set it to `false` for the old behavior.
+13. **Waterfall or dumbbell on the default bundle** *(v8.0)*: draws an empty plot plus one console warning. Add `import 'apexcharts/features/waterfall'` (or `'apexcharts/features/dumbbell'`) next to `import ApexCharts from 'apexcharts'`.

@@ -10,6 +10,30 @@
 
 **Important:** All wrappers require `apexcharts` as a peer dependency. Install both packages.
 
+**With apexcharts 8**, use ng-apexcharts 3.2.0 or later (Angular 20+): 3.1.x accepts apexcharts 6 or 7 only, so npm reports a peer conflict. react-apexcharts (2.1.1) and vue3-apexcharts (1.11.2) accept any apexcharts from 5.10 up, and vue-apexcharts (Vue 2) any from 4.0.
+
+---
+
+## Opt-in chart types and features (apexcharts 8)
+
+The wrappers' standard components load the default ApexCharts bundle, which since 8.0 leaves out some chart types and features (see `references/tree-shaking.md`). Until the app imports the add-on, a wrapper chart of type `unit`, `waffle`, `sunburst`, `violin`, `icicle` or `raincloud` fails to render, and `waterfall`, `dumbbell` or `streamgraph` draws an empty plot. Import it once anywhere in the app (`main.ts`, or the component file): it registers on the ApexCharts the wrapper uses.
+
+| You use | Add once |
+|---|---|
+| `unit`/`waffle`, `sunburst`, `violin`, `icicle` | `import 'apexcharts/unit'` (or `/sunburst`, `/violin`, `/icicle`) |
+| `raincloud` | `import 'apexcharts/raincloud'` |
+| `waterfall`, `dumbbell`, `streamgraph`, drilldown or another Tier 2 feature | `import 'apexcharts/features/<name>'` (`highlightFilter` is `features/highlight-filter`) |
+| Everything | `import 'apexcharts/full'`, which reuses the default bundle the wrapper already loads |
+
+```jsx
+import Chart from 'react-apexcharts'
+import 'apexcharts/sunburst'   // once per app
+
+export default function Breakdown({ options, series }) {
+  return <Chart type="sunburst" options={options} series={series} height={350} />
+}
+```
+
 ---
 
 ## React
@@ -218,7 +242,7 @@ updateChart() {
 <div id="chart"></div>
 
 <!-- CDN -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@8/dist/apexcharts.min.js"></script>
 
 <script>
   const options = {
@@ -234,18 +258,24 @@ updateChart() {
 
 ### CDN Links
 
+```html
+<!-- default bundle -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@8/dist/apexcharts.min.js"></script>
+<!-- one add-on next to it: an opt-in chart type -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@8/dist/sunburst.js"></script>
+
+<!-- or the full bundle: every chart type and feature, no add-ons -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@8/dist/apexcharts.full.min.js"></script>
 ```
-https://cdn.jsdelivr.net/npm/apexcharts
-https://cdn.jsdelivr.net/npm/apexcharts@7/dist/apexcharts.min.js
-https://unpkg.com/apexcharts
-```
+
+Pin the major: the unversioned URLs (`https://cdn.jsdelivr.net/npm/apexcharts`, `https://unpkg.com/apexcharts`) moved to 8.0 on its release. Use `apexcharts@7` to stay on 7. The other add-ons are `dist/unit.js`, `dist/violin.js`, `dist/icicle.js` and `dist/features/<name>.js`, and may load before or after the main script.
 
 ---
 
 ## Common Framework Pitfalls
 
 1. **Missing peer dependency** — `react-apexcharts`, `vue3-apexcharts`, and `ng-apexcharts` all require `apexcharts` as a separate dependency.
-2. **SSR with wrapper components** — most wrappers access `window`/`document` and crash in SSR. Use dynamic imports with `{ ssr: false }` or the native SSR API.
+2. **SSR with wrapper components**: the standard components access `window`/`document` and can crash in SSR. Use dynamic imports with `{ ssr: false }`, the native SSR API, or the wrapper's SSR components: `react-apexcharts/server`, vue3-apexcharts `<apexchart-server>` and `<apexchart-hydrate>` (1.11.2 or later, which render with your installed apexcharts), ng-apexcharts `<apx-chart-ssr>` and `<apx-chart-hydrate>`. They load `apexcharts/ssr`, so with apexcharts 8 a Tier 2 type needs its opt-in import on the server too. For React hydration call `apexcharts/ssr` directly: `react-apexcharts/hydrate` (2.1.1) loads `apexcharts/client`, which has no `hydrate()`.
 3. **Not destroying on unmount (vanilla API in React/Vue)** — causes memory leaks and duplicate charts. The official wrappers handle this automatically.
 4. **Mutating config objects in place (Vue)** — deep mutations may not trigger reactivity. Replace the entire object or use `ref` at the right level.
 5. **Rendering in hidden containers** — charts rendered in hidden tabs/modals have zero dimensions. Call `chart.updateOptions({})` or trigger a resize after showing the container.

@@ -4,7 +4,7 @@
 
 - **Candlestick** (`'candlestick'`) — OHLC (Open, High, Low, Close) financial chart
 - **Box Plot** (`'boxPlot'`) — Statistical distribution chart showing min, Q1, median, Q3, max
-- **Violin** (`'violin'`, **new in v6**): Statistical distribution chart showing a density curve per category, optionally with the raw sample points overlaid as jitter
+- **Violin** (`'violin'`, **new in v6, Tier 2 since v8.0**): Statistical distribution chart showing a density curve per category, optionally with the raw sample points overlaid as jitter
 - **Histogram** (`'histogram'`, **new in v6.9**): Bins raw observations into columns; the series carries the sample, the chart does the aggregating
 - **Raincloud** (`'raincloud'`, **new in v7.1, premium, Tier 2**): A distribution shown three ways at once: a half-violin for the shape, a box for the summary, and the observations themselves as "rain" underneath
 
@@ -15,14 +15,19 @@ import ApexCharts from 'apexcharts/candlestick'
 // Registers: candlestick, boxPlot
 // Alias: apexcharts/boxPlot
 
-import ApexCharts from 'apexcharts/violin'
-// Registers: violin (separate entry point, new in v6)
-
 import ApexCharts from 'apexcharts/histogram'
 // Registers: histogram (v6.9), the bar engine plus the stats feature
 
-import ApexCharts from 'apexcharts/raincloud'
-// Registers: raincloud (v7.1), the violin engine plus the raincloud feature
+// violin is Tier 2 since v8.0 and raincloud since v7.1: neither is in the default bundle.
+// Add the entry next to the default bundle:
+import ApexCharts from 'apexcharts'
+import 'apexcharts/violin'      // Registers: violin (new in v6)
+import 'apexcharts/raincloud'   // Registers: raincloud (v7.1), the violin engine plus the raincloud feature
+
+// Tree-shaking: violin and raincloud draw on the bar renderer without
+// bundling one, so pair them with apexcharts/bar
+import ApexCharts from 'apexcharts/bar'
+import 'apexcharts/violin'      // or 'apexcharts/raincloud'
 
 // The statistics (histogram binning, boxPlot/violin raw-sample summaries,
 // rowSeries()) live behind one optional feature. apexcharts/histogram already
@@ -30,9 +35,11 @@ import ApexCharts from 'apexcharts/raincloud'
 import 'apexcharts/features/stats'
 ```
 
-**⚠️ Raincloud is Tier 2 (v7.1).** It is **not in the default `apexcharts` bundle**, one of only two chart types that are not (the other is `icicle`, v7.6, which is free). On the full bundle add `import 'apexcharts/raincloud'` (or `import 'apexcharts/features/raincloud'`); from a script tag add `dist/features/raincloud.js` after `apexcharts.js`. It is also premium, so it renders an `APEXCHARTS` watermark until an entitled license is set.
+**⚠️ Violin is Tier 2 since v8.0.** `import ApexCharts from 'apexcharts'` no longer registers it, so a `chart.type: 'violin'` chart draws nothing and the console names the import. Add `import 'apexcharts/violin'` (script tag: `dist/violin.js`), or use the full bundle (`apexcharts/full`, `dist/apexcharts.full.min.js`). Plain violins stay free.
 
-**Raw samples (v6.9):** boxPlot, violin, and histogram can all take the raw observations and compute the statistics themselves (quartiles for boxPlot, KDE density for violin, bin counts for histogram). Precomputed summaries keep working exactly as before. With the full `apexcharts` bundle the stats feature is always present; with tree-shaking entries it must be imported (without it, a raw-sample boxPlot/violin datum has nothing to summarize and a histogram warns and draws nothing).
+**⚠️ Raincloud is Tier 2 (v7.1).** Since v8.0 the default bundle carries neither the raincloud feature nor the violin renderer it draws through. Next to `import ApexCharts from 'apexcharts'` add `import 'apexcharts/raincloud'`, which brings both; `apexcharts/features/raincloud` alone is enough only where violin is already registered. Script tag: load `dist/violin.js`, then `dist/features/raincloud.js`. Or use the full bundle (`apexcharts/full`, `dist/apexcharts.full.min.js`), which has both. On the lean core also import `apexcharts/bar`. It is also premium, so it renders an `APEXCHARTS` watermark until an entitled license is set.
+
+**Raw samples (v6.9):** boxPlot, violin, and histogram can all take the raw observations and compute the statistics themselves (quartiles for boxPlot, KDE density for violin, bin counts for histogram). Precomputed summaries keep working exactly as before. The default `apexcharts` bundle (and the full bundle) always has the stats feature; with tree-shaking entries it must be imported (without it, a raw-sample boxPlot/violin draws nothing, with a console warning naming the import since v8.0, and a histogram warns and draws nothing).
 
 ---
 
@@ -125,6 +132,8 @@ Each point is `{ x, y: { density, points } }`:
 - `points` (optional): a flat array of raw observations, rendered as jitter dots.
 
 ```js
+import 'apexcharts/violin'   // Tier 2 since v8.0: not in the default bundle
+
 {
   chart: { type: 'violin', height: 420 },
   series: [{
@@ -161,6 +170,8 @@ Each point is `{ x, y: { density, points } }`:
 A datum may instead supply only the raw observations (in `points`, no `y`) and the library derives the density itself via kernel density estimation. Requires `apexcharts/features/stats` when tree-shaking. `plotOptions.violin.kde` tunes the estimation; it is ignored when a precomputed `density` profile is given.
 
 ```js
+import 'apexcharts/violin'   // Tier 2 since v8.0: not in the default bundle
+
 {
   chart: { type: 'violin', height: 420 },
   series: [{
@@ -196,7 +207,7 @@ plotOptions: {
 
 ### Histogram (v6.9)
 
-The series carries **raw observations** (a flat number array, or `{ y }` objects), one number per event; the chart chooses the bin width and counts them. It renders through the bar pathway (like funnel, pyramid, gauge, and waffle), so stacking, zoom, export, and animation all work on the bins. Import from `apexcharts/histogram`, or add `import 'apexcharts/features/stats'` alongside `apexcharts/bar`; the full `apexcharts` bundle already includes it. Without the stats feature the chart warns and draws nothing.
+The series carries **raw observations** (a flat number array, or `{ y }` objects), one number per event; the chart chooses the bin width and counts them. It renders through the bar pathway (like funnel and pyramid), so stacking, zoom, export, and animation all work on the bins. Import from `apexcharts/histogram`, or add `import 'apexcharts/features/stats'` alongside `apexcharts/bar`; the default `apexcharts` bundle already includes it. Without the stats feature the chart warns and draws nothing.
 
 ```js
 {
@@ -228,7 +239,7 @@ The series carries **raw observations** (a flat number array, or `{ y }` objects
 
 ```js
 import ApexCharts from 'apexcharts'
-import 'apexcharts/raincloud'   // Tier 2: required even on the full bundle
+import 'apexcharts/raincloud'   // Tier 2: not in the default bundle (apexcharts/full already has it)
 
 new ApexCharts(el, {
   chart: { type: 'raincloud', height: 350 },
@@ -286,8 +297,11 @@ The rain **is** the outlier display, so the box draws no outlier dots of its own
 A histogram bin, a box, and a violin all stand for rows the chart is already holding. `chart.rowSeries()` returns them as a unit-chart series (one cluster per mark, one datum per row), so a summary can be opened into its observations:
 
 ```js
+import 'apexcharts/unit'   // Tier 2 since v8.0: the target type must be loaded
 chart.updateOptions({ chart: { type: 'unit' }, series: chart.rowSeries() })
 ```
+
+Since v8.0 the unit type is not in the default bundle, so load it first (`apexcharts/unit`, `dist/unit.js`, or the full bundle). Without it the update is refused (the promise rejects and the console names the import) and the chart stays as it was.
 
 Returns `null` when the current type has no row source or the stats feature is not loaded. `chart.rowSeries({ maxRows })` caps the dots produced (default 3000); past the cap every cluster is thinned by one shared stride so relative sizes survive. With the `morph` feature loaded, each dot animates out of the part of the mark that stood for it.
 
@@ -323,6 +337,8 @@ plotOptions: {
   }
 }
 ```
+
+**Updates animate (v7.9):** on `updateSeries()` each box morphs from its previous shape. Set `chart: { animations: { dynamicAnimation: { enabled: false } } }` to snap instead.
 
 ---
 
@@ -382,7 +398,7 @@ plotOptions: {
 7. **Violin orientation set on the wrong namespace**: horizontal violins and per-violin colors come from `plotOptions.bar` (`horizontal`, `distributed`), while `bandwidthScale`, `kde`, `normalize`, and `points` live under `plotOptions.violin`.
 8. **Feeding a histogram pre-binned counts**: the series must carry raw observations. If you already have counts per bucket, use a `bar` chart; a histogram would bin your counts as if they were measurements.
 9. **`whiskers: 'tukey'` on a precomputed boxPlot summary**: `plotOptions.boxPlot.whiskers` only applies when the summary is derived from `points`. A five-number `y` is drawn exactly as given.
-10. **Raw samples with tree-shaking but no stats feature**: `apexcharts/candlestick` and `apexcharts/violin` alone cannot summarize `points`. Add `import 'apexcharts/features/stats'` (the `apexcharts/histogram` entry and the full bundle already include it).
-11. **Expecting `raincloud` to work on the full bundle** *(v7.1)*: it is one of two chart types outside the default bundle (the other is `icicle`, v7.6). `import ApexCharts from 'apexcharts'` alone gives you a console warning and no raincloud, because `raincloud` aliases the violin engine and degrades; an unregistered `icicle` throws instead. Add `import 'apexcharts/raincloud'`.
+10. **Raw samples with tree-shaking but no stats feature**: `apexcharts/candlestick`, and `apexcharts/bar` plus `apexcharts/violin`, cannot summarize `points`. Add `import 'apexcharts/features/stats'` (the `apexcharts/histogram` entry and the default bundle already include it). Since v8.0 the console names the missing import.
+11. **Expecting `violin` or `raincloud` on the default bundle** *(v8.0)*: `import ApexCharts from 'apexcharts'` registers neither, so the chart draws nothing and the console reports `chart type "violin" is not registered` (for a raincloud, `chart type "raincloud" is not registered (it draws through "violin")`) with the import to add. That is the same failure an unregistered `icicle` gives. Add `import 'apexcharts/violin'` for a plain violin or `import 'apexcharts/raincloud'` for a raincloud, or use the full bundle (`apexcharts/full`).
 12. **Looking for `plotOptions.raincloud`**: there is none. Raincloud is a preset over the violin engine, so configure it through `plotOptions.violin` (`side`, `box`, `points`, `kde`, `normalize`).
 13. **Giving a raincloud a `y`**: it takes the raw sample per category: `data: [{ x, points: [number] }]`. A precomputed `y.summary` is honored for the box, but the density and the rain need the observations.

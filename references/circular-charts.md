@@ -34,7 +34,7 @@ import { person, registerMarks } from 'apexcharts/pictograms'
 // Pictogram glyph collection (v7.0), one drawn mark per unit. See "Pictograms" below.
 ```
 
-All of these are **Tier 1** (in the default `apexcharts` bundle). Nothing in the circular family is Tier 2.
+**⚠️ Sunburst and unit / waffle are Tier 2 since v8.0.** Pie, donut, polarArea, radialBar and gauge are in the default `apexcharts` bundle; `sunburst` and `unit` (with the `waffle` alias and the beeswarm layout) are not. Add `import 'apexcharts/sunburst'` or `import 'apexcharts/unit'` next to `import ApexCharts from 'apexcharts'` (script tag: `dist/sunburst.js` or `dist/unit.js`), or use the full bundle (`apexcharts/full`, `dist/apexcharts.full.min.js`). Without it the chart draws nothing and the console says the type is not registered, naming the import.
 
 ---
 
@@ -52,7 +52,7 @@ All of these are **Tier 1** (in the default `apexcharts` bundle). Nothing in the
 }
 ```
 
-### Radial Bar (values 0–100)
+### Radial Bar (values on the min/max domain, default 0 to 100)
 
 ```js
 {
@@ -62,7 +62,7 @@ All of these are **Tier 1** (in the default `apexcharts` bundle). Nothing in the
 }
 ```
 
-**Important:** RadialBar values represent percentages (0–100). Values above 100 will overflow the track.
+**Important:** RadialBar values sit on the `plotOptions.radialBar.min` to `max` domain, which defaults to 0 to 100, so by default they read as percentages. A value outside the domain is clamped to the end of the arc; set `min` / `max` to plot raw values.
 
 ### Gauge (v6)
 
@@ -102,7 +102,7 @@ A gauge is a single-value `radialBar` alias. Series is a flat one-element array;
       },
       needle: { color: '#0F172A', length: '60%', baseWidth: 6, tipWidth: 1 },
       hollow: { size: '70%' },
-      dataLabels: { name: { show: false }, value: { offsetY: 32, fontSize: '28px', fontWeight: 700 } }
+      dataLabels: { name: { show: false }, value: { fontSize: '28px', fontWeight: 700 } }  // value sits below the needle (v7.9)
     }
   }
 }
@@ -110,11 +110,15 @@ A gauge is a single-value `radialBar` alias. Series is a flat one-element array;
 
 A plain radialBar is effectively a gauge with `shape: 'arc'`. A semi-circle gauge is `startAngle: -90, endAngle: 90`.
 
+**Needle value label (v7.9):** on a `gauge` with `shape: 'needle'` and no `plotOptions.radialBar.dataLabels.value.offsetY`, the value is placed below the farthest reach of the needle, so the two never cross (it used to sit under the needle). Set `offsetY` to place it yourself.
+
 ### Sunburst (v6.7)
 
 A sunburst draws a hierarchy as concentric rings: the first level fills a donut around the centre hole, and each deeper level stacks outward, with every child arc constrained to its parent's angular wedge. It is a **free** chart type (not gated). Data uses the axis-style `[{ data: [...] }]` wrapper, but each datum is an `{ x, y, children }` node nested to any depth. A leaf node omits `children`.
 
 ```js
+import 'apexcharts/sunburst'   // Tier 2 since v8.0: not in the default bundle
+
 {
   chart: { type: 'sunburst', height: 380 },
   series: [{
@@ -166,6 +170,8 @@ A `unit` chart renders one discrete mark for every unit of value instead of a si
 Data is the same flat number array + `labels` shape as pie:
 
 ```js
+import 'apexcharts/unit'   // Tier 2 since v8.0: not in the default bundle
+
 {
   chart: { type: 'unit', height: 360 },
   series: [276, 266, 3],
@@ -194,6 +200,7 @@ A companion kit of **39 shapes** a count can take (a heart, a house, a globe, th
 
 ```js
 import ApexCharts from 'apexcharts'
+import 'apexcharts/unit'   // the unit type is not in the default bundle since v8.0
 import { heart } from 'apexcharts/unit-shapes'
 
 new ApexCharts(el, {
@@ -226,7 +233,7 @@ strokeFrom(path, opts?)          // your own centreline
 registerShapes([...])            // register so positions: '<name>' resolves by string
 ```
 
-Every shape carries metadata on `shape` (category, kind, and `minUnits`: the count below which it stops being recognisable; asking for fewer logs a console warning naming the shape). From a script tag, `dist/unit-shapes.js` exposes the kit as the global `ApexUnitShapes` with every shape pre-registered, so `positions: 'heart'` works by name.
+Every shape carries metadata on `shape` (category, kind, and `minUnits`: the count below which it stops being recognisable; asking for fewer logs a console warning naming the shape). From a script tag, load `dist/unit.js` (the unit type) and then `dist/unit-shapes.js`, which exposes the kit as the global `ApexUnitShapes` with every shape pre-registered, so `positions: 'heart'` works by name. The full bundle (`apexcharts/full`, `dist/apexcharts.full.min.js`) already has the unit type and registers every shape and pictogram by name.
 
 ### Pictograms (`apexcharts/pictograms`, v7.0)
 
@@ -234,6 +241,7 @@ A **shape** is where the units go; a **pictogram** is what one unit looks like. 
 
 ```js
 import ApexCharts from 'apexcharts'
+import 'apexcharts/unit'   // the unit type is not in the default bundle since v8.0
 import { person, registerMarks } from 'apexcharts/pictograms'
 
 registerMarks([person])   // so pictogram.mark: 'person' resolves by name
@@ -430,6 +438,10 @@ plotOptions: {
 }
 ```
 
+### Part-of-whole overlay (v7.9, premium)
+
+Pie, donut, polarArea, radialBar and gauge charts take `highlightFilter`, which draws each value faded with a part of it solid in front (parts in `highlightFilter.data`, one per slice or ring, or `highlight` on a slice's `{ x, y }` point), after `import 'apexcharts/features/highlight-filter'`. See "Highlight filter" in `references/feature-platform.md`. While parts are shown, the donut and radialBar `total.formatter` reads the parts in `w.globals.seriesTotals` (unless `highlightFilter.dataLabels.total` is `'whole'`).
+
 ---
 
 ## Complete Working Example — Donut with Center Label
@@ -482,13 +494,13 @@ plotOptions: {
 ## Family-Specific Pitfalls
 
 1. **Using axis-chart series format** — `series: [{ name: 'A', data: [44, 55] }]` is WRONG for pie/donut. The x/y object form `series: [{ data: [{ x: 'A', y: 44 }] }]` works (ApexCharts normalizes it), but the canonical form is preferred: `series: [44, 55]` (flat array) + `labels: ['A', 'B']`.
-2. **RadialBar values above 100** — values represent percentages and will overflow. If you have raw values, calculate percentages first: `(value / max) * 100`.
+2. **RadialBar raw values on the default domain**: the domain defaults to 0 to 100, so a value such as 340 is clamped to a full arc. Set `plotOptions.radialBar.min` / `max` to the raw range, or convert to percentages first: `(value / max) * 100`.
 3. **Missing `labels` array** — without `labels`, pie/donut slices show as "undefined" in tooltips and legend.
 4. **Donut center labels not showing** — must set `plotOptions.pie.donut.labels.show: true` explicitly.
 5. **`total.formatter` signature** — receives `w` (the full chart config object), NOT a simple value. Access `w.globals.seriesTotals` for the array of current values.
 6. **Polar Area confused with Radar** — polar area uses `series: [num]` (flat), radar uses `series: [{ data: [num] }]` (axis format). They look similar but have different data shapes.
 7. **Looking for `plotOptions.gauge`**: it does not exist. Gauge is a `radialBar` alias; configure `shape`, `bands`, `ticks`, `needle`, and `min`/`max` under `plotOptions.radialBar`.
-8. **Gauge value outside `min`/`max`**: unlike a plain radialBar (fixed 0-100), a gauge maps its value to the `min..max` domain you set. A value beyond that domain saturates at the arc ends.
+8. **Gauge value outside `min`/`max`**: a gauge, like a plain radialBar, maps its value to the `min..max` domain you set (default 0 to 100). A value beyond that domain saturates at the arc ends.
 9. **Legend click now toggles the slice (v6.7 behavior change)**: on pie, donut, and polarArea a legend click hides and shows the slice (like other chart types). Previously it darkened and expanded the slice. If your app relied on the old darken-and-expand behavior, review this.
 10. **Expecting `unit` / `waffle` without a license to be watermark-free**: they are premium and render an `APEXCHARTS` watermark until an entitled `premium`/`enterprise` license is set. Sunburst, by contrast, is free.
 11. **Slice click behavior changed (v6.9)**: clicking a pie/donut slice now slides it out along its own mid-angle (`plotOptions.pie.expandOffset`, default 10 px) instead of darkening it and redrawing it at a larger radius, and hover traces an outline band (`plotOptions.pie.hoverOutline`) instead of lightening the fill. Set `expandOffset: 0` to keep slices in place; set `states.hover.filter.type: 'none'` to suppress the hover band.
@@ -496,3 +508,4 @@ plotOptions: {
 13. **Confusing a shape with a pictogram** *(v7.0)*: `plotOptions.unit.positions` (from `apexcharts/unit-shapes`) is **where** the units go; `plotOptions.unit.shape: 'pictogram'` + `pictogram.mark` (from `apexcharts/pictograms`) is **what one unit looks like**. They compose freely.
 14. **Setting a size on a pictogram** *(v7.0)*: there is no `pictogram.size`. A glyph is fitted to the box the dot would have occupied, so use `plotOptions.unit.size` and `spacing`. Use `pictogram.scale` only to nudge a glyph that reads light.
 15. **Pie / radial charts pinned to the top of a tall container** *(fixed v7.1)*: the centre came from `min(width, height)`, so a tall, narrow container put the circle at the top with the leftover space below it. The circle now centres in the height it actually has. If you carried a manual `offsetY` to work around this, remove it.
+16. **Sunburst, unit or waffle on the default bundle** *(v8.0)*: draws nothing and the console says the type is not registered. Add `import 'apexcharts/sunburst'` or `import 'apexcharts/unit'` next to `import ApexCharts from 'apexcharts'`. `apexcharts/unit-shapes` and `apexcharts/pictograms` do not register the unit type.

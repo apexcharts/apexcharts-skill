@@ -20,7 +20,7 @@ import ApexCharts from 'apexcharts/line'
 import ApexCharts from 'apexcharts/streamgraph'  // == apexcharts/rangeArea + features/streamgraph
 ```
 
-Streamgraph is **Tier 1**, so the default `apexcharts` bundle already has it and no import is needed there.
+**⚠️ Streamgraph is Tier 2 since v8.0.** The default bundle no longer carries its feature. Next to `import ApexCharts from 'apexcharts'` add `import 'apexcharts/features/streamgraph'` (script tag: `dist/features/streamgraph.js`). The range-area renderer is already in the default bundle, and the `apexcharts/streamgraph` entry above would add a second copy of it, so keep that for a tree-shaken build. Or use the full bundle (`apexcharts/full`, `dist/apexcharts.full.min.js`). Without the feature the chart draws an empty plot and the console names the import to add.
 
 ---
 
@@ -135,6 +135,8 @@ Always use XY format:
 `chart.type: 'streamgraph'` stacks the series as flowing bands around a baseline chosen to keep the whole picture readable. Series format is the same as area; **the stacking is the chart's job, so do not set `chart.stacked`**.
 
 ```js
+import 'apexcharts/features/streamgraph'   // Tier 2 since v8.0: not in the default bundle
+
 {
   chart: { type: 'streamgraph', height: 350 },
   series: [
@@ -273,6 +275,10 @@ While the chart **is** zoomed and nothing else can reset it, one reset control i
 
 Requires `zoom.enabled: true`. A completed drag-zoom now also focuses the chart, so the `+`, `-` and `0` keys are reachable straight after a mouse zoom.
 
+### Part-of-whole overlay (v7.9, premium)
+
+Line and area charts (stacked area too) take `highlightFilter`, which draws each value faded with a part of it solid in front (`highlightData` on a series, or `highlight` on a point), after `import 'apexcharts/features/highlight-filter'`. See "Highlight filter" in `references/feature-platform.md`.
+
 ---
 
 ## Complete Working Example — Line Chart with Datetime
@@ -329,6 +335,7 @@ Requires `zoom.enabled: true`. A completed drag-zoom now also focuses the chart,
 6. **Setting `chart.stacked` on a streamgraph** *(v7.1)*: the chart owns its own stacking, baseline and band order through `plotOptions.streamgraph`. Reach for `offset: 'zero'` if what you actually want is a plain stacked area.
 7. **A series that starts with nulls used to mis-target the tooltip**: the hovered index resolved against the drawn points rather than the data, so the tooltip read the wrong point. Fixed in v7.1.
 8. **`autoScaleYaxis` scaling to points nobody can see**: before v7.1, zooming let one point just outside the window size the whole axis, and a series with nothing in the window still contributed. Fixed in v7.1; stacked charts now also scale to the stacked totals inside the window rather than to individual series.
+9. **Streamgraph on the default bundle** *(v8.0)*: draws an empty plot plus one console warning. Add `import 'apexcharts/features/streamgraph'` next to `import ApexCharts from 'apexcharts'`.
 
 ## Axis and layout fixes worth knowing (v7.0 / v7.1)
 

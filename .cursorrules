@@ -1,26 +1,29 @@
 # ApexCharts.js — AI Coding Rules
 
-You are working with ApexCharts.js (v7), a JavaScript charting library.
+You are working with ApexCharts.js (v8), a JavaScript charting library.
 Documentation: https://apexcharts.com/docs/
 NPM: apexcharts
 GitHub: https://github.com/apexcharts/apexcharts.js
 
-v5 and v6 configs keep working in v7, with two exceptions: `plotOptions.bar.borderRadiusWhenStacked` was REMOVED (corner ownership now follows the stack's outer edge), and `dataLabels.animate.enabled` now defaults to true on bar/column.
+v5 and v6 configs keep working, with two v7.0 changes: `plotOptions.bar.borderRadiusWhenStacked` was dropped in v7.0 and is a working option again since v7.4 (`'all'`, the default, rounds both stack ends; `'last'` rounds only the far end), so do not delete it from a config; and `dataLabels.animate.enabled` now defaults to true on bar/column.
 
-## !! v7.0: the default bundle no longer ships every feature
+## !! v8.0: the default bundle does not carry every chart type or feature
 
-Nine features are Tier 2: in the package, in NO bundle, reachable only through an explicit import. This applies to `import ApexCharts from 'apexcharts'` too, not just tree-shaken builds, and it is the most common v6 -> v7 failure.
+`import ApexCharts from 'apexcharts'` (script tag `dist/apexcharts.min.js`) registers line, area, scatter, bubble, rangeArea, bar (and `column`), rangeBar, candlestick, boxPlot, histogram, funnel, pyramid, pie, donut, polarArea, radialBar, gauge, radar, heatmap and treemap, plus the Tier 1 features (exports, legend, toolbar, annotations, keyboard, morph, stats, facet, weave, marks). Everything else is Tier 2: in the package, not in the default bundle, reachable through its own import next to it. This is the most common v7 -> v8 failure (and v6 -> v7 for the nine 7.0 features).
 
     import ApexCharts from 'apexcharts'
-    import 'apexcharts/features/trellis'   // required even here
+    import 'apexcharts/sunburst'             // a Tier 2 chart type
+    import 'apexcharts/features/drilldown'   // a Tier 2 feature
 
-Tier 2: trellis, storyboard, perspectives, ink, renderer-canvas, link, measure, history, context-menu, plus the `raincloud` chart type.
+Tier 2 chart types, `import 'apexcharts/<type>'` (script tag `dist/<type>.js`): `unit` (also for `waffle`), `sunburst` and `violin` (all three since 8.0), `icicle` (7.6), and `raincloud` (`apexcharts/raincloud` brings violin plus the raincloud feature; script tags `dist/violin.js`, then `dist/features/raincloud.js`).
+Tier 2 features, `import 'apexcharts/features/<name>'` (script tag `dist/features/<name>.js`): drilldown, waterfall, dumbbell, streamgraph (since 8.0), highlight-filter (7.9), trellis, storyboard, perspectives, ink, renderer-canvas, link, measure, history, context-menu (since 7.0). Waterfall, dumbbell and streamgraph are chart types whose renderer is in the default bundle, so next to it add only the feature.
 `apexcharts/features/all` is the Tier 1 set and pulls in none of them.
-Each Tier 2 module warns in the console when its config is present but the module is not, and degrades where it can (a trellis renders as one chart; renderer: 'canvas' falls back to SVG).
+Full bundle (v8.0): `import ApexCharts from 'apexcharts/full'` (script tag `dist/apexcharts.full.min.js`) carries every chart type and feature and needs no add-on import. Gzipped at 8.0.0: default bundle 263,188 B, full bundle 381,135 B.
+A missing import is named in the console: a Tier 2 chart type makes `render()` reject; a waterfall, dumbbell or streamgraph draws an empty plot; a Tier 2 feature degrades where it can (a trellis renders as one chart; renderer: 'canvas' falls back to SVG). Unversioned CDN URLs serve 8.0; pin `apexcharts@7` to stay on 7.
 
-Premium (watermarked until an entitled premium/enterprise license): trellis, storyboard, link, ink, measure, context-menu, perspectives, history, and the unit/waffle and raincloud chart types. Premium and Tier 2 are independent: renderer-canvas is Tier 2 and free; unit/waffle is premium and Tier 1.
+Premium (watermarked until an entitled premium/enterprise license): trellis, storyboard, link, ink, measure, context-menu, perspectives, history, highlight-filter, and the unit/waffle and raincloud chart types. Premium and Tier 2 are separate axes: since 8.0 every premium item is Tier 2, but renderer-canvas, drilldown, waterfall, dumbbell, streamgraph, sunburst, violin and icicle are Tier 2 and free.
 
-Two behaviors are on by default (both respect prefers-reduced-motion): coherent add/remove data-transition animations, and mobile pinch-zoom / two-finger pan.
+On by default: coherent add/remove data-transition animations (they respect prefers-reduced-motion), and one-finger kinetic pan (`chart.pan.inertia`). Since v7.8, `dataLabels.avoidOverlap` nudges overlapping data labels apart (`false` to disable). Pinch-zoom and two-finger pan follow `chart.zoom.pinch: 'auto'`: on only where the toolbar reset button is present.
 
 ## Framework wrapper detection — check `package.json` first
 
@@ -38,15 +41,17 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 4. **`yaxis` must be an array** when using multiple y-axes. Each entry needs `seriesName`.
 5. **`tooltip.shared` and `tooltip.intersect` are mutually exclusive.**
 6. **Use `null` (not `undefined`)** for missing data points.
-7. **`chart.stacked: true`** only works with `bar` and `area` chart types.
+7. **`chart.stacked: true`** stacks `bar`, `area` and `line` series. In a mixed chart only the bar series stack unless `chart.stackOnlyBar: false`. `waterfall`, `dumbbell` and `streamgraph` force it off.
 8. **Responsive breakpoints** must be in ascending order.
 9. **For mixed/combo charts**, set `type` on each series object.
-10. **RadialBar values must be 0–100** (percentages).
+10. **RadialBar values sit on the `plotOptions.radialBar.min` to `max` domain** (default 0 to 100, so percentages by default). Set `min` / `max` to plot raw values; a value outside the domain is clamped.
 11. **Color hex values must include `#`** (e.g., `'#FF5733'`).
-12. **Tree-shaking**: `apexcharts/core` requires separate chart-type + feature imports.
-13. **Aliases**: `funnel`/`pyramid` render through bar, `gauge` through radialBar. Use them as `chart.type` directly (no `plotOptions.bar.isFunnel`); covered by `apexcharts/bar` and `apexcharts/radialBar`.
-14. **`violin`** points use a density profile: `data: [{ x, y: { density: [[value, weight], ...], points?: [num] } }]`.
-15. **`render()` is idempotent**: a repeated `render()` returns the same promise; still `destroy()` before a new instance on the same element.
+12. **The default `apexcharts` bundle is not everything (v8).** Next to it, import `apexcharts/unit` (also for `waffle`), `apexcharts/sunburst`, `apexcharts/violin`, `apexcharts/icicle` or `apexcharts/raincloud` before writing that chart type, and `apexcharts/features/<name>` before a `waterfall`, `dumbbell` or `streamgraph` chart or any Tier 2 feature. `import ApexCharts from 'apexcharts/full'` (script tag `dist/apexcharts.full.min.js`) is the one entry that needs none of these.
+13. **Tree-shaking**: `apexcharts/core` requires separate chart-type + feature imports. On it, `violin` and `raincloud` also need `apexcharts/bar`, and a raw-sample boxPlot or violin needs `apexcharts/features/stats`.
+14. **Aliases**: `funnel`/`pyramid` render through bar, `gauge` through radialBar. Use them as `chart.type` directly (no `plotOptions.bar.isFunnel`); covered by `apexcharts/bar` and `apexcharts/radialBar`.
+15. **`violin`** points use a density profile: `data: [{ x, y: { density: [[value, weight], ...], points?: [num] } }]`.
+16. **`render()` is idempotent**: a repeated `render()` returns the same promise; still `destroy()` before a new instance on the same element.
+17. **Unknown `chart.type` throws (v7.9)** and the message names the closest type. `'column'` is a synonym for `'bar'`; `''` and `null` draw a line chart.
 
 ---
 
@@ -58,23 +63,23 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 |---|---|---|---|
 | Line | `'line'` | `[{ name, data: [num\|null] }]` or `[{ name, data: [{ x, y }] }]` | `[{ data: [30, 40, null, 50] }]` |
 | Area | `'area'` | Same as line | `[{ data: [10, 20, 30] }]` |
-| Bar/Column | `'bar'` | Same as line. `plotOptions.bar.horizontal: false` for columns. | `[{ data: [44, 55, 41] }]` |
+| Bar/Column | `'bar'` (or `'column'`, a synonym since v7.9) | Same as line. `plotOptions.bar.horizontal: false` for columns. | `[{ data: [44, 55, 41] }]` |
 | Scatter | `'scatter'` | `[{ name, data: [{ x, y }] }]` | `[{ data: [{ x: 1, y: 5 }] }]` |
 | Bubble | `'bubble'` | `[{ name, data: [{ x, y, z }] }]` — z required | `[{ data: [{ x: 1, y: 30, z: 10 }] }]` |
 | Range Area | `'rangeArea'` | `[{ data: [{ x, y: [low, high] }] }]` | `[{ data: [{ x: 'Jan', y: [5, 15] }] }]` |
 | Range Bar | `'rangeBar'` | `[{ data: [{ x, y: [start, end] }] }]` | `[{ data: [{ x: 'Task', y: [1, 5] }] }]` |
 | Candlestick | `'candlestick'` | `[{ data: [{ x, y: [O,H,L,C] }] }]` — 4 values | `[{ data: [{ x: new Date(), y: [51,56,48,53] }] }]` |
 | Box Plot | `'boxPlot'` | `[{ data: [{ x, y: [min,Q1,med,Q3,max] }] }]` — 5 values | `[{ data: [{ x: 'A', y: [10,20,30,40,50] }] }]` |
-| Violin *(v6)* | `'violin'` | `[{ name, data: [{ x, y: { density: [[value,weight],...], points?: [num] } }] }]` | `[{ data: [{ x: 'A', y: { density: [[20,0.1],[30,0.2]], points: [21,29] } }] }]` |
+| Violin *(v6, Tier 2 since v8)* | `'violin'` | `[{ name, data: [{ x, y: { density: [[value,weight],...], points?: [num] } }] }]`. Needs `import 'apexcharts/violin'` | `[{ data: [{ x: 'A', y: { density: [[20,0.1],[30,0.2]], points: [21,29] } }] }]` |
 | Heatmap | `'heatmap'` | `[{ name, data: [{ x, y: number }] }]` — y is intensity | `[{ name: 'Mon', data: [{ x: '10am', y: 45 }] }]` |
 | Treemap | `'treemap'` | `[{ data: [{ x, y: number }] }]` — y is area value | `[{ data: [{ x: 'Item', y: 100 }] }]` |
 | Radar | `'radar'` | `[{ name, data: [num] }]` + `xaxis.categories` | `[{ data: [80, 50, 30] }]` |
 | Funnel *(v6)* | `'funnel'` | `[{ name, data: [num] }]` + `xaxis.categories`; order largest→smallest | `[{ data: [1380, 990, 548, 200] }]` |
 | Pyramid *(v6)* | `'pyramid'` | Same as funnel; order smallest→largest | `[{ data: [200, 548, 990, 1380] }]` |
-| Waterfall *(v7.1)* | `'waterfall'` | `[{ name, data: [{ x, y }] }]` where y is the signed DELTA; a running-total row carries `isSubtotal` or `isTotal` and NO y | `[{ data: [{ x: 'Rev', y: 8786 }, { x: 'Cost', y: -2786 }, { x: 'Gross', isSubtotal: true }] }]` |
-| Dumbbell *(v7.1)* | `'dumbbell'` | ONE SERIES PER MEASURE sharing x categories; not [low, high] pairs | `[{ name: '2020', data: [{ x: 'BE', y: 92 }] }, { name: '2025', data: [{ x: 'BE', y: 118 }] }]` |
-| Streamgraph *(v7.1)* | `'streamgraph'` | Same as area; do NOT set chart.stacked (the chart owns baseline + order) | `[{ name: 'Drama', data: [{ x: '2024-01-01', y: 32 }] }]` |
-| Raincloud *(v7.1, premium, TIER 2)* | `'raincloud'` | `[{ name, data: [{ x, points: [num] }] }]`: raw sample; configured via `plotOptions.violin` | `[{ data: [{ x: 'Control', points: [3.1, 4.7, 2.9] }] }]` |
+| Waterfall *(v7.1, Tier 2 since v8)* | `'waterfall'` | `[{ name, data: [{ x, y }] }]` where y is the signed DELTA; a running-total row carries `isSubtotal` or `isTotal` and NO y. Needs `import 'apexcharts/features/waterfall'` | `[{ data: [{ x: 'Rev', y: 8786 }, { x: 'Cost', y: -2786 }, { x: 'Gross', isSubtotal: true }] }]` |
+| Dumbbell *(v7.1, Tier 2 since v8)* | `'dumbbell'` | ONE SERIES PER MEASURE sharing x categories; not [low, high] pairs. Needs `import 'apexcharts/features/dumbbell'` | `[{ name: '2020', data: [{ x: 'BE', y: 92 }] }, { name: '2025', data: [{ x: 'BE', y: 118 }] }]` |
+| Streamgraph *(v7.1, Tier 2 since v8)* | `'streamgraph'` | Same as area; do NOT set chart.stacked (the chart owns baseline + order). Needs `import 'apexcharts/features/streamgraph'` | `[{ name: 'Drama', data: [{ x: '2024-01-01', y: 32 }] }]` |
+| Raincloud *(v7.1, premium, TIER 2)* | `'raincloud'` | `[{ name, data: [{ x, points: [num] }] }]`: raw sample; configured via `plotOptions.violin`. Needs `import 'apexcharts/raincloud'` | `[{ data: [{ x: 'Control', points: [3.1, 4.7, 2.9] }] }]` |
 
 ### Non-Axis Charts (flat number array — NOT object format)
 
@@ -82,11 +87,23 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 // Pie, Donut, Polar Area
 { chart: { type: 'pie' }, series: [44, 55, 13], labels: ['A', 'B', 'C'] }
 
-// Radial Bar (values 0–100)
+// Radial Bar (values on the plotOptions.radialBar min/max domain, default 0 to 100)
 { chart: { type: 'radialBar' }, series: [76, 67, 61], labels: ['X', 'Y', 'Z'] }
 
 // Gauge (v6): single value; domain via plotOptions.radialBar.min/max
 { chart: { type: 'gauge' }, series: [72], labels: ['Progress'] }
+
+// Unit / Waffle (v6.6, premium, Tier 2 since v8): needs import 'apexcharts/unit'
+{ chart: { type: 'waffle' }, series: [44, 55, 13], labels: ['A', 'B', 'C'] }
+```
+
+### Hierarchical Charts (sunburst, icicle)
+
+One `[{ data: [...] }]` series whose data are `{ x, y, children }` nodes nested to any depth. Both are Tier 2: `import 'apexcharts/sunburst'` (v6.7, Tier 2 since v8) or `import 'apexcharts/icicle'` (v7.6) next to `apexcharts`.
+
+```js
+{ chart: { type: 'sunburst' },   // or 'icicle' (same tree, bands along one axis)
+  series: [{ data: [{ x: 'Mobile', y: 55, children: [{ x: 'iOS', y: 30 }, { x: 'Android', y: 23 }] }] }] }
 ```
 
 ---
@@ -113,7 +130,8 @@ chart.destroy()                                         // cleanup
 ## Import Paths
 
 ```
-apexcharts              # Default bundle: every type except raincloud + the Tier 1 features
+apexcharts              # Default bundle: the standard types (see the box above) + the Tier 1 features
+apexcharts/full         # Full bundle (v8.0): every chart type and feature; no add-on import needed
 apexcharts/core         # Bare core (must register types + features manually)
 apexcharts/line         # line, area, scatter, bubble, rangeArea
 apexcharts/bar          # bar, column, rangeBar, funnel, pyramid (aliases)
@@ -121,20 +139,24 @@ apexcharts/waterfall    # waterfall (v7.1) = bar + features/waterfall
 apexcharts/dumbbell     # dumbbell (v7.1) = bar + features/dumbbell
 apexcharts/streamgraph  # streamgraph (v7.1) = rangeArea + features/streamgraph
 apexcharts/candlestick  # candlestick, boxPlot
-apexcharts/violin       # violin
-apexcharts/raincloud    # raincloud (v7.1, premium, TIER 2) = violin + features/raincloud
 apexcharts/histogram    # histogram (v6.9) = bar + features/stats
 apexcharts/pie          # pie, donut, polarArea
 apexcharts/radialBar    # radialBar, gauge (alias)
 apexcharts/radar        # radar
 apexcharts/heatmap      # heatmap
 apexcharts/treemap      # treemap
-apexcharts/sunburst     # sunburst (v6.7)
-apexcharts/unit         # unit, waffle (v6.6, premium)
+
+# TIER 2 chart types: NOT in the default bundle. Import next to `apexcharts` (or use /full).
+apexcharts/unit         # unit, waffle (v6.6, premium; Tier 2 since v8)
+apexcharts/sunburst     # sunburst (v6.7; Tier 2 since v8)
+apexcharts/violin       # violin (Tier 2 since v8); on /core also import apexcharts/bar
+apexcharts/icicle       # icicle (v7.6)
+apexcharts/raincloud    # raincloud (v7.1, premium) = violin + features/raincloud; on /core also import apexcharts/bar
+
 apexcharts/unit-shapes  # unit-chart shape kit (v6.10), named exports
 apexcharts/pictograms   # pictogram glyphs (v7.0), named exports
-apexcharts/ssr          # Server-side rendering (Node.js)
-apexcharts/client       # Explicit browser import
+apexcharts/ssr          # Server-side rendering (Node.js); also the only entry with hydrate() (browser-safe)
+apexcharts/client       # Explicit browser import; no hydrate()
 
 # TIER 1 features: already in the default `apexcharts` bundle.
 # Import only if you started from /core or a per-type entry.
@@ -145,16 +167,17 @@ apexcharts/features/annotations     # X/Y/point annotations
 apexcharts/features/keyboard        # Keyboard navigation
 apexcharts/features/stats           # histogram binning, raw-sample summaries, rowSeries()
 apexcharts/features/morph           # animated chart-type morphs
-apexcharts/features/drilldown       # hierarchical drill-down
 apexcharts/features/facet           # design tokens + OS themes
 apexcharts/features/weave           # plugin platform
 apexcharts/features/marks           # custom series types (registerSeriesType)
-apexcharts/features/waterfall       # (v7.1) waterfall type
-apexcharts/features/dumbbell        # (v7.1) dumbbell type
-apexcharts/features/streamgraph     # (v7.1) streamgraph type
 apexcharts/features/all             # Tier 1 only: NOT a shortcut past Tier 2
 
-# TIER 2 features: in NO bundle. Required whatever entry point you used.
+# TIER 2 features: NOT in the default bundle (all are in apexcharts/full).
+apexcharts/features/drilldown       # hierarchical drill-down (Tier 2 since v8)
+apexcharts/features/waterfall       # (v7.1) waterfall type (Tier 2 since v8)
+apexcharts/features/dumbbell        # (v7.1) dumbbell type (Tier 2 since v8)
+apexcharts/features/streamgraph     # (v7.1) streamgraph type (Tier 2 since v8)
+apexcharts/features/highlight-filter # (v7.9) part-of-whole highlight, highlightFilter (premium)
 apexcharts/features/trellis         # (v7.0) small multiples (premium)
 apexcharts/features/storyboard      # scrollytelling (premium; registers perspectives)
 apexcharts/features/perspectives    # shareable view state (premium)
@@ -164,11 +187,10 @@ apexcharts/features/link            # crossfilter / linked views (premium)
 apexcharts/features/measure         # measure / delta ruler (premium)
 apexcharts/features/history         # undo/redo (Rewind, premium)
 apexcharts/features/context-menu    # right-click context menu (premium)
-apexcharts/features/raincloud       # (v7.1) raincloud type (premium)
 ```
 (Cadence easing and real-time streaming are core: no feature import needed.)
-Script tags: every Tier 2 module has a `dist/features/<name>.js`, and a full-bundle page still needs it.
-Lean core channel (v7.0): `dist/apexcharts.core.js` + `dist/line.js` + `dist/features/legend.js`, 136,921 B gzipped vs 252,005 for the full bundle.
+Script tags: a default-bundle page adds `dist/<type>.js` for a Tier 2 chart type and `dist/features/<name>.js` for a Tier 2 feature (raincloud: `dist/violin.js`, then `dist/features/raincloud.js`). Add-on tags may load before or after the ApexCharts script. `dist/apexcharts.full.min.js` already contains them all.
+Lean core channel (v7.0): `dist/apexcharts.core.js` plus per-type files such as `dist/line.js` and feature files such as `dist/features/legend.js`, for a page that needs less than the default bundle.
 
 ---
 
@@ -179,7 +201,7 @@ Lean core channel (v7.0): `dist/apexcharts.core.js` + `dist/line.js` + `dist/fea
 | `xaxis.labels.formatter` | `(value, timestamp?, opts?) => string` |
 | `yaxis.labels.formatter` | `(value, opts?) => string` |
 | `tooltip.x.formatter` | `(value, opts?) => string` |
-| `tooltip.y.formatter` | `(value, opts?) => string` |
+| `tooltip.y.formatter` | `(value: number \| null, opts?) => string`; `value` is `null` at a gap, so guard: `val == null ? 'n/a' : val.toFixed(2)` |
 | `tooltip.y.title.formatter` | `(seriesName, opts?) => string` |
 | `dataLabels.formatter` | `(value, opts?) => string \| number` |
 | `legend.formatter` | `(legendName, opts?) => string` |
@@ -220,15 +242,15 @@ Lean core channel (v7.0): `dist/apexcharts.core.js` + `dist/line.js` + `dist/fea
 
 ### 8. Stacking on unsupported types
 ❌ `chart: { type: 'scatter', stacked: true }`
-✅ `chart: { type: 'bar', stacked: true }` (or area)
+✅ `chart: { type: 'bar', stacked: true }` (or area, or line)
 
 ### 9. Mixed chart without per-series type
 ❌ `series: [{ name: 'A', data: [...] }, { name: 'B', data: [...] }]` — all same type
 ✅ `series: [{ name: 'A', type: 'column', data: [...] }, { name: 'B', type: 'line', data: [...] }]`
 
-### 10. RadialBar > 100
-❌ `series: [340, 520]`
-✅ `series: [76, 67]` (percentages 0–100)
+### 10. RadialBar values outside the min/max domain
+❌ `series: [340, 520]` on the default 0 to 100 domain (each arc is clamped to full)
+✅ `series: [76, 67]` (percentages), or keep the raw values and set `plotOptions: { radialBar: { min: 0, max: 600 } }`
 
 ### 11. Colors without #
 ❌ `colors: ['FF5733']`
@@ -239,8 +261,9 @@ Lean core channel (v7.0): `dist/apexcharts.core.js` + `dist/line.js` + `dist/fea
 ✅ `import ApexCharts from 'apexcharts/line'; import 'apexcharts/features/legend'`
 
 ### 13. SSR with wrong import
-❌ Server: `import ApexCharts from 'apexcharts'; ApexCharts.renderToString(opts)` — method missing
-✅ Server: `import ApexCharts from 'apexcharts/ssr'; await ApexCharts.renderToString(opts)`
+❌ Client: `import ApexCharts from 'apexcharts/client'; ApexCharts.hydrateAll()`: in a browser, `apexcharts`, `apexcharts/client` and `apexcharts/full` have no `hydrate()` / `hydrateAll()`
+✅ Server: `import ApexCharts from 'apexcharts/ssr'; await ApexCharts.renderToString(opts)`. Client: `import ApexCharts from 'apexcharts/ssr'; ApexCharts.hydrateAll()` (the SSR entry is browser-safe)
+On Node, plain `apexcharts` also resolves to the SSR bundle (the `node` export condition); import `apexcharts/ssr` anyway, so a bundler that resolves the `browser` condition while targeting Node keeps `renderToString`.
 
 ### 14. updateOptions just to change data
 ❌ `chart.updateOptions({ series: [{ data: newData }] })`
@@ -253,6 +276,10 @@ Lean core channel (v7.0): `dist/apexcharts.core.js` + `dist/line.js` + `dist/fea
 ### 16. Categories with {x,y} data
 ❌ `xaxis: { categories: ['A','B'] }, series: [{ data: [{ x: 'A', y: 10 }] }]` — categories ignored
 ✅ Either use categories + simple array, OR use {x,y} without categories
+
+### 17. Tier 2 chart type or feature on the default bundle (v8)
+❌ `import ApexCharts from 'apexcharts'; new ApexCharts(el, { chart: { type: 'sunburst' }, series }).render()`: `render()` rejects and the console names the missing import
+✅ `import ApexCharts from 'apexcharts'; import 'apexcharts/sunburst'` (or `import ApexCharts from 'apexcharts/full'`)
 
 ---
 

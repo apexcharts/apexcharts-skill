@@ -1,26 +1,29 @@
 # Feature Platform: ApexCharts
 
-ApexCharts ships an opt-in feature platform on top of the chart core. **Every v5 and v6 config keeps working unchanged in v7**, apart from the two v7.0 breaking changes noted below. Each feature is off by default in config terms and ships as its own `apexcharts/features/*` entry.
+ApexCharts ships an opt-in feature platform on top of the chart core. **Every v5 and v6 config keeps working unchanged in v7**, apart from the two v7.0 breaking changes noted below. In 8.0 the breaking change is what the default bundle carries (next section). Each feature is off by default in config terms and ships as its own `apexcharts/features/*` entry.
 
-## ⚠️ Read first: two bundle tiers (v7.0)
+## ⚠️ Read first: what is in the default bundle (8.0)
 
-Whether you need the `features/*` import depends on the feature's **tier**, and this changed in v7.0.
+Whether you need an import depends on the feature's or chart type's **tier**. The tiers date from v7.0. **8.0 moved seven items to Tier 2**: the `unit` (with `waffle`), `sunburst` and `violin` chart types, and the `drilldown`, `waterfall`, `dumbbell` and `streamgraph` features. A page that uses one adds its import, or loads the full bundle.
 
-- **Tier 1** is in the default `import ApexCharts from 'apexcharts'` bundle: `exports`, `legend`, `toolbar`, `annotations`, `keyboard`, `morph`, `drilldown`, `weave`, `marks`, `facet`, `stats`, and the v7.1 `waterfall` / `dumbbell` / `streamgraph` chart types. Import these only if you started from `apexcharts/core` or a per-type entry.
-- **Tier 2 is not in any bundle.** Nine features (`trellis`, `storyboard`, `perspectives`, `ink`, `renderer-canvas`, `link`, `measure`, `history`, `context-menu`) plus the `raincloud` (premium) and `icicle` (free) chart types require an explicit import **whatever entry point you used**, the full bundle included.
+- **Tier 1** is in the default `import ApexCharts from 'apexcharts'` bundle: `exports`, `legend`, `toolbar`, `annotations`, `keyboard`, `morph`, `weave`, `marks`, `facet`, `stats`. Import these only if you started from `apexcharts/core` or a per-type entry.
+- **Tier 2 is not in the default bundle.** Each item needs its own import next to it (or its script tag), or the full bundle:
+  - features, `import 'apexcharts/features/<name>'` (script tag `dist/features/<name>.js`): `trellis`, `storyboard`, `perspectives`, `ink`, `renderer-canvas`, `link`, `measure`, `history`, `context-menu`, `highlight-filter` *(7.9)*, and since 8.0 `drilldown`, `waterfall`, `dumbbell` and `streamgraph` (those three are chart types whose renderers, rangeBar and rangeArea, are in the default bundle, so next to it you add only the feature);
+  - chart types: `unit` / `waffle` (`apexcharts/unit`, `dist/unit.js`), `sunburst`, `violin`, `icicle` (`apexcharts/<type>`, `dist/<type>.js`) and `raincloud` (`apexcharts/raincloud`; script tags `dist/violin.js`, then `dist/features/raincloud.js`).
+- **The full bundle**, `import ApexCharts from 'apexcharts/full'` (script tag `dist/apexcharts.full.min.js`, new in 8.0), has every chart type and feature and needs no add-on import. Premium items still watermark there.
 
 ```js
 import ApexCharts from 'apexcharts'
-import 'apexcharts/features/trellis'   // Tier 2: required even here
+import 'apexcharts/features/trellis'   // Tier 2: not in the default bundle
 ```
 ```html
 <script src=".../dist/apexcharts.js"></script>
 <script src=".../dist/features/trellis.js"></script>
 ```
 
-Nothing fails silently: each Tier 2 module warns in the console when its configuration is present but the module is not, and names both import routes. Where the chart can still draw something sensible it does and says what it did: a trellis renders as a single chart, `renderer: 'canvas'` falls back to SVG. `apexcharts/features/all` is the **Tier 1** set and is not a shortcut past this.
+Nothing fails silently, and since 7.9.1 the minified bundle prints these warnings too. A Tier 2 chart type that is not loaded makes `render()` reject, and the console names the import. A Tier 2 feature warns when its configuration is present but the module is not, naming the import, the script-tag file and `apexcharts.full.min.js`. Where the chart can still draw something sensible it does and says what it did: a trellis renders as a single chart, `renderer: 'canvas'` falls back to SVG, a drilldown chart draws its root level. `waterfall`, `dumbbell` and `streamgraph` without their feature draw an empty plot with one warning. `apexcharts/features/all` is the **Tier 1** set and is not a shortcut past this; the full bundle is.
 
-Why: 24% of the 6.10.0 default bundle was licence-gated premium code that an unlicensed user could only run watermarked, and everybody downloaded it. The default bundle went 291,654 B gzipped (6.10.0) to 252,005 B (7.0.0), and 264,326 B in 7.1.0 with the three new free chart types. It is about 270 KB at 7.6.1 (measured on the shipped dist with gzip -9; the upstream build report gzips at a different level and prints a few hundred bytes more). See `references/tree-shaking.md` for the full tier table and per-module sizes.
+Why: 24% of the 6.10.0 default bundle was licence-gated premium code that an unlicensed user could only run watermarked, and everybody downloaded it. The default bundle went 291,654 B gzipped (6.10.0) to 252,005 B (7.0.0), and 264,326 B in 7.1.0 with the three new free chart types. At 8.0.0 it is 263,188 B, and the full bundle 381,135 B (the upstream build report's figures, gzip at the default level; they move every release). See `references/tree-shaking.md` for the full tier table and per-module sizes.
 
 ## Two v7.0 breaking changes
 
@@ -45,7 +48,7 @@ Two update behaviors worth knowing (both 6.9/6.10):
 
 ## Licensing: premium features and the trial watermark
 
-Introduced in **6.5.0**, tightened in **6.7.0**. Not every feature is free. Eight feature modules plus two chart types are **premium** and run under a lightweight, offline license check. They keep working fully without a key (trial mode), but the chart shows an unobtrusive `APEXCHARTS` watermark until an entitled license is set.
+Introduced in **6.5.0**, tightened in **6.7.0**. Not every feature is free. Nine feature modules plus two chart types are **premium** and run under a lightweight, offline license check. They keep working fully without a key (trial mode), but the chart shows an unobtrusive `APEXCHARTS` watermark until an entitled license is set.
 
 **The premium set (watermarked until entitled):**
 
@@ -57,12 +60,13 @@ Introduced in **6.5.0**, tightened in **6.7.0**. Not every feature is free. Eigh
 - `context-menu` (`contextMenu`)
 - `perspectives` (shareable view state)
 - `history` (undo/redo, Rewind)
+- `highlight-filter` (`highlightFilter`, premium since **7.9.0**; watermarks only while a render draws parts)
 - the `unit` / `waffle` chart type (premium since **6.6.0**, the first premium chart type)
 - the `raincloud` chart type (premium since **7.1.0**)
 
-**Everything else is free and never gated**: every other chart type (`sunburst`, the v7.1 `waterfall` / `dumbbell` / `streamgraph`, and the v7.6 `icicle`, which is an opt-in import but free), and every other module (Weave, Strata / canvas, Marks, Facet / themes, Cadence, drilldown, streaming, exports, legend, toolbar, annotations, keyboard, stats).
+**Everything else is free and never gated**: every other chart type (the Tier 2 `sunburst`, `violin`, `icicle`, `waterfall`, `dumbbell` and `streamgraph` included), and every other module (Weave, Strata / canvas, Marks, Facet / themes, Cadence, drilldown, streaming, exports, legend, toolbar, annotations, keyboard, stats). Free here means never watermarked, not licence-free: the Community licence covers only organisations under $2M in annual revenue, operating budget, funding or equivalent resources, whichever is highest, across parent, affiliates and entities under common control (see LICENSE.md).
 
-**Premium and Tier 2 are independent axes.** Premium is about the watermark; Tier 2 is about the bundle. `renderer-canvas` is Tier 2 and free. `waterfall`, `dumbbell` and `streamgraph` are Tier 1 and free. `unit` / `waffle` is premium but Tier 1 (it is a chart type in the default bundle). `trellis` and `raincloud` are both.
+**Premium and Tier 2 are separate questions.** Premium is about the watermark; Tier 2 is about the bundle. Since 8.0 every premium item is Tier 2, but Tier 2 is not all premium: `renderer-canvas`, `drilldown`, `waterfall`, `dumbbell`, `streamgraph`, `sunburst`, `violin` and `icicle` are Tier 2 and free. The full bundle carries all of them, and the premium ones still watermark there.
 
 ### Setting a license
 
@@ -78,7 +82,7 @@ Both are typed: `ApexCharts.setLicense(key: string)` (static) and `chart.license
 
 - **In use, not bundled.** Importing a premium module without actually enabling it does not watermark; only *using* it does.
 - **Live.** A late `setLicense(validKey)` followed by an update clears an on-screen watermark; no full re-render needed. The watermark is re-evaluated on every render/update.
-- **One key across the family.** The key format is shared across the ApexCharts family (apexgantt, apextree, apexsankey, apex-grid-enterprise, apexstock), validated offline with no network call. SSR-safe.
+- **One key across the family.** The key format is shared across every Apex product (apexgantt, apextree, apexsankey, apex-grid-enterprise, apexstock, apexmaps), validated offline with no network call. SSR-safe.
 
 ### Plan entitlement (6.7.0 behavior change)
 
@@ -127,6 +131,7 @@ trellis: { by: 'facet', minPanelWidth: 260 },
 | `columns` | `'auto'` | `'auto'` fits `minPanelWidth` columns into the container. |
 | `minPanelWidth` | `220` | Drives `'auto'` columns and the responsive collapse. |
 | `gap` / `aspectRatio` / `panelHeight` | `12` / `1.6` / none | `panelHeight` wins over `aspectRatio` and `chart.height`. |
+| `minPanelHeight` | `80` | *(7.7.0)* Floor for a height-derived panel, in px. A grid that cannot fit its container overflows and warns by how much instead of shrinking panels past this. Lower it when fitting a short container matters more than legibility. |
 | `order` | `'first-seen'` | Also `'asc'`, `'desc'`, an explicit `string[]`, or a comparator. |
 | `limit` | none | Render only the first N panels (warns about the rest). |
 | `virtualize` | `'auto'` | Mounts only panels intersecting the viewport (plus one row) once the grid exceeds **64 panels**. An unmounted cell keeps its header and a fixed-height skeleton so page height never shifts; a remount restores its zoom window. **`getPanel(key)` returns `null` for an unmounted panel.** |
@@ -136,13 +141,15 @@ trellis: { by: 'facet', minPanelWidth: 260 },
 | `legend` / `toolbar` | `'shared'` | One legend (toggles a series name in every panel) and one zoom/pan/reset toolbar. `'none'` to drop. |
 | `tooltip` | `'panel'` | Card in the hovered panel while the crosshair sweeps all. `'sync'` = a card per panel; `'grid'` = one card near the cursor with a row per panel, composed from the panels' own tooltips so every formatter is honored. |
 | `zoom` | `'sync'` | A zoom in any panel moves every panel. |
-| `promote` | `true` | Clicking a header expands that panel to full width with an "All panels" breadcrumb. |
+| `promote` | `false` | *(7.7.0 BREAKING: was `true`)* Set `true` to make a header click expand that panel to full width with an "All panels" breadcrumb. `chart.promotePanel(key)` / `chart.restorePanels()` work either way. |
 | `radiusByTotal` | `false` | Pie/donut/polarArea only: scale each panel's radius so its **area** is proportional to the panel's total. Equal-size pies cannot encode magnitude, so set this on a pie trellis. |
 | `targetTicks` | `3` | Tick-interval target for the shared nice y scale, so a small panel wears few labels. |
 | `header` | shown | `{ show, formatter(key, { dimension, index, count }), style }`. |
 | `panel` | none | `(key, { index, seriesNames }) => ApexOptions`, a per-panel override applied last. |
 
-**API.** `chart.getPanels()` returns the panels in grid order; `chart.getPanel(key)` returns one panel's own ApexCharts instance (the escape hatch to every per-chart API the trellis does not re-expose); `chart.promotePanel(key)` / `chart.restorePanels()` drive the promotion from code. `ApexCharts.trellis(el, options)` is the imperative constructor and throws if the feature is not imported.
+**API.** `chart.getPanels()` returns the panels in grid order; `chart.getPanel(key)` returns one panel's own ApexCharts instance (the escape hatch to every per-chart API the trellis does not re-expose); `chart.promotePanel(key)` / `chart.restorePanels()` drive the promotion from code. `ApexCharts.trellis(el, options)` is the imperative constructor: it creates the host and starts rendering it (a later `render()` settles with the same mount). It returns `null`, with a console warning, when the trellis feature is not loaded, so check the return before calling panel methods.
+
+**Events.** `panelMounted`, `trellisMounted`, `panelPromoted` and `panelRestored` fire through `chart.events` (7.7.0) as well as `addEventListener`, with `(chart, payload)`; they are not in the shipped types. On scatter and bubble panels `dataPointIndex` indexes the panel's own data. To turn a trellis back into one chart, pass `trellis: null` to `updateOptions` (a cast in TypeScript); leaving the key out keeps the grid.
 
 **Annotations** take `scope`: absent or `'trellis'` draws in every panel through each panel's own scale, a key or array of keys restricts it.
 
@@ -289,7 +296,7 @@ api.on('draw', () => {
 
 Declared in the shipped `apexcharts.d.ts`: `ApexPluginAPI` (the `setup(api)` facade), `ApexPluginSeries`, `ApexPluginScales`, `ApexPluginLayer`, `ApexPluginHook`, `ApexPluginPayload`, and for the v6 additions `ApexPluginChartInfo` (`api.info`), `ApexPluginPointerEvent` (the `pointer` payload), `ApexPluginClaim` (`{ release(), update(entries) }`) and `ApexDrawnItem` (a `drawn()` row).
 
-### Typing gap at 7.6.1
+### Typing gap (still present at 8.0.0)
 
 `api.categories` and `data[].raw` are real at runtime (both shipped in v2) but are **not declared** in the shipped `apexcharts.d.ts`: `ApexPluginAPI` has no `categories` member and `ApexPluginSeries` is typed as `{ name?, hidden, color?, points }`. TypeScript rejects both. Cast the facade where you need them, and do not read the absence as "removed".
 
@@ -403,6 +410,8 @@ ApexCharts.perspectives.decode(str)
 const options = { chart: { perspectives: { serializeOptions: ['colors', 'title'] } } }
 ```
 
+Calling the static `decode` / `fromURL` counts as using Perspectives for every chart on the page that has the feature loaded, so an unlicensed page shows the watermark on those charts (a script-tag add-on included, since 7.9.1).
+
 ---
 
 ## Facet: design tokens and OS-aware themes
@@ -497,6 +506,55 @@ const b = {
   },
 }
 ```
+
+---
+
+## Highlight filter
+
+`import 'apexcharts/features/highlight-filter'` *(7.9)*: **Tier 2** (not in the default bundle; script tag `dist/features/highlight-filter.js`, or the full bundle) and **premium**. It watermarks only while a render draws parts: loading the feature, or drawing a chart with no parts, never does.
+
+Each value is drawn faded at its whole, with a part of it solid in front, from the same baseline and in the same slot: what a dashboard shows when a pick elsewhere leaves part of every value behind. The part travels with the data, as `highlightData` on a series (parallel to `data`, `null` where a datum has none) or `highlight` on a point (`{ x, y, highlight }`, which wins), so a pick and a clear are ordinary updates. A part may exceed its whole (an average) or have the other sign. Parts alone switch it on; every option is optional.
+
+```js
+import ApexCharts from 'apexcharts'
+import 'apexcharts/features/highlight-filter'
+
+const chart = new ApexCharts(el, {
+  chart: { type: 'bar' },
+  series: [{ name: 'Units', data: [34, 43, 66], highlightData: [26, null, 50] }],
+  xaxis: { categories: ['2015', '2016', '2017'] },
+})
+await chart.render()
+
+// A new pick is an updateSeries() with new parts, or the helpers:
+await chart.highlightFilter.set([[8, 14, 16]])   // one row per series
+await chart.highlightFilter.clear()               // the plain chart again
+```
+
+A pie, donut, polarArea, radialBar or gauge has no per-datum slot for a part, so give one per slice or ring in `highlightFilter.data` (a `highlight` on a slice's own `{ x, y }` point wins). A nested treemap takes `highlight` on each leaf and ignores `highlightData` with a warning.
+
+| Option | Default | Notes |
+|---|---|---|
+| `enabled` | `true` | `false` keeps the parts in the data but draws the chart as usual. |
+| `data` | none | Circles only: one part per slice or ring. Ignored, with a warning, while its length differs from the slice count. |
+| `fadeOpacity` | `0.2` | Opacity of the faded whole. |
+| `outline` | `{ width: 1, opacity: 1 }` | Keeps a faded whole readable; `width: 0` for none. |
+| `enter` | `'whole'` | First pick: each part starts as its whole and drains (or grows) to the part. `'baseline'` rises from the baseline. |
+| `axis` | `'extend'` | A part past the value axis stretches the axis; `'clamp'` keeps the axis the wholes set. |
+| `dataLabels` | `{ value: 'part', total: 'part' }` | Each `'part'` or `'whole'`. `total` is the stack total and the donut's centre total. |
+| `tooltip` | `{ show: true, share: false }` | Each row reads "part / whole"; `share` appends the part's percentage; `formatter(part, whole, opts)` returns the row's value text instead (plain text or HTML); the series name stays. |
+
+Per type:
+
+- `line.dashArray` (`4`): a line chart draws the whole dashed at full strength, with the part solid over it.
+- `pie.encoding` (`'radius'`): how a part's share sets its radius on pie and donut; `'area'` makes the part's area its share. polarArea follows its own value scale.
+- `radialBar.indicator`: `'arc'` when unset (the part as a solid arc in front of its faded whole), except `'needle'` on a gauge with `plotOptions.radialBar.shape: 'needle'`. `'lanes'` splits each ring into an outer whole lane and an inner part lane, for a part that can exceed its whole (`lanes.opacity`, default 0.45; the word on the whole lane's tooltip row is the locale's `options.highlightFilter.part`). `needle: { color, length, baseWidth, tipWidth, offsetY }` falls back to `plotOptions.radialBar.needle`.
+
+**Where it draws.** Column and bar (grouped, horizontal, distributed, negative values, stacked including 100% and groups), funnel and pyramid, line and area (every curve, stacked area too), pie, donut, polarArea, radialBar and gauge, and treemap (flat and nested). Any other type, mixed-type charts, range series, histograms, and stacked charts over more than one y axis or a logarithmic one warn once and draw as usual. `highlightData` cannot follow `chart.dataReducer` or `chart.streaming` and warns there: put the part on each point instead.
+
+**API and event.** `chart.highlightFilter` is `{ isActive(), valueAt(seriesIndex, dataPointIndex?), set(parts, opts?), clear(opts?) }`, or `null` without the feature (parts are then ignored with one console warning naming the import). `set` takes one row per series, one value per slice or ring on a circle, or a function of the datum, and resolves when the update is drawn. `chart.events.highlightFilterChanged(chart, { active, phase })` fires once that render is drawn, with `phase` `'enter'`, `'update'` or `'clear'`. Slice and tile label formatters (pie, donut, polarArea, treemap) and the donut and radialBar centre value and total formatters receive `opts.highlight` (`{ value, total, share, overflow }`). In `tooltip.custom`, read the part with `opts.ctx.highlightFilter.valueAt(opts.seriesIndex, opts.dataPointIndex)`.
+
+**Drilldown.** A drill, either way, drops the parts from the level it shows, including any written into a `drilldown.series` entry, and reports `'clear'` if parts were on screen. Send the pick for the new level with `chart.highlightFilter.set()`.
 
 ---
 
@@ -641,13 +699,14 @@ const options = { chart: { streaming: { enabled: true, maxPoints: 100000 } } }
 
 ## Drilldown: hierarchical drill-down
 
-`import 'apexcharts/features/drilldown'` (add `import 'apexcharts/features/morph'` for animated cross-type transitions): both Tier 1 (already in the default bundle).
+`import 'apexcharts/features/drilldown'`: **Tier 2 since 8.0** (no longer in the default bundle; script tag `dist/features/drilldown.js`, or the full bundle). Free. `apexcharts/features/morph`, for animated cross-type transitions, is Tier 1 and already in the default bundle. Without the drilldown import, a chart with `drilldown.enabled` warns once and draws its root level, which never navigates, and `chart.drillDown()` / `drillUp()` / `drillToRoot()` / `clearDrilldownCache()` throw.
 
 Data points reference a child level via a `drilldown` id; clicking drills in, with an optional breadcrumb. Since **v6.9** drilldown also works on **line and area** charts, and levels can be resolved **async** against a backend.
 
 ```js
-import 'apexcharts/features/drilldown'
-import 'apexcharts/features/morph'   // optional, animated type morphs
+import ApexCharts from 'apexcharts'
+import 'apexcharts/features/drilldown'   // Tier 2 since 8.0
+import 'apexcharts/features/morph'       // animated type morphs; already in the default bundle
 
 const options = {
   series: [{ data: [
@@ -690,6 +749,8 @@ chart.drillToRoot()
 
 **Async failure semantics (v6.9):** a failed fetch never strands the view. On a throw, a rejection, or a resolver returning something without a `data` array, the chart stays where it was, the breadcrumb is untouched, nothing is cached, and `drillDownError` fires. A second click while one resolve is in flight is ignored rather than starting a second request.
 
+*(8.0)* A child level naming a Tier 2 chart type whose renderer the page has not loaded (`unit` / `waffle`, `sunburst`, `icicle`, `violin`, and `raincloud`, which draws through violin) is refused too: the update stops before anything moves, the level comes back off the stack, `drillDownError` fires with the error, and the `chart.drillDown(id)` promise rejects. A `waterfall`, `dumbbell` or `streamgraph` level without its feature is not refused: it navigates, then draws blank with one console warning. Load each level's chart type and feature as well as the drilldown feature.
+
 ---
 
 ## Stats: raw-sample statistics (6.9.0)
@@ -700,9 +761,9 @@ Free. The statistics behind three things, kept out of core so they cost nothing 
 
 - **Histogram binning**: `chart.type: 'histogram'` bins raw observations (the `apexcharts/histogram` entry includes this feature automatically).
 - **Raw samples for boxPlot and violin**: a datum supplying `points: [number]` instead of a summary `y` gets its quartiles (R type 7) or KDE density computed.
-- **`chart.rowSeries(opts?)`**: returns the rows behind the chart's marks as a unit-chart series (one cluster per mark), or `null` when the type has no row source. `chart.updateOptions({ chart: { type: 'unit' }, series: chart.rowSeries() })` opens a summary into its observations; with the `morph` feature loaded each dot leaves from the part of the mark that stood for it.
+- **`chart.rowSeries(opts?)`**: returns the rows behind the chart's marks as a unit-chart series (one cluster per mark), or `null` when the type has no row source. `chart.updateOptions({ chart: { type: 'unit' }, series: chart.rowSeries() })` opens a summary into its observations; with the `morph` feature loaded each dot leaves from the part of the mark that stood for it. Since 8.0 `unit` is Tier 2, so add `import 'apexcharts/unit'` (or `dist/unit.js`, or the full bundle) first. Without it the update is refused with a console error and the chart stays as it was.
 
-Full data shapes and options are in `references/financial-charts.md`. The full `apexcharts` bundle includes it.
+Full data shapes and options are in `references/financial-charts.md`. The default `apexcharts` bundle includes it.
 
 ---
 
@@ -736,9 +797,9 @@ const options = {
 
 ## Common Pitfalls
 
-1. **Assuming the full bundle still carries everything *(the #1 v6 → v7 mistake)*.** In v6, `import ApexCharts from 'apexcharts'` was enough for every feature. In v7 the nine Tier 2 features and the `raincloud` and `icicle` types need their own import on top of it. Read the console: each one names both routes when its config is present without it.
+1. **Assuming the default bundle carries everything *(the #1 upgrade mistake, v6 to v7 and again 7 to 8)*.** In v6, `import ApexCharts from 'apexcharts'` was enough for every feature. At 8.0 each of these needs its own import on top of it: the features `trellis`, `storyboard`, `perspectives`, `ink`, `renderer-canvas`, `link`, `measure`, `history`, `context-menu`, `highlight-filter`, `drilldown`, `waterfall`, `dumbbell` and `streamgraph`, and the `unit` / `waffle`, `sunburst`, `violin`, `icicle` and `raincloud` chart types. Read the console: each names the import, the script-tag file and `apexcharts.full.min.js`.
 2. **Forgetting the feature import on a tree-shaken build**: a Tier 1 feature is in the default bundle but not in `apexcharts/core` or a per-type entry, so those builds still need `import 'apexcharts/features/<name>'`.
-3. **Reaching for `apexcharts/features/all` to fix either of the above**: it is the Tier 1 set only, by design (`tests/unit/feature-tier-budget.spec.js` upstream fails the build if a Tier 2 feature reappears in it).
+3. **Reaching for `apexcharts/features/all` to fix either of the above**: it is the Tier 1 set only, by design (`tests/unit/feature-tier-budget.spec.js` upstream fails the build if a Tier 2 feature reappears in it). The entry that does have everything is `apexcharts/full`.
 4. **Using `api.zeroY` in a custom mark**: it does not exist. Use `ctx.scales.y(0)` for the baseline.
 5. **Expecting `mode: 'filter'` on `chart.link` without records**: highlight mode needs `chart.selection.enabled: true`; the crossfilter engine needs `ApexCharts.crossfilter({ id, records })` or a `dimension` extractor.
 6. **Two different `largeDatasetThreshold` options.** `chart.animations.largeDatasetThreshold` (default 1000) skips update animations; `markers.largeDatasetThreshold` *(v7.0, default 0 = off)* batches a series' markers into one path. Neither lives on `chart` directly.

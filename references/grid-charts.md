@@ -9,12 +9,12 @@
 ## Tree-Shakeable Import
 
 ```js
-import ApexCharts from 'apexcharts/heatmap'   # heatmap only
-import ApexCharts from 'apexcharts/treemap'    # treemap only
-import ApexCharts from 'apexcharts/icicle'     # icicle (v7.6): opt-in, see below
+import ApexCharts from 'apexcharts/heatmap'   // heatmap only
+import ApexCharts from 'apexcharts/treemap'    // treemap only
+import ApexCharts from 'apexcharts/icicle'     // icicle (v7.6): Tier 2, see below
 ```
 
-`icicle` is **not in the default bundle**. Unlike every other type here, `import ApexCharts from 'apexcharts'` does not carry its class, so `chart.type: 'icicle'` throws until the sub-entry (or `dist/icicle.js` after the ApexCharts script) has registered it. Loading the full bundle is not a workaround, which is what the v7.6.1 error message was corrected to stop suggesting.
+`icicle` is **not in the default bundle** (Tier 2 since v7.6). Unlike every other type here, `import ApexCharts from 'apexcharts'` (script tag `dist/apexcharts.min.js`) does not carry its class, so a `chart.type: 'icicle'` chart fails to render, and the console names the import, until something registers it. Add `import 'apexcharts/icicle'` next to `import ApexCharts from 'apexcharts'` (script tag: `dist/icicle.js`), or use the full bundle (`import ApexCharts from 'apexcharts/full'`, `dist/apexcharts.full.min.js`, v8.0), which has it. `import ApexCharts from 'apexcharts/icicle'` on its own is the core plus icicle, without the Tier 1 features (toolbar, exports, keyboard and the rest).
 
 ---
 
@@ -172,7 +172,9 @@ plotOptions: {
                                // false forces the flat two-level layout
       drilldownAsLevels: false // read `drilldown: '<id>'` ids on data points as extra levels
                                // instead of as click targets for the drilldown feature.
-                               // Default false ("descend on click" is the historical meaning)
+                               // Default false ("descend on click" is the historical meaning).
+                               // Since v8.0 those click targets need the Tier 2
+                               // import 'apexcharts/features/drilldown'
     },
     parents: {                 // how branch containers are drawn once the data is nested
       show: 'auto'             // 'auto' (on when the data carries children) | true | false
@@ -191,7 +193,8 @@ The hierarchy resolver is shared with sunburst, including the `drilldown: '<id>'
 Same hierarchy as the sunburst, drawn in cartesian coordinates: one band per depth level, each child sized inside its parent's extent along the value axis. Axis-style `[{ data: [...] }]` wrapper, `{ x, y, children }` nodes to any depth.
 
 ```js
-import ApexCharts from 'apexcharts/icicle'   // required: not in the default bundle
+import ApexCharts from 'apexcharts'
+import 'apexcharts/icicle'   // Tier 2: not in the default bundle (apexcharts/full already has it)
 
 const options = {
   chart: { type: 'icicle' },
@@ -376,6 +379,6 @@ A click that would not change the view is refused rather than performed: clickin
 3. **Treemap with negative values** — treemap `y` values must be positive (they represent area). Negative values cause rendering issues.
 4. **Confusing heatmap `y` with position** — in heatmap data `{ x, y }`, the `y` is the VALUE (color intensity), NOT the y-axis position. The series `name` determines the row.
 5. **Nested treemap branch carrying its own `y` (v6.9)**: a branch node normally omits `y`; its area is the sum of its children. Only leaves supply values. Flattening a hierarchy by hand is no longer necessary; pass `children` instead.
-6. **`chart.type: 'icicle'` on the default bundle (v7.6)** — icicle is opt-in and the default build carries no class for it, so this throws. Add `import ApexCharts from 'apexcharts/icicle'` (or load `dist/icicle.js` after the ApexCharts script). Loading the full `apexcharts.js` does **not** help: it does not carry the class either.
+6. **`chart.type: 'icicle'` on the default bundle (v7.6)**: icicle is Tier 2 and the default build carries no class for it, so the chart fails to render and the console names the import. Add `import 'apexcharts/icicle'` next to `import ApexCharts from 'apexcharts'` (or load `dist/icicle.js`). The default `apexcharts.js` does not carry the class; the full bundle (`apexcharts/full`, `dist/apexcharts.full.min.js`, v8.0) does.
 7. **Reaching for `zoomType: 'both'` to make a branch fill the plot** — `'value'` already stretches the branch across the full width; what `'both'` additionally does is move every level, which costs the reader their place in the tree. Change it only when the ancestors genuinely do not matter.
 8. **Expecting `sort: 'value'` on a flame graph** — `'name'` is the flame-graph convention, because it holds a frame in the same place across profiles so two runs of one program can be compared by eye.

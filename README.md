@@ -11,24 +11,24 @@ AI coding skill for building [ApexCharts.js](https://apexcharts.com/) charts and
 > | **ApexTree** — hierarchy / org charts | `apextree` | [`apextree-skill`](https://github.com/apexcharts/apextree-skill) |
 > | **ApexSankey** — flow / Sankey | `apexsankey` | [`apexsankey-skill`](https://github.com/apexcharts/apexsankey-skill) |
 > | **Apex Grid** — data grid | `apex-grid` | [`apexgrid-skill`](https://github.com/apexcharts/apexgrid-skill) |
-| **ApexStock**: financial / OHLC | `apexstock` | [`apexstock-skill`](https://github.com/apexcharts/apexstock-skill) |
-| **ApexMaps**: maps / geo | `apexmaps` | [`apexmaps-skill`](https://github.com/apexcharts/apexmaps-skill) |
+> | **ApexStock**: financial / OHLC | `apexstock` | [`apexstock-skill`](https://github.com/apexcharts/apexstock-skill) |
+> | **ApexMaps**: maps / geo | `apexmaps` | [`apexmaps-skill`](https://github.com/apexcharts/apexmaps-skill) |
 
 ## What This Does
 
 AI models frequently generate incorrect ApexCharts code — wrong series data formats, missing `render()` calls, broken formatter signatures, etc. This skill provides structured reference files that help AI assistants generate correct ApexCharts code on the first try.
 
-This skill targets **ApexCharts v7** (v5 and v6 configs keep working, apart from two v7.0 breaking changes the skill documents).
+This skill targets **ApexCharts v8** (v5, v6 and v7 configs keep working, apart from the breaking changes the skill documents).
 
-> **The v7.0 change to know about:** the default bundle no longer ships every feature. Nine features (trellis, storyboard, perspectives, ink, canvas renderer, link, measure, history, context menu) plus the `raincloud` chart type now need an explicit `import 'apexcharts/features/<name>'` **even on the full bundle**. This is the most common v6 → v7 upgrade failure, so the skill leads with it.
+> **The v8.0 change to know about:** the default bundle no longer carries `unit`/`waffle`, `sunburst`, `violin`, drilldown, waterfall, dumbbell or streamgraph. Import them next to `apexcharts` (`import 'apexcharts/sunburst'`, `import 'apexcharts/features/waterfall'`), or load `apexcharts/full`, which has every chart type and feature. `icicle`, `raincloud`, the highlight filter and the nine v7.0 features (trellis, storyboard, perspectives, ink, canvas renderer, link, measure, history, context menu) were already separate imports. This is the most common v7 to v8 upgrade failure, so the skill leads with it.
 
 ### Coverage
 
-- **28 chart types**: line, area, bar, pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot, violin, histogram, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge, sunburst, unit, waffle, waterfall, dumbbell, streamgraph, raincloud
+- **30 `chart.type` values**: line, area, bar (with its `column` synonym), pie, donut, radialBar, scatter, bubble, heatmap, candlestick, boxPlot, violin, histogram, radar, polarArea, rangeBar, rangeArea, treemap, funnel, pyramid, gauge, sunburst, icicle, unit, waffle, waterfall, dumbbell, streamgraph, raincloud
 - **Correct data formats** for every chart type
 - **Common pitfalls** with wrong/correct code examples
-- **Feature platform**: small multiples (Trellis), plugins (Weave), canvas renderer (Strata), custom series (Marks), undo/redo (Rewind), shareable views (Perspectives), themes (Facet), easing (Cadence), crossfilter (Link), annotation authoring (Ink), measure ruler, context menu, storyboard, streaming, drilldown, raw-sample statistics (Stats), unit-chart shape kit (`apexcharts/unit-shapes`), pictogram glyphs (`apexcharts/pictograms`)
-- **Bundle tiers** (which features are in the default v7 bundle and which are not), tree-shaking, and the lean-core script-tag channel
+- **Feature platform**: small multiples (Trellis), plugins (Weave), canvas renderer (Strata), custom series (Marks), undo/redo (Rewind), shareable views (Perspectives), themes (Facet), easing (Cadence), crossfilter (Link), annotation authoring (Ink), measure ruler, context menu, storyboard, streaming, drilldown, part-of-whole highlight (Highlight filter), raw-sample statistics (Stats), unit-chart shape kit (`apexcharts/unit-shapes`), pictogram glyphs (`apexcharts/pictograms`)
+- **Bundle contents** (which chart types and features the default v8 bundle carries, which are opt-in imports, and the `apexcharts/full` bundle), tree-shaking, and the lean-core script-tag channel
 - **SSR** (server-side rendering) and hydration
 - **Framework integration**: React, Vue 3, Angular
 
@@ -86,7 +86,7 @@ const barCharts = await readFile(referencePath('bar-charts.md'), 'utf8');
 │   ├── bar-charts.md           # bar, column, rangeBar, timeline/Gantt, funnel, pyramid, waterfall, dumbbell
 │   ├── financial-charts.md     # candlestick, boxPlot, violin, histogram, raincloud
 │   ├── circular-charts.md      # pie, donut, polarArea, radialBar, gauge, sunburst, unit, waffle, pictograms
-│   ├── grid-charts.md          # heatmap, treemap
+│   ├── grid-charts.md          # heatmap, treemap, icicle
 │   ├── radar-charts.md         # radar
 │   ├── feature-platform.md     # feature platform + bundle tiers (trellis, plugins, canvas, undo/redo, ...)
 │   ├── tree-shaking.md         # bundle tiers and optimization

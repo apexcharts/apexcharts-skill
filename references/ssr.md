@@ -10,13 +10,21 @@ ApexCharts supports SSR for generating chart SVGs on the server (Node.js) and hy
 // Server (Node.js) — includes renderToString, renderToHTML
 import ApexCharts from 'apexcharts/ssr'
 
-// Client (Browser) — for hydration after SSR
-import ApexCharts from 'apexcharts'          // auto-detects browser
-// or explicitly:
-import ApexCharts from 'apexcharts/client'
+// Client (Browser), for hydration after SSR: hydrate() and hydrateAll() live only here
+import ApexCharts from 'apexcharts/ssr'   // self-contained, safe in the browser
 ```
 
-**Important:** The default `import ApexCharts from 'apexcharts'` uses Node.js conditional exports. In Node.js, it automatically resolves to the SSR bundle. In browsers (bundlers), it resolves to the client bundle.
+**Important:** The default `import ApexCharts from 'apexcharts'` uses Node.js conditional exports. In Node.js, it automatically resolves to the SSR bundle. In browsers (bundlers), it resolves to the client bundle, the same file as `apexcharts/client`, which has no `hydrate()`, `hydrateAll()` or `isHydrated()`. Hydrate with `apexcharts/ssr`.
+
+**The SSR bundle registers the default chart set only *(v8.0)*.** It is built from the same entry as the default bundle, so the Tier 2 chart types and features (see `tree-shaking.md`) are not in it: `renderToString` rejects for a Tier 2 type (`SSR rendering failed: ... not registered`), and a waterfall renders an empty plot with a warning. Import what you use next to `apexcharts/ssr`; chart types and features register through a shared registry, so the SSR class picks them up:
+
+```js
+import ApexCharts from 'apexcharts/ssr'
+import 'apexcharts/sunburst'             // unit, sunburst, violin, icicle, raincloud: the type's entry
+import 'apexcharts/features/waterfall'   // waterfall, dumbbell, streamgraph, drilldown: the feature
+```
+
+Or `import ApexCharts from 'apexcharts/full'`, which under Node carries `renderToString` and every type. The client that hydrates needs the same type and feature imports next to `apexcharts/ssr` (in the browser `apexcharts/full` has no hydrate methods).
 
 ---
 
@@ -77,7 +85,7 @@ After the server-rendered HTML is in the DOM, hydrate it to make it interactive:
 ### hydrate(element, clientOptions?)
 
 ```js
-import ApexCharts from 'apexcharts'
+import ApexCharts from 'apexcharts/ssr'   // not 'apexcharts' or 'apexcharts/client': no hydrate() there
 
 // Hydrate a specific chart element (optionally merge client-only options).
 // Select the emitted wrapper, not a chart id: `#my-chart` matches nothing.
@@ -131,7 +139,9 @@ app.get('/', async (req, res) => {
     <body>
       ${chartHTML}
       <script type="module">
-        import ApexCharts from '/node_modules/apexcharts/dist/apexcharts.esm.js'
+        // The self-contained SSR build. dist/apexcharts.esm.js imports apexcharts/core
+        // by bare name (needs a bundler or an import map) and has no hydrateAll().
+        import ApexCharts from '/node_modules/apexcharts/dist/apexcharts.ssr.esm.js'
         ApexCharts.hydrateAll()
       </script>
     </body>
@@ -176,7 +186,7 @@ import { useEffect } from 'react'
 
 export default function HydrateCharts() {
   useEffect(() => {
-    import('apexcharts').then(({ default: ApexCharts }) => {
+    import('apexcharts/ssr').then(({ default: ApexCharts }) => {
       ApexCharts.hydrateAll()
     })
   }, [])
@@ -194,7 +204,7 @@ export default function HydrateCharts() {
 
 <script setup>
 // Server-side
-const chartHTML = await useAsyncData('chart', async () => {
+const { data: chartHTML } = await useAsyncData('chart', async () => {
   const ApexCharts = (await import('apexcharts/ssr')).default
   return await ApexCharts.renderToHTML(
     {
@@ -208,7 +218,7 @@ const chartHTML = await useAsyncData('chart', async () => {
 
 // Client-side hydration
 onMounted(async () => {
-  const ApexCharts = (await import('apexcharts')).default
+  const ApexCharts = (await import('apexcharts/ssr')).default
   ApexCharts.hydrateAll()
 })
 </script>
@@ -223,3 +233,5 @@ onMounted(async () => {
 3. **Forgetting to hydrate on the client** — server-rendered charts are static SVGs. Without `hydrate()`, they have no interactivity (no tooltips, zoom, click events).
 4. **Missing width/height**: SSR has no DOM to measure. Pass explicit dimensions in the **second** argument: `renderToString(options, { width, height })` / `renderToHTML(options, { width, height })`.
 5. **Hydrating before DOM is ready** — call `hydrate()` after the server-rendered HTML is in the DOM (use `onMounted`, `useEffect`, or `DOMContentLoaded`).
+6. **Hydrating with `apexcharts` or `apexcharts/client`**: those browser builds have no hydrate methods, so `ApexCharts.hydrateAll()` throws a TypeError. Import `apexcharts/ssr` on the client too.
+7. **Server-rendering a Tier 2 type with `apexcharts/ssr` alone *(v8.0)***: `unit`, `waffle`, `sunburst`, `violin`, `icicle` and `raincloud` reject, and `waterfall`, `dumbbell` and `streamgraph` render empty. Import the type's entry or feature next to it, on the server and on the client.
