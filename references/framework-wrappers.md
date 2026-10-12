@@ -241,8 +241,8 @@ updateChart() {
 ```html
 <div id="chart"></div>
 
-<!-- CDN -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@8/dist/apexcharts.min.js"></script>
+<!-- CDN, pinned to a release -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.1.0/apexcharts.min.js"></script>
 
 <script>
   const options = {
@@ -260,15 +260,19 @@ updateChart() {
 
 ```html
 <!-- default bundle -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@8/dist/apexcharts.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.1.0/apexcharts.min.js"></script>
 <!-- one add-on next to it: an opt-in chart type -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@8/dist/sunburst.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.1.0/sunburst.js"></script>
 
 <!-- or the full bundle: every chart type and feature, no add-ons -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@8/dist/apexcharts.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.1.0/apexcharts.full.min.js"></script>
+
+<!-- the same files on jsDelivr keep the dist/ folder in the path -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@8.1.0/dist/apexcharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@8.1.0/dist/sunburst.js"></script>
 ```
 
-Pin the major: the unversioned URLs (`https://cdn.jsdelivr.net/npm/apexcharts`, `https://unpkg.com/apexcharts`) moved to 8.0 on its release. Use `apexcharts@7` to stay on 7. The other add-ons are `dist/unit.js`, `dist/violin.js`, `dist/icicle.js` and `dist/features/<name>.js`, and may load before or after the main script.
+**Always write an exact version**, as above, never a major channel (`apexcharts@<major>`) or the unversioned URL: sandboxes that host generated pages (artifacts, previews) commonly reject a URL without an exact version, and an exact pin keeps a page working when the next major changes what the default bundle holds. **Never write a 3.x or 4.x URL** (`.../apexcharts/3.54.1/...`): those are releases from 2024 and early 2025, and this skill does not describe them. If an environment only accepts an older release, use the newest one it accepts with the same major version as the URLs above, since this skill applies to that whole major. To stay on an older major, pin a release from it. The other add-ons are `unit.js`, `violin.js`, `icicle.js` and `features/<name>.js` beside `apexcharts.min.js`, and may load before or after the main script.
 
 ---
 
