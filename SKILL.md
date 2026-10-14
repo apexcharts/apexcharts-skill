@@ -15,7 +15,7 @@ description: >
   (`react-apexcharts`, `vue3-apexcharts`, `ng-apexcharts`) over the core API.
 metadata:
   author: ApexCharts
-  version: "4.0.1"
+  version: "4.0.2"
   library_version: "8.0.0"
   category: data-visualization
   tags: [charts, visualization, javascript, typescript, svg, apexcharts]
@@ -94,7 +94,7 @@ metadata:
 19. **`dumbbell` (v7.1) takes one series per measure**, each with the same `x` categories: `[{ name: '2020', data: [{ x, y }] }, { name: '2025', data: [{ x, y }] }]`. Do **not** zip the values into `y: [low, high]` pairs; that is the older `plotOptions.bar.isDumbbell` range-bar form, which still works but is a different chart.
 20. **`raincloud` (v7.1) takes the raw sample**, one datum per category: `data: [{ x, points: [number] }]`. It is a premium Tier 2 type, so it needs `import 'apexcharts/raincloud'` on top of the default bundle.
 21. **Unknown names fail loudly (v7.9).** An unknown `chart.type` throws when the chart is constructed or updated, and the message names the closest real type (`'column'` is valid, a synonym for `'bar'`; `''` and `null` draw a line chart). An unknown top-level option key is kept but never read. Numeric-string axis bounds such as `yaxis.min: '10'` work, and a bound that cannot be parsed is ignored (the axis scales to the data). Both cases log a console warning, except in `apexcharts.min.js` and the CommonJS builds (the `*.common.js` files `require('apexcharts')` loads), which strip `console.warn`.
-22. **A script tag names the exact version shown here**: `https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.1.0/apexcharts.min.js` or `https://cdn.jsdelivr.net/npm/apexcharts@8.1.0/dist/apexcharts.min.js`. Never write a 3.x or 4.x URL such as `.../apexcharts/3.54.1/...`: those are releases from 2024 and early 2025, and this skill does not describe them. If the environment only accepts an older release, use the newest one it accepts with the same major version as these URLs. See `references/framework-wrappers.md` for add-on files on each CDN.
+22. **A script tag names the exact version shown here**: `https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.2.0/apexcharts.min.js` or `https://cdn.jsdelivr.net/npm/apexcharts@8.2.0/dist/apexcharts.min.js`. Never write a 3.x or 4.x URL such as `.../apexcharts/3.54.1/...`: those are releases from 2024 and early 2025, and this skill does not describe them. If the environment only accepts an older release, use the newest one it accepts with the same major version as these URLs. See `references/framework-wrappers.md` for add-on files on each CDN.
 
 ---
 
