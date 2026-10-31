@@ -26,7 +26,7 @@ import ApexCharts from 'apexcharts/full'   // script tag: dist/apexcharts.full.m
 | 8.0.0 default bundle | 263,188 B (**-9.8%**) |
 | 8.0.0 full bundle | 381,135 B |
 
-Unversioned CDN URLs serve 8.0. Pin `apexcharts@7` to stay on 7.
+Unversioned CDN URLs serve the latest 8.x release. Pin a 7.x release to stay on 7.
 
 ## ⚠️ What changed in v7.0
 
@@ -166,12 +166,13 @@ Required whatever entry point you used, the default `apexcharts` bundle included
 | Waterfall *(v7.1; Tier 2 since v8.0)* | `import 'apexcharts/features/waterfall'` | 2.8 KB | no | The `waterfall` chart type |
 | Dumbbell *(v7.1; Tier 2 since v8.0)* | `import 'apexcharts/features/dumbbell'` | 2.1 KB | no | The `dumbbell` chart type |
 | Raincloud *(v7.1)* | `import 'apexcharts/raincloud'` | 2.4 KB + violin 6.4 KB | yes | The `raincloud` chart type. The entry brings violin and the feature; `apexcharts/features/raincloud` alone works only where violin is already registered *(v8.0)* |
+| Radial targets *(v8.5)* | `import 'apexcharts/features/radial-targets'` | 2.9 KB (at 8.7.0) | no | `plotOptions.radialBar.targets`: target and limit marks on a radialBar ring or a gauge. Never in the default bundle: it shipped as an add-on |
 
 Storyboard registers Perspectives, so importing both costs no more than Storyboard alone.
 
 **`apexcharts/features/all` does not include Tier 2**, by design: upstream has a tier-budget test that fails the build if a Tier 2 feature reappears in it.
 
-**Nothing fails silently on Tier 2.** Each module warns in the console when its configuration is present but the module is not, and the warning names the ESM import, the script-tag file and `apexcharts.full.min.js`. Where the chart can still draw something sensible it does and says what it did instead: a trellis renders as a single chart, `renderer: 'canvas'` falls back to SVG.
+**Nothing fails silently on Tier 2.** Each module warns in the console when its configuration is present but the module is not, and the warning names the ESM import, the script-tag file and `apexcharts.full.min.js`. Where the chart can still draw something sensible it does and says what it did instead: a trellis renders as a single chart, `renderer: 'canvas'` falls back to SVG, a radialBar or gauge draws its dial without `plotOptions.radialBar.targets`.
 
 ---
 
@@ -210,7 +211,7 @@ It depends on the tier.
 - `addXaxisAnnotation()` does nothing
 - `dataURI()` / `exportToCSV()` throw because the feature isn't registered
 
-**Tier 2 features announce themselves.** Each warns in the console when its configuration is present but the module is not, naming the ESM import, the script-tag file and `apexcharts.full.min.js`, and degrades predictably where it can: a `trellis` config renders as one ordinary chart, `renderer: 'canvas'` falls back to SVG. If a chart is quietly missing a feature you configured, **check the console before the config**. Since 7.9.1 the minified `apexcharts.min.js` prints these warnings too.
+**Tier 2 features announce themselves.** Each warns in the console when its configuration is present but the module is not, naming the ESM import, the script-tag file and `apexcharts.full.min.js`, and degrades predictably where it can: a `trellis` config renders as one ordinary chart, `renderer: 'canvas'` falls back to SVG, targets on a radialBar or gauge are left off the dial (one warning per chart, not one per update). If a chart is quietly missing a feature you configured, **check the console before the config**. Since 7.9.1 the minified `apexcharts.min.js` prints these warnings too.
 
 **Opt-in chart types throw *(v8.0)*.** `unit`, `waffle`, `sunburst`, `violin`, `icicle` and `raincloud` without their entry make `render()` reject, and the console prints one error naming the import, the script tag and the full bundle. An `updateOptions()` that switches to an unloaded type keeps the current chart.
 
@@ -291,7 +292,7 @@ export default {
 
 ## Common Pitfalls
 
-1. **Assuming the default bundle still has everything *(v7, v8)***: the Tier 2 chart types (`unit`/`waffle`, `sunburst`, `violin`, `icicle`, `raincloud`) and Tier 2 features (the nine since 7.0, highlight-filter since 7.9, and drilldown, waterfall, dumbbell and streamgraph since 8.0) need their own import on top of `import ApexCharts from 'apexcharts'`, or the full bundle. This is the most common upgrade failure, v6 to v7 and v7 to v8.
+1. **Assuming the default bundle still has everything *(v7, v8)***: the Tier 2 chart types (`unit`/`waffle`, `sunburst`, `violin`, `icicle`, `raincloud`) and Tier 2 features (the nine since 7.0, highlight-filter since 7.9, drilldown, waterfall, dumbbell and streamgraph since 8.0, and radial-targets since 8.5) need their own import on top of `import ApexCharts from 'apexcharts'`, or the full bundle. This is the most common upgrade failure, v6 to v7 and v7 to v8.
 2. **Reaching for `apexcharts/features/all` to fix it**: that is the Tier 1 set by design and pulls in no Tier 2 module.
 3. **Missing feature imports on a tree-shaken build**: Tier 1 features fail silently. If legend/toolbar/annotations don't appear, check imports.
 4. **Adding a per-type entry for a type the default bundle already has** (`apexcharts/line`, `apexcharts/bar`, `apexcharts/waterfall` next to `apexcharts`): that is a second copy of the renderer. Next to `apexcharts`, add only the opt-in entries (`apexcharts/unit`, `/sunburst`, `/violin`, `/icicle`, `/raincloud`) and `apexcharts/features/*`. *(v7.0 fixed the related internal bug where the default bundle inlined its own core copy while add-ons resolved `apexcharts/core`, so an app importing both got two classes, ~130 KB gzipped of duplicate core, and a feature that never registered. They now share one core.)*

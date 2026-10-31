@@ -16,14 +16,14 @@ v5 and v6 configs keep working, with two v7.0 changes: `plotOptions.bar.borderRa
     import 'apexcharts/features/drilldown'   // a Tier 2 feature
 
 Tier 2 chart types, `import 'apexcharts/<type>'` (script tag `dist/<type>.js`): `unit` (also for `waffle`), `sunburst` and `violin` (all three since 8.0), `icicle` (7.6), and `raincloud` (`apexcharts/raincloud` brings violin plus the raincloud feature; script tags `dist/violin.js`, then `dist/features/raincloud.js`).
-Tier 2 features, `import 'apexcharts/features/<name>'` (script tag `dist/features/<name>.js`): drilldown, waterfall, dumbbell, streamgraph (since 8.0), highlight-filter (7.9), trellis, storyboard, perspectives, ink, renderer-canvas, link, measure, history, context-menu (since 7.0). Waterfall, dumbbell and streamgraph are chart types whose renderer is in the default bundle, so next to it add only the feature.
+Tier 2 features, `import 'apexcharts/features/<name>'` (script tag `dist/features/<name>.js`): radial-targets (8.5, for `plotOptions.radialBar.targets`), drilldown, waterfall, dumbbell, streamgraph (since 8.0), highlight-filter (7.9), trellis, storyboard, perspectives, ink, renderer-canvas, link, measure, history, context-menu (since 7.0). Waterfall, dumbbell and streamgraph are chart types whose renderer is in the default bundle, so next to it add only the feature.
 `apexcharts/features/all` is the Tier 1 set and pulls in none of them.
 Full bundle (v8.0): `import ApexCharts from 'apexcharts/full'` (script tag `dist/apexcharts.full.min.js`) carries every chart type and feature and needs no add-on import. Gzipped at 8.0.0: default bundle 263,188 B, full bundle 381,135 B.
-A missing import is named in the console: a Tier 2 chart type makes `render()` reject; a waterfall, dumbbell or streamgraph draws an empty plot; a Tier 2 feature degrades where it can (a trellis renders as one chart; renderer: 'canvas' falls back to SVG). Unversioned CDN URLs serve 8.0; pin `apexcharts@7` to stay on 7.
+A missing import is named in the console: a Tier 2 chart type makes `render()` reject; a waterfall, dumbbell or streamgraph draws an empty plot; a Tier 2 feature degrades where it can (a trellis renders as one chart; renderer: 'canvas' falls back to SVG; a gauge draws without its targets). Unversioned CDN URLs serve the latest 8.x release; pin a 7.x release to stay on 7.
 
-Premium (watermarked until an entitled premium/enterprise license): trellis, storyboard, link, ink, measure, context-menu, perspectives, history, highlight-filter, and the unit/waffle and raincloud chart types. Premium and Tier 2 are separate axes: since 8.0 every premium item is Tier 2, but renderer-canvas, drilldown, waterfall, dumbbell, streamgraph, sunburst, violin and icicle are Tier 2 and free.
+Premium (watermarked until an entitled premium/enterprise license): trellis, storyboard, link, ink, measure, context-menu, perspectives, history, highlight-filter, and the unit/waffle and raincloud chart types. Premium and Tier 2 are separate axes: since 8.0 every premium item is Tier 2, but renderer-canvas, drilldown, radial-targets, waterfall, dumbbell, streamgraph, sunburst, violin and icicle are Tier 2 and free.
 
-On by default: coherent add/remove data-transition animations (they respect prefers-reduced-motion), and one-finger kinetic pan (`chart.pan.inertia`). Since v7.8, `dataLabels.avoidOverlap` nudges overlapping data labels apart (`false` to disable). Pinch-zoom and two-finger pan follow `chart.zoom.pinch: 'auto'`: on only where the toolbar reset button is present.
+On by default: coherent add/remove data-transition animations (they respect prefers-reduced-motion), and one-finger kinetic pan (`chart.pan.inertia`). Since v7.8, `dataLabels.avoidOverlap` nudges overlapping data labels apart (`false` to disable). Pinch-zoom and two-finger pan follow `chart.zoom.pinch: 'auto'`: on only where the toolbar reset button is present. The mouse wheel follows `chart.zoom.allowMouseWheelZoom: 'auto'`, the same gate, and since v8.3 it is cooperative: a bare wheel scrolls the page (with a short hint, `chart.zoom.wheelHint: false` hides it), and Ctrl/Cmd + wheel or a trackpad pinch zooms. `allowMouseWheelZoom: true` zooms on every wheel.
 
 ## Framework wrapper detection — check `package.json` first
 
@@ -41,7 +41,7 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 4. **`yaxis` must be an array** when using multiple y-axes. Each entry needs `seriesName`.
 5. **`tooltip.shared` and `tooltip.intersect` are mutually exclusive.**
 6. **Use `null` (not `undefined`)** for missing data points.
-7. **`chart.stacked: true`** stacks `bar`, `area` and `line` series. In a mixed chart only the bar series stack unless `chart.stackOnlyBar: false`. `waterfall`, `dumbbell` and `streamgraph` force it off.
+7. **`chart.stacked: true`** stacks `bar`, `area` and `line` series. In a mixed chart only the bar series stack unless `chart.stackOnlyBar: false`. `waterfall`, `dumbbell` and `streamgraph` force it off. `chart.stackType: '100%'` draws shares of each stack's total; since v8.5 area and line stacks draw percentages too.
 8. **Responsive breakpoints** must be in ascending order.
 9. **For mixed/combo charts**, set `type` on each series object.
 10. **RadialBar values sit on the `plotOptions.radialBar.min` to `max` domain** (default 0 to 100, so percentages by default). Set `min` / `max` to plot raw values; a value outside the domain is clamped.
@@ -50,9 +50,9 @@ Wrappers handle `destroy()` automatically on unmount, accept reactive props, and
 13. **Tree-shaking**: `apexcharts/core` requires separate chart-type + feature imports. On it, `violin` and `raincloud` also need `apexcharts/bar`, and a raw-sample boxPlot or violin needs `apexcharts/features/stats`.
 14. **Aliases**: `funnel`/`pyramid` render through bar, `gauge` through radialBar. Use them as `chart.type` directly (no `plotOptions.bar.isFunnel`); covered by `apexcharts/bar` and `apexcharts/radialBar`.
 15. **`violin`** points use a density profile: `data: [{ x, y: { density: [[value, weight], ...], points?: [num] } }]`.
-16. **`render()` is idempotent**: a repeated `render()` returns the same promise; still `destroy()` before a new instance on the same element.
+16. **`render()` is idempotent**: a repeated `render()` returns the same promise; still `destroy()` before a new instance on the same element. Since v8.1 `render()` after `destroy()` draws that instance afresh, and `updateOptions` / `updateSeries` on a destroyed chart warn and resolve instead of throwing.
 17. **Unknown `chart.type` throws (v7.9)** and the message names the closest type. `'column'` is a synonym for `'bar'`; `''` and `null` draw a line chart.
-18. **A script tag names the exact version shown here**: `https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.5.0/apexcharts.min.js` or `https://cdn.jsdelivr.net/npm/apexcharts@8.5.0/dist/apexcharts.min.js`. Never write a 3.x or 4.x URL (`.../apexcharts/3.54.1/...`): those are releases from 2024 and early 2025. If the environment only accepts an older release, use the newest one it accepts with the same major version as these URLs.
+18. **A script tag names the exact version shown here**: `https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.6.0/apexcharts.min.js` or `https://cdn.jsdelivr.net/npm/apexcharts@8.6.0/dist/apexcharts.min.js`. Never write a 3.x or 4.x URL (`.../apexcharts/3.54.1/...`): those are releases from 2024 and early 2025. If the environment only accepts an older release, use the newest one it accepts with the same major version as these URLs.
 
 ---
 
@@ -179,6 +179,7 @@ apexcharts/features/waterfall       # (v7.1) waterfall type (Tier 2 since v8)
 apexcharts/features/dumbbell        # (v7.1) dumbbell type (Tier 2 since v8)
 apexcharts/features/streamgraph     # (v7.1) streamgraph type (Tier 2 since v8)
 apexcharts/features/highlight-filter # (v7.9) part-of-whole highlight, highlightFilter (premium)
+apexcharts/features/radial-targets  # (v8.5) plotOptions.radialBar.targets on radialBar / gauge (free)
 apexcharts/features/trellis         # (v7.0) small multiples (premium)
 apexcharts/features/storyboard      # scrollytelling (premium; registers perspectives)
 apexcharts/features/perspectives    # shareable view state (premium)
@@ -202,12 +203,14 @@ Lean core channel (v7.0): `dist/apexcharts.core.js` plus per-type files such as 
 | `xaxis.labels.formatter` | `(value, timestamp?, opts?) => string` |
 | `yaxis.labels.formatter` | `(value, opts?) => string` |
 | `tooltip.x.formatter` | `(value, opts?) => string` |
-| `tooltip.y.formatter` | `(value: number \| null, opts?) => string`; `value` is `null` at a gap, so guard: `val == null ? 'n/a' : val.toFixed(2)` |
+| `tooltip.y.formatter` | `(value: number \| null, opts?) => string \| null`; `value` is `null` at a gap, so guard: `val == null ? 'n/a' : val.toFixed(2)`. Returning `null` hides that row in a shared tooltip |
 | `tooltip.y.title.formatter` | `(seriesName, opts?) => string` |
 | `dataLabels.formatter` | `(value, opts?) => string \| number` |
-| `legend.formatter` | `(legendName, opts?) => string` |
+| `legend.formatter` | `(legendName, opts?) => string` (HTML; `legendName` is raw, so escape it before adding markup) |
 | `plotOptions.pie.donut.labels.total.formatter` | `(w) => string` |
 | `plotOptions.radialBar.dataLabels.value.formatter` | `(val) => string` |
+
+Names are text (v8.4): series names, categories, goal names and tree node names are escaped in the legend and tooltip, so markup in them shows literally. Markup a formatter returns still renders.
 
 ---
 
@@ -234,8 +237,9 @@ Lean core channel (v7.0): `dist/apexcharts.core.js` plus per-type files such as 
 ✅ `yaxis: [{ seriesName: 'Revenue', title: {...} }, { seriesName: 'Profit', opposite: true }]`
 
 ### 6. Both shared and intersect tooltips
-❌ `tooltip: { shared: true, intersect: true }`
+❌ `tooltip: { shared: true, intersect: true }` (constructing the chart throws)
 ✅ `tooltip: { shared: true, intersect: false }` or `{ shared: false, intersect: true }`
+`tooltip.visible: false` (v8.5) keeps hover events and crosshairs but draws no tooltip box; `enabled: false` turns hover off.
 
 ### 7. undefined for missing data
 ❌ `data: [10, undefined, 30]`

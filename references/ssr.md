@@ -50,6 +50,8 @@ const svgString = await ApexCharts.renderToString(
 // svgString is raw <svg>...</svg> markup
 ```
 
+The legend is HTML beside the SVG, so this standalone SVG carries **no legend** and its plot fills the chart. Use `renderToHTML` for a chart with its legend.
+
 ### renderToHTML(options, ssrOptions?)
 
 Returns an HTML string with a wrapper `<div>` containing the SVG, ready for hydration:
@@ -76,6 +78,8 @@ const htmlString = await ApexCharts.renderToHTML(
 // travels in data-apexcharts-config, which is what hydration reads.
 ```
 
+*(v8.2)* The HTML includes the legend and its stylesheet beside the SVG, as the browser draws it; before 8.2 it had none. Set `legend: { show: false }` for the old output. Series names and categories in it are escaped *(v8.0.1, v8.4)*, so data you do not control cannot inject markup.
+
 ---
 
 ## Client-Side Hydration
@@ -91,6 +95,8 @@ import ApexCharts from 'apexcharts/ssr'   // not 'apexcharts' or 'apexcharts/cli
 // Select the emitted wrapper, not a chart id: `#my-chart` matches nothing.
 const chart = ApexCharts.hydrate(document.querySelector('[data-apexcharts-hydrate]'))
 ```
+
+The options you passed to `renderToHTML` travel with it and **stand as written** on the client *(v8.1)*: a `chart.animations.enabled: false` or `chart.toolbar.show: false` you set for the server stays off after hydration (before 8.1 hydration switched both back on). To change them on the client, pass them in `clientOptions`, e.g. `hydrate(el, { chart: { toolbar: { show: true } } })`.
 
 ### hydrateAll(selector?, clientOptions?)
 

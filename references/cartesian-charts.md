@@ -79,6 +79,8 @@ Use `null` to create gaps in the line:
 series: [{ data: [10, 25, null, null, 50, 60] }]
 ```
 
+In `{ x, y }` data write a gap as `{ x, y: null }`, which keeps its category label. Since v8.1 a bare `null` entry in `{ x, y }` or `[x, y]` data also draws as a gap instead of throwing, but it blanks the category label at that slot, and one among the first three points logs a "mixed formats" console warning.
+
 ### Scatter Chart
 
 Always use XY format:
@@ -202,6 +204,17 @@ stroke: {
 }
 ```
 
+**Dash patterns (v8.5).** Every dash option (`stroke.dashArray`, `markers.strokeDashArray`, `grid.strokeDashArray`, annotation `strokeDashArray`, `forecastDataPoints.dashArray`, crosshair strokes) takes a number (dash and gap of that length), a pattern string (`'8 3 2 3'` or `'8,3,2,3'`) or an array of lengths (type `ApexDashPattern`). On the per-series options a **top-level array is one value per series**, so:
+
+```js
+stroke: { dashArray: '8 3 2 3' }          // dash-dot on every series
+stroke: { dashArray: [0, '8 3 2 3'] }     // first solid, second dash-dot
+stroke: { dashArray: [8, 3, 2, 3] }       // NOT a pattern: four series dashed 8, 3, 2 and 3
+stroke: { dashArray: [0, [8, 3, 2, 3]] }  // a nested array is a pattern for one series
+```
+
+Dotted lines are a zero-length dash with a round cap: `dashArray: '0 6'` with `stroke.lineCap: 'round'`. X and y axis annotations take `strokeLineCap: 'butt' | 'square' | 'round'` *(v8.5, default `'butt'`)* for the same effect on their lines and range borders.
+
 ### Markers
 
 ```js
@@ -255,6 +268,22 @@ xaxis: {
   }
 }
 ```
+
+### Mouse-wheel zoom is cooperative (v8.3)
+
+With `chart.zoom.enabled` and the default `allowMouseWheelZoom: 'auto'` (offered only where the toolbar reset button is present), a bare wheel over the chart scrolls the page and briefly shows a hint; **Ctrl/Cmd + wheel**, or a trackpad pinch, zooms. Charts written for the pre-8.3 wheel no longer zoom on a plain scroll.
+
+```js
+chart: {
+  zoom: {
+    enabled: true,
+    allowMouseWheelZoom: true,   // every wheel zooms again (even with the toolbar hidden)
+    wheelHint: false,            // or keep 'auto' and hide the hint
+  },
+}
+```
+
+The hint text is the locale's `toolbar.wheelZoomHint` (`chart.locales[].options.toolbar.wheelZoomHint`, default `'Use {key} + scroll to zoom'`, `{key}` becomes Ctrl or ⌘), translated in every shipped locale.
 
 ### A way out of a zoom when the toolbar is hidden (v7.4)
 

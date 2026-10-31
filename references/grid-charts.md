@@ -179,7 +179,9 @@ plotOptions: {
     parents: {                 // how branch containers are drawn once the data is nested
       show: 'auto'             // 'auto' (on when the data carries children) | true | false
       // plus header/label styling and a tooltip.formatter receiving
-      // { name, value, depth, leafCount, percentOfParent, percentOfTotal, node, w }
+      // { name, value, depth, leafCount, percentOfParent, percentOfTotal, node, w,
+      //   series, seriesIndex, dataPointIndex: -1, ctx }   (the last four since v8.4)
+      // and returning markup, an Element, or null / undefined / false to keep the built-in rows
     },
     levels: [ /* per-depth overrides of `parents`, indexed from the outermost drawn group */ ]
   }
@@ -187,6 +189,8 @@ plotOptions: {
 ```
 
 The hierarchy resolver is shared with sunburst, including the `drilldown: '<id>'` adapter (opted into via `nested.drilldownAsLevels`).
+
+**Branch tooltips (v8.2, v8.4).** A hovered branch gets its own tooltip (`.apexcharts-treemap-tooltip`, v8.2) with the branch name, total and shares. Since v8.4 `tooltip.custom` runs on branches too, called as the sunburst and icicle call it: `dataPointIndex: -1`, `seriesIndex` the branch's series, `node`, `value` (the branch total), `percentOfParent` and `percentOfTotal` (0 to 100, one decimal). `plotOptions.treemap.parents.tooltip.formatter`, when set, owns branch tooltips instead and `tooltip.custom` keeps the leaves. A `null` / `undefined` return keeps the built-in rows. **A `tooltip.custom` written for leaves must return `null` when `node` is set**, or it reads `series[seriesIndex][-1]` on every branch hover.
 
 ### Icicle (v7.6)
 
@@ -213,6 +217,7 @@ const options = {
 - A branch may **omit its own `y`** and be the sum of its children. This is the documented shape for both partition types, and it only started working in v7.6: before that the non-axis parser dropped any node carrying `children` without `x` and `y`, and the chart drew nothing at all while warning about pie data.
 - A node may carry `drilldown: '<id>'` instead of `children`, and the matching `drilldown.series` entry is read as the next level. It is read as plain data, so no drilldown feature import is needed.
 - Sibling order follows the array by default (`sort: 'none'`). Set `plotOptions.icicle.sort` to `'value'` or `'name'` to override it.
+- `tooltip.custom` *(v8.4)* runs once per hovered node with `{ seriesIndex: 0, dataPointIndex: -1, node, percentOfParent, percentOfTotal, series, w, ctx }`, the same call the sunburst makes; return markup or an Element, or `null` to keep the built-in row. Node names are escaped in the built-in tooltip *(v8.3.1)*, so markup in a name shows as text.
 
 **Choosing between icicle and sunburst.** Both resolve the same tree. An icicle keeps labels horizontal at every depth and puts depth on a straight axis, so same-depth siblings line up across branches and deep trees stay readable; a sunburst spends its area radially and reads better for shallow, wide trees. `direction: 'up'` is the flame-graph orientation, for call stacks and path funnels.
 
@@ -382,3 +387,4 @@ A click that would not change the view is refused rather than performed: clickin
 6. **`chart.type: 'icicle'` on the default bundle (v7.6)**: icicle is Tier 2 and the default build carries no class for it, so the chart fails to render and the console names the import. Add `import 'apexcharts/icicle'` next to `import ApexCharts from 'apexcharts'` (or load `dist/icicle.js`). The default `apexcharts.js` does not carry the class; the full bundle (`apexcharts/full`, `dist/apexcharts.full.min.js`, v8.0) does.
 7. **Reaching for `zoomType: 'both'` to make a branch fill the plot** — `'value'` already stretches the branch across the full width; what `'both'` additionally does is move every level, which costs the reader their place in the tree. Change it only when the ancestors genuinely do not matter.
 8. **Expecting `sort: 'value'` on a flame graph** — `'name'` is the flame-graph convention, because it holds a frame in the same place across profiles so two runs of one program can be compared by eye.
+9. **A data-point `tooltip.custom` on a nested treemap, sunburst or icicle** *(v8.4)*: it now runs on branches and partition nodes too, with `dataPointIndex: -1` and the hovered `node`. Return `null` when `opts.node` is set to keep the built-in tooltip there, or give treemap branches `plotOptions.treemap.parents.tooltip.formatter`.

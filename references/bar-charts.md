@@ -72,8 +72,7 @@ import ApexCharts from 'apexcharts/dumbbell'   // == apexcharts/bar + features/d
 
 ```js
 {
-  chart: { type: 'bar', height: 350, stacked: true },
-  // stackType: '100%'  // uncomment for percentage stacking
+  chart: { type: 'bar', height: 350, stacked: true },  // add stackType: '100%' to chart for percentage stacking
   series: [
     { name: 'Product A', data: [44, 55, 41] },
     { name: 'Product B', data: [13, 23, 20] },
@@ -83,6 +82,8 @@ import ApexCharts from 'apexcharts/dumbbell'   // == apexcharts/bar + features/d
   plotOptions: { bar: { horizontal: false } }
 }
 ```
+
+`chart.stackType: '100%'` draws each stack as shares of its total on a 0 to 100 axis, and labels read as percentages; the tooltip keeps the raw value. Since v8.5 the same holds for stacked area and line series (before, they drew raw values on the 0 to 100 axis). In a combo, a line or area joins the percent stack only with `chart.stackOnlyBar: false`.
 
 ### Range Bar (start/end values)
 
@@ -100,6 +101,8 @@ import ApexCharts from 'apexcharts/dumbbell'   // == apexcharts/bar + features/d
   plotOptions: { bar: { horizontal: true } }
 }
 ```
+
+Data labels are off by default on a range bar, and once enabled the default prints `end - start`. A `dataLabels.formatter` of your own receives the value as `[start, end]`, on vertical range columns as well since v8.2 (before, those passed only the end): `` formatter: ([start, end]) => `${start} to ${end}` ``.
 
 ### Timeline / Gantt Chart (Range Bar with dates)
 
@@ -341,7 +344,7 @@ A stack of a single data point also stopped rounding its baseline in v7.4, which
 dataLabels: { animate: { enabled: false } }
 ```
 
-**⚠️ `dataLabels.avoidOverlap` is on by default (v7.8).** Labels that land on each other, across series too, are nudged apart along the value axis (left and right on a horizontal bar), each by at most about its own size. A pair that cannot be separated stays overlapping unless you pass `{ hide: true }`. Tune it with `{ gap, maxShift, hide }`, or set `false` to keep every label where it was placed. Rotated labels (`orientation: 'vertical'`) are never moved. A manual `offsetY` that only separated labels may no longer be needed.
+**⚠️ `dataLabels.avoidOverlap` is on by default (v7.8).** Labels that land on each other, across series too, are nudged apart along the value axis (left and right on a horizontal bar), each by at most about its own size. A pair that cannot be separated stays overlapping unless you pass `{ hide: true }`. Tune it with `{ gap, maxShift, hide }`, or set `false` to keep every label where it was placed. Rotated labels (`orientation: 'vertical'`) are never moved. A manual `offsetY` that only separated labels may no longer be needed. *(v8.5)* `maxShift: 0` never moves a label, and `hideOrder: 'balanced'` makes `hide` drop labels evenly across the series rather than always the later-drawn one (default `'later'`).
 
 ### Bar Chart Race (v6.4)
 
@@ -448,3 +451,4 @@ Bar, column, funnel and pyramid charts take `highlightFilter`, which draws each 
 11. **Assuming `borderRadiusWhenStacked` is still removed**: it was dead config in v7.0 through v7.3 and is a working option again from v7.4 (`'all'` default, `'last'` to leave the baseline square). Guidance written for v7.0 says to delete it; on v7.4+ that silently reverts a deliberate `'last'` to `'all'`.
 12. **Expecting data labels to snap on update** *(v7.0)*: `dataLabels.animate.enabled` now defaults to `true` on bar/column. Set it to `false` for the old behavior.
 13. **Waterfall or dumbbell on the default bundle** *(v8.0)*: draws an empty plot plus one console warning. Add `import 'apexcharts/features/waterfall'` (or `'apexcharts/features/dumbbell'`) next to `import ApexCharts from 'apexcharts'`.
+14. **Expecting every category name on a dense horizontal bar chart** *(v8.5)*: names that would overlap are thinned (the top one always stays, the rest evenly spaced; the tooltip and keyboard navigation keep every name). `xaxis.labels.hideOverlappingLabels: false` draws them all, and so does setting a `yaxis.labels.formatter`.

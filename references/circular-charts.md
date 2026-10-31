@@ -34,7 +34,7 @@ import { person, registerMarks } from 'apexcharts/pictograms'
 // Pictogram glyph collection (v7.0), one drawn mark per unit. See "Pictograms" below.
 ```
 
-**⚠️ Sunburst and unit / waffle are Tier 2 since v8.0.** Pie, donut, polarArea, radialBar and gauge are in the default `apexcharts` bundle; `sunburst` and `unit` (with the `waffle` alias and the beeswarm layout) are not. Add `import 'apexcharts/sunburst'` or `import 'apexcharts/unit'` next to `import ApexCharts from 'apexcharts'` (script tag: `dist/sunburst.js` or `dist/unit.js`), or use the full bundle (`apexcharts/full`, `dist/apexcharts.full.min.js`). Without it the chart draws nothing and the console says the type is not registered, naming the import.
+**⚠️ Sunburst and unit / waffle are Tier 2 since v8.0.** Pie, donut, polarArea, radialBar and gauge are in the default `apexcharts` bundle; `sunburst` and `unit` (with the `waffle` alias and the beeswarm layout) are not. Add `import 'apexcharts/sunburst'` or `import 'apexcharts/unit'` next to `import ApexCharts from 'apexcharts'` (script tag: `dist/sunburst.js` or `dist/unit.js`), or use the full bundle (`apexcharts/full`, `dist/apexcharts.full.min.js`). Without it the chart draws nothing and the console says the type is not registered, naming the import. `plotOptions.radialBar.targets` (v8.5) is a Tier 2 feature as well: `import 'apexcharts/features/radial-targets'` (see "Targets" below).
 
 ---
 
@@ -93,7 +93,7 @@ A gauge is a single-value `radialBar` alias. Series is a flat one-element array;
         { from: 30, to: 70, color: '#FEB019' },
         { from: 70, to: 100, color: '#00E396' }
       ],
-      bandsStyle: { strokeWidth: '50%', gap: 1 },
+      bandsStyle: { strokeWidth: '50%', gap: 2 },   // gap: px along the band (v8.1); '1%' of the scale or '1.5deg' (v8.5) look the same at every size
       ticks: {
         show: true,
         major: { count: 11, length: 8, width: 2, color: '#334155', placement: 'outside' },
@@ -109,6 +109,53 @@ A gauge is a single-value `radialBar` alias. Series is a flat one-element array;
 ```
 
 A plain radialBar is effectively a gauge with `shape: 'arc'`. A semi-circle gauge is `startAngle: -90, endAngle: 90`.
+
+**Band gaps (v8.1, v8.5):** `bandsStyle.gap` is measured in px along the band since 8.1, as documented; before that it was applied in value units, so a gap tuned on an older release may need raising. A number or `'4px'` is px, so it takes a smaller angle on a larger gauge; `'1%'` (a share of the `min..max` scale) and `'1.5deg'` look the same at every size. A band narrower than its gap is not drawn, and the console says which. Default `0`.
+
+**Centre value label:** the default radialBar and gauge value and total formatters append `%` only on the default 0 to 100 domain *(v8.1)*; with a custom `min` / `max` (a speedometer) they print the bare value.
+
+#### Targets (v8.5, add-on)
+
+`plotOptions.radialBar.targets` puts marks at a value on a ring: a target, a limit, last period's reading. It needs `import 'apexcharts/features/radial-targets'` (script tag `dist/features/radial-targets.js`, or the full bundle): the add-on is free but not in the default bundle, and without it the dial draws without the targets and the console warns once.
+
+```js
+import ApexCharts from 'apexcharts'
+import 'apexcharts/features/radial-targets'   // Tier 2: not in the default bundle
+
+{
+  chart: { type: 'gauge', height: 360 },
+  series: [62],
+  labels: ['Uptime'],
+  plotOptions: {
+    radialBar: {
+      min: 0, max: 100,
+      targets: [
+        { value: 80, label: { text: 'Goal' } },                       // a line across the ring
+        { value: 'series', shape: 'triangle', position: 'outside' },  // a pointer that follows the value
+        { value: 95, seriesIndex: 0, shape: 'circle', color: '#FF4560', id: 'limit' },
+      ],
+    },
+  },
+}
+```
+
+Each entry (`ApexRadialTarget`):
+
+| Key | Default | Notes |
+|---|---|---|
+| `value` | required | A number in the `min..max` domain (clamped to it), or `'series'` to follow the ring's own value. A missing or non-numeric value draws nothing. |
+| `seriesIndex` | `0` | The ring it marks. |
+| `shape` | `'line'` | `'line'`, `'triangle'` (points at the ring) or `'circle'`. |
+| `position` | `'across'` (`'outside'` for a triangle) | Across the ring's centre line, or off its outer or inner edge (`'inside'`). |
+| `length` | `'130%'` for a line, `10` otherwise | Along the radius: px, or a percentage of the ring's thickness. |
+| `width` | `3` for a line, `12` for a triangle | Across the radius, in px. Not used by a circle. |
+| `color` / `strokeColor` / `strokeWidth` | `chart.foreColor` / none / `0` | The outline reads a mark over a band of its own colour. |
+| `label` | none | `{ text, offset (4), style: { fontSize, fontFamily, fontWeight, color } }`, drawn upright off the mark's outer end (inner end for `'inside'`). |
+| `cssClass`, `id` | none | `id` keeps a target's identity across updates, so a reordered list moves rather than swaps. |
+
+Targets sit over the rings and bands, sweep in with their ring on mount, move from the old value on an update (`updateOptions` changes them), and hide with a legend-hidden ring.
+
+**Reading the dial (v8.5, core):** `chart.getRadialScales()` returns where the last render drew it: `{ cx, cy, startAngle, endAngle, min, max, outerRadius, radius, thickness, rings: [{ seriesIndex, radius, thickness, trackThickness }], bands, hollow, needle, angle(value), point(value, radius?) }`, in the px of `chart.getChartArea()`, angles in degrees clockwise from 12 o'clock. It is frozen and replaced on every render, so read it again after an update or resize. `null` on other chart types and before the first render. A Weave plugin gets the same object as `api.radialScales`.
 
 **Needle value label (v7.9):** on a `gauge` with `shape: 'needle'` and no `plotOptions.radialBar.dataLabels.value.offsetY`, the value is placed below the farthest reach of the needle, so the two never cross (it used to sit under the needle). Set `offsetY` to place it yourself.
 
@@ -159,6 +206,8 @@ import 'apexcharts/sunburst'   // Tier 2 since v8.0: not in the default bundle
 
 Colours, `stroke`, `legend`, and `title` behave as they do on pie and donut. A sunburst can also adapt an existing `drilldown` config instead of a native `children` hierarchy.
 
+**`tooltip.custom` on a sunburst (v8.4)** runs once per hovered node with `{ seriesIndex: 0, dataPointIndex: -1, node, percentOfParent, percentOfTotal, series, w, ctx }` (`node` carries `name`, `value` and, on a branch, `children`; the percentages are 0 to 100 with one decimal). Return markup or an Element to replace the tooltip, or `null` / `undefined` to keep the built-in row. A custom written for axis data points must return `null` when `node` is set. The icicle and nested-treemap branches are called the same way (see `references/grid-charts.md`).
+
 A branch may **omit its own `y`** and be the sum of its children. That is the documented shape, but it only began working in v7.6: before that the non-axis parser required every datum to carry `x` and `y`, so a branch with only `children` was dropped, the series came back empty, and the chart drew nothing while warning about pie data. The samples all gave their top-level nodes a `y`, which is what hid it from the moment sunburst shipped.
 
 **The same tree in cartesian coordinates** is the `icicle` type *(v7.6)*: one band per depth level instead of concentric rings, labels horizontal at every depth, and `direction: 'up'` for flame graphs. It is an opt-in import. See `references/grid-charts.md`.
@@ -193,6 +242,8 @@ import 'apexcharts/unit'   // Tier 2 since v8.0: not in the default bundle
 **Also available:** `shape` (`'circle'` | `'square'` | `'image'` pictogram with `image.tint`); per-mark object data `series: [{ name, data: [{ value, x, z, name, fillColor, id }] }]`; `transition` (`'group'` default | `'flow'` crowd migration | `'identity'` keyed by `id`/`name`); numeric or `'auto'` dot `size`; `sizeByValue` bubbles; `unitValue` (1 mark = N units); `maxUnits` cap; per-cluster `clusterLabels`; and per-mark `tooltip.formatter`.
 
 **Motion (v6.9):** marks travel on a damped spring by default, so an update landing mid-flight retargets with the marks' velocity instead of restarting them (a dragged slider reads as continuous motion, not stutter). Configure via `plotOptions.unit.gather`: `motion: 'auto' | 'spring' | 'tween'`, `spring: 'crisp' | 'gentle' | 'snappy'`, `easing: 'outCubic' | 'inOutCubic' | 'outBack'` (setting `easing` implies tween), and `enter: 'burst' | 'fade' | 'rise'`.
+
+**Update timing (v8.6):** a unit update follows `chart.animations.dynamicAnimation` like every other type: 350 ms by default (it was 800 ms before 8.6, ignoring that option), the springs and stagger scaled to it, and no tween at all when `dynamicAnimation.enabled` is `false`. Set `chart: { animations: { dynamicAnimation: { speed: 800 } } }` for the old pace. The first draw keeps `chart.animations.speed`.
 
 ### Unit shapes (`apexcharts/unit-shapes`, v6.10)
 
@@ -509,3 +560,5 @@ Pie, donut, polarArea, radialBar and gauge charts take `highlightFilter`, which 
 14. **Setting a size on a pictogram** *(v7.0)*: there is no `pictogram.size`. A glyph is fitted to the box the dot would have occupied, so use `plotOptions.unit.size` and `spacing`. Use `pictogram.scale` only to nudge a glyph that reads light.
 15. **Pie / radial charts pinned to the top of a tall container** *(fixed v7.1)*: the centre came from `min(width, height)`, so a tall, narrow container put the circle at the top with the leftover space below it. The circle now centres in the height it actually has. If you carried a manual `offsetY` to work around this, remove it.
 16. **Sunburst, unit or waffle on the default bundle** *(v8.0)*: draws nothing and the console says the type is not registered. Add `import 'apexcharts/sunburst'` or `import 'apexcharts/unit'` next to `import ApexCharts from 'apexcharts'`. `apexcharts/unit-shapes` and `apexcharts/pictograms` do not register the unit type.
+17. **`plotOptions.radialBar.targets` on the default bundle** *(v8.5)*: the dial draws without them and the console warns once, naming the import. Add `import 'apexcharts/features/radial-targets'` (script tag `dist/features/radial-targets.js`), or use the full bundle.
+18. **Reading the dial geometry out of the SVG**: since v8.5 `chart.getRadialScales()` returns the centre, ring radii, angles and a value-to-angle mapping for a radialBar or gauge. Read it again after each render; the object is replaced.
