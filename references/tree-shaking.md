@@ -170,6 +170,8 @@ Required whatever entry point you used, the default `apexcharts` bundle included
 
 Storyboard registers Perspectives, so importing both costs no more than Storyboard alone.
 
+**In no bundle at all: the Ignite UI add-on *(from 8.8.0)*.** `import 'apexcharts/features/ignite-ui'` (script tag `dist/features/ignite-ui.js`, after `apexcharts.js`) makes charts follow an Ignite UI theme on the page. Unlike the Tier 2 features it is not in `apexcharts/full` either, since it changes how the page's charts look: only a page that imports it gets it. Free, no licence key, about 3.6 KB gzip (pre-release build). Without it the page's `--ig-*` tokens are ignored silently (no warning) and `theme.designSystem` does nothing. See "Ignite UI add-on" in `feature-platform.md`.
+
 **`apexcharts/features/all` does not include Tier 2**, by design: upstream has a tier-budget test that fails the build if a Tier 2 feature reappears in it.
 
 **Nothing fails silently on Tier 2.** Each module warns in the console when its configuration is present but the module is not, and the warning names the ESM import, the script-tag file and `apexcharts.full.min.js`. Where the chart can still draw something sensible it does and says what it did instead: a trellis renders as a single chart, `renderer: 'canvas'` falls back to SVG, a radialBar or gauge draws its dial without `plotOptions.radialBar.targets`.
@@ -190,7 +192,7 @@ Tree-shaking only ever helped people with a build step. A page using a `<script>
 
 The opt-in chart types have their own files rather than `features/*` ones: `dist/unit.js`, `dist/sunburst.js`, `dist/violin.js` and `dist/icicle.js`, and a raincloud page loads `dist/violin.js` then `dist/features/raincloud.js`. On `apexcharts.core.js`, violin (and so raincloud) also needs `dist/bar.js`.
 
-Every Tier 2 feature has a `dist/features/<name>.js` artifact for this channel too, and a default-bundle page still needs it. Add-on tags may load before or after the ApexCharts script *(v8.0)*. `dist/apexcharts.full.min.js` needs none of them.
+Every Tier 2 feature has a `dist/features/<name>.js` artifact for this channel too, and a default-bundle page still needs it. Add-on tags may load before or after the ApexCharts script *(v8.0)*. `dist/apexcharts.full.min.js` needs none of them. The exception is `dist/features/ignite-ui.js` *(from 8.8.0)*: it is in no bundle, `full` included, so add its tag to a full-bundle page too if that page should follow an Ignite UI theme. Like the other add-ons it may load before or after the ApexCharts script; after `apexcharts.js` is the recommended order.
 
 ```html
 <script src=".../dist/apexcharts.js"></script>

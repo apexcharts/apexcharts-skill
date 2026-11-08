@@ -9,7 +9,7 @@ description: >
   correct data formats, lifecycle, formatters, tree-shaking, SSR, and the feature
   platform (plugins, canvas renderer, custom series, small multiples, undo/redo,
   shareable views, themes, crossfilter, annotation authoring, storyboard, streaming,
-  drilldown, highlight filter, radialBar targets). Knows which chart types and features ship in the
+  drilldown, highlight filter, radialBar targets, Ignite UI theming). Knows which chart types and features ship in the
   default v8 bundle and which need an explicit import or the full bundle. In React /
   Vue / Angular projects, prefer the framework wrapper packages
   (`react-apexcharts`, `vue3-apexcharts`, `ng-apexcharts`) over the core API.
@@ -254,6 +254,7 @@ import 'apexcharts/features/dumbbell'        # (v7.1) dumbbell chart type (Tier 
 import 'apexcharts/features/streamgraph'     # (v7.1) streamgraph chart type (Tier 2 since v8)
 import 'apexcharts/features/highlight-filter' # (v7.9) Part-of-whole highlight, highlightFilter (premium)
 import 'apexcharts/features/radial-targets'  # (v8.5) plotOptions.radialBar.targets on radialBar / gauge (free)
+import 'apexcharts/features/ignite-ui'       # (v8.8) Follow an Ignite UI theme on the page (free). In NO bundle, not even full
 import 'apexcharts/features/trellis'         # (v7.0) Small multiples (premium)
 import 'apexcharts/features/storyboard'      # Scrollytelling (premium; registers perspectives)
 import 'apexcharts/features/perspectives'    # Shareable view state (premium)
@@ -643,6 +644,25 @@ await chart.appendData([{ data: [newPoint] }])
 await chart.updateOptions({ title: { text: 'New Title' } })
 ```
 
+### Pitfall 17: Ignite UI theme on the page, but the chart ignores it *(from apexcharts 8.8.0)*
+
+Ignite UI theming is an opt-in add-on. Without it the page's `--ig-*` tokens are ignored, with no error and no warning, and `theme.designSystem` does nothing. It is in no bundle, `apexcharts/full` included.
+
+❌ **WRONG**: Ignite UI stylesheet loaded, no add-on, and a pinned mode:
+```js
+import ApexCharts from 'apexcharts'
+new ApexCharts(el, { theme: { mode: 'light' }, series }).render()  // stays light under a dark Ignite UI theme
+```
+
+✅ **CORRECT**: import the add-on once, before the first render, and leave `theme.mode` unset so the theme's dark variant (`--ig-theme-variant`) can pick the mode:
+```js
+import ApexCharts from 'apexcharts'
+import 'apexcharts/features/ignite-ui'   // free, no licence key
+new ApexCharts(el, { series }).render()
+```
+
+Script tags: `dist/features/ignite-ui.js` after `dist/apexcharts.js`. A chart rendered before the add-on loaded picks it up on its next update, resize or `chart.refreshTokens()`. Anything you set outranks the theme (see "Ignite UI add-on" in `references/feature-platform.md`).
+
 ---
 
 ## 7. API Methods Quick Reference
@@ -687,7 +707,7 @@ await chart.updateOptions({ title: { text: 'New Title' } })
 | `chart.history.undo() / redo() / jump(id) / transaction(fn)` | history | Undo/redo over the command journal. |
 | `chart.perspectives.capture() / toURL() / apply(token)` | perspectives | Serialize / restore the exact view. |
 | `chart.getActiveRenderer()` | renderer-canvas | Returns `'svg' \| 'canvas'` currently in use. |
-| `chart.refreshTokens()` | facet | Re-read `--apx-*` CSS custom properties. |
+| `chart.refreshTokens()` | facet | Re-read `--apx-*` CSS custom properties (and, with the `ignite-ui` add-on, the page's `--ig-*` tokens). Call it after a stylesheet swap that does not trigger a render, such as an Ignite UI light/dark switch. |
 | `chart.startMeasure() / stopMeasure() / clearMeasures()` | measure | Drive the measure ruler from code. |
 | `chart.storyboard.bind({ beats }) / goTo() / unbind()` | storyboard | Scroll-driven choreography. |
 | `chart.drillDown(id) / drillUp() / drillToRoot()` | drilldown | Navigate the drill-down hierarchy. |
@@ -792,6 +812,7 @@ Every feature below is off by default in config terms. The **Tier** column is ab
 | **Weave** (plugins) | 1 | `apexcharts/features/weave` | Publish reusable chart plugins against a stable `ApexCharts.registerPlugin({ name, setup })` API; activate per chart with `plugins: [{ name }]`. Contract is at **v7** (v8.1): `info`/`categories`/`markDerived` (v2), `reserve` (v3), `pointer` (v4), `claim`/`drawn`/`declare`/`can` (v6), `highlight()` (v7), and the capabilities `observations` and `scale-orientation` (8.0.1) and `radial-scales` (8.5). Declare the **lowest** `apiVersion` you can run on and feature-detect the rest: a host older than the version you declare skips your plugin outright. |
 | **Marks** (custom series) | 1 | `apexcharts/features/marks` | `ApexCharts.registerSeriesType(name, { renderItem })` for first-class custom marks (lollipop, bullet). Baseline is `scales.y(0)`, **not** `api.zeroY`. |
 | **Facet** (themes/tokens) | 1 | `apexcharts/features/facet` | `theme: { follow: 'os', name }`, `--apx-*` CSS custom props, `ApexCharts.registerTheme`. |
+| **Ignite UI theming** | add-on | `apexcharts/features/ignite-ui` | *(from 8.8.0, free, no licence key)* Charts follow an Ignite UI theme on the page: series colours, text, grid, tooltips, menus, font, and light or dark from `--ig-theme-variant` when `theme.mode` is unset. In no bundle, `full` included; script tag `dist/features/ignite-ui.js` after `apexcharts.js`. Ranks below everything you set; `theme: { designSystem: false }` turns it off per chart. |
 | **Morph** | 1 | `apexcharts/features/morph` | Animated transitions between chart types. |
 | **Stats** | 1 | `apexcharts/features/stats` | *(v6.9)* Statistics behind histogram binning, boxPlot/violin raw-sample summaries (R type 7 quartiles, KDE), and `chart.rowSeries()`. The `apexcharts/histogram` entry includes it. |
 | **Cadence** (easing) | core | none | `chart.animations.easing` accepts a named curve, cubic-bezier array, or function; `ApexCharts.registerEasing`. |
@@ -823,7 +844,7 @@ For detailed chart-family-specific options, data format variants, and full worki
 | Pie, Donut, Polar Area, Radial Bar, Gauge, Sunburst, Unit, Waffle, Pictograms | `references/circular-charts.md` |
 | Heatmap (incl. cell shapes), Treemap, Icicle | `references/grid-charts.md` |
 | Radar | `references/radar-charts.md` |
-| Feature platform (small multiples, plugins, canvas, undo/redo, themes, crossfilter, storyboard, ...) | `references/feature-platform.md` |
+| Feature platform (small multiples, plugins, canvas, undo/redo, themes, `--apx-*` tokens, Ignite UI theming, crossfilter, storyboard, ...) | `references/feature-platform.md` |
 | Bundle tiers, Tree-shaking, Bundle optimization | `references/tree-shaking.md` |
 | Server-side rendering, Hydration | `references/ssr.md` |
 | React, Vue, Angular integration | `references/framework-wrappers.md` |

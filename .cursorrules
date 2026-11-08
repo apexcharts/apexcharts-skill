@@ -189,9 +189,12 @@ apexcharts/features/link            # crossfilter / linked views (premium)
 apexcharts/features/measure         # measure / delta ruler (premium)
 apexcharts/features/history         # undo/redo (Rewind, premium)
 apexcharts/features/context-menu    # right-click context menu (premium)
+
+# IN NO BUNDLE, not even apexcharts/full (from 8.8.0, free, no licence key)
+apexcharts/features/ignite-ui       # follow an Ignite UI theme (--ig-* tokens) on the page
 ```
 (Cadence easing and real-time streaming are core: no feature import needed.)
-Script tags: a default-bundle page adds `dist/<type>.js` for a Tier 2 chart type and `dist/features/<name>.js` for a Tier 2 feature (raincloud: `dist/violin.js`, then `dist/features/raincloud.js`). Add-on tags may load before or after the ApexCharts script. `dist/apexcharts.full.min.js` already contains them all.
+Script tags: a default-bundle page adds `dist/<type>.js` for a Tier 2 chart type and `dist/features/<name>.js` for a Tier 2 feature (raincloud: `dist/violin.js`, then `dist/features/raincloud.js`). Add-on tags may load before or after the ApexCharts script. `dist/apexcharts.full.min.js` already contains them all. Exception: `dist/features/ignite-ui.js` (from 8.8.0) is in no bundle, the full one included, so a full-bundle page adds its tag too (after `apexcharts.js` is the recommended order).
 Lean core channel (v7.0): `dist/apexcharts.core.js` plus per-type files such as `dist/line.js` and feature files such as `dist/features/legend.js`, for a page that needs less than the default bundle.
 
 ---
@@ -286,6 +289,10 @@ On Node, plain `apexcharts` also resolves to the SSR bundle (the `node` export c
 ❌ `import ApexCharts from 'apexcharts'; new ApexCharts(el, { chart: { type: 'sunburst' }, series }).render()`: `render()` rejects and the console names the missing import
 ✅ `import ApexCharts from 'apexcharts'; import 'apexcharts/sunburst'` (or `import ApexCharts from 'apexcharts/full'`)
 
+### 18. Ignite UI theme on the page without the add-on (from 8.8.0)
+❌ Loading an Ignite UI stylesheet and expecting charts to follow it: without the add-on the `--ig-*` tokens are ignored silently and `theme.designSystem` does nothing. Also ❌ `theme: { mode: 'light' }` on a page with a dark Ignite UI theme: a pinned mode blocks the dark variant.
+✅ `import 'apexcharts/features/ignite-ui'` once, before the first render (script tag: `dist/features/ignite-ui.js` after `apexcharts.js`), and leave `theme.mode` unset. Free, no licence key. Ranking: explicit options > the chart's CSS variables > `--apx-*` tokens > named theme / explicit palette > `--ig-*` > defaults. `theme: { designSystem: false }` turns it off for one chart; `theme: { tokens: false }` turns off `--apx-*` and Ignite UI together. After swapping the Ignite UI stylesheet, call `chart.refreshTokens()`. New core tokens in 8.8.0: `--apx-font-family`, `--apx-radius-factor`.
+
 ---
 
 ## API Methods
@@ -308,6 +315,7 @@ On Node, plain `apexcharts` also resolves to the SSR bundle (the `node` export c
 | `clearAnnotations()` | Remove all. |
 | `dataURI()` | Export as image (needs features/exports). |
 | `exportToCSV()` | Export as CSV (needs features/exports). |
+| `refreshTokens()` | Re-read `--apx-*` tokens (and `--ig-*` with the ignite-ui add-on) after a CSS change that does not render. From 8.8.0 `ApexCharts.exec('<chart.id>', 'refreshTokens')` reaches it too and returns the update Promise (same as `ApexCharts.getChartByID(id).refreshTokens()`). |
 
 ### Static Methods
 

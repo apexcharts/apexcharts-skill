@@ -24,6 +24,7 @@ The wrappers' standard components load the default ApexCharts bundle, which sinc
 | `raincloud` | `import 'apexcharts/raincloud'` |
 | `waterfall`, `dumbbell`, `streamgraph`, drilldown or another Tier 2 feature | `import 'apexcharts/features/<name>'` (`highlightFilter` is `features/highlight-filter`, `plotOptions.radialBar.targets` is `features/radial-targets`) |
 | Everything | `import 'apexcharts/full'`, which reuses the default bundle the wrapper already loads |
+| An Ignite UI theme on the page *(from 8.8.0)* | `import 'apexcharts/features/ignite-ui'` (free; in no bundle, `full` included). Leave `theme.mode` unset so the theme's dark variant can apply; after swapping the Ignite UI stylesheet call `ApexCharts.exec('<chart.id>', 'refreshTokens')` (from 8.8.0; returns the update Promise, same as `ApexCharts.getChartByID('<chart.id>').refreshTokens()`) |
 
 ```jsx
 import Chart from 'react-apexcharts'

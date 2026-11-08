@@ -466,6 +466,43 @@ const options = {
 
 **Built-in palettes and the mode (8.7).** `theme.palette` (`'palette1'` to `'palette10'`) that you name, in the options, `window.Apex` or an `updateOptions` payload, is kept in either mode. Left unset, the palette follows the mode: `'palette4'` in dark mode, `'palette1'` otherwise. Before 8.7 a named `'palette1'` in dark mode (or `'palette4'` in light) was swapped for the mode's default.
 
+**Font and corner tokens (from 8.8.0).** `--apx-font-family` sets the chart font and `--apx-radius-factor` scales the fixed corner radii (unset or `1` keeps today's radii). Both are core tokens like the others: no add-on needed. A token font that is still loading is read again once it has loaded, and the labels re-lay out.
+
+### Ignite UI add-on (from 8.8.0)
+
+`import 'apexcharts/features/ignite-ui'`: an opt-in add-on, **free, no licence key**. It is in **no** bundle, `apexcharts/full` included, because it changes how a page's charts look; only a page that asks for it gets it.
+
+With it loaded and an Ignite UI theme on the page, charts follow the theme's `--ig-*` tokens: series colours from its colour families, text, gridlines and overlay colours, tooltips and menus, the font, and (when `theme.mode` is unset) light or dark from `--ig-theme-variant`. Without it the `--ig-*` tokens are ignored, with no error, and `theme.designSystem` does nothing; the `--apx-*` tokens work either way.
+
+```js
+// bundler: once per app, before the first render
+import ApexCharts from 'apexcharts'
+import 'apexcharts/features/ignite-ui'
+
+new ApexCharts(el, {
+  // leave theme.mode unset so a dark Ignite UI theme can turn the chart dark
+  theme: {
+    designSystem: true,   // default; false turns the Ignite UI layer off for this chart
+    tokens: true,         // default; false turns off the --apx-* tokens AND the Ignite UI layer
+  },
+  series,
+}).render()
+```
+
+```html
+<!-- script tags: the add-on after the core -->
+<script src=".../dist/apexcharts.js"></script>
+<script src=".../dist/features/ignite-ui.js"></script>
+```
+
+**Ranking**, highest first: explicit options > the chart's own CSS variables > `--apx-*` tokens > a named theme (`theme.name`) or an explicit `theme.palette` > the Ignite UI `--ig-*` tokens > built-in defaults. `colorBlindMode` and `monochrome` keep their own colours.
+
+- **Load order.** Import it before the first render. A chart rendered earlier picks it up on its next update, resize or `chart.refreshTokens()`.
+- **Stylesheet swap.** A light/dark switch that replaces the Ignite UI stylesheet does not trigger a render: call `await chart.refreshTokens()` once the new sheet has loaded (`link.onload`).
+- **Fonts.** The chart takes `--ig-font-family` (below `--apx-font-family`); a web font that is still loading is read again once it has loaded, so make sure the page actually loads the font face.
+- **`chart.injectStyleSheet: false`.** In the light DOM, link `dist/apexcharts-ignite-ui.css` after `dist/apexcharts.css`.
+- **Other products.** The add-on registers the Ignite UI adapter shared by the Apex family, so ApexTree, ApexSankey and ApexGantt on the page follow the theme too (from a script tag, only once `apexcharts.js` has loaded). ApexGrid and ApexMaps take their own add-ons.
+
 ---
 
 ## Cadence: pluggable easing
