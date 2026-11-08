@@ -52,7 +52,7 @@ ApexCharts supports five import strategies with different bundle sizes:
 | Strategy | Import | Includes |
 |---|---|---|
 | Default bundle | `import ApexCharts from 'apexcharts'` | line, area, scatter, bubble, rangeArea, bar, column, rangeBar, candlestick, boxPlot, pie, donut, polarArea, radialBar, radar, heatmap, treemap (plus the funnel, pyramid, histogram and gauge aliases), and the **Tier 1** features. **Not** the Tier 2 chart types or features *(v8.0)*. |
-| Full bundle *(v8.0)* | `import ApexCharts from 'apexcharts/full'` / `dist/apexcharts.full.min.js` | Every chart type and every feature, Tier 2 included, plus the unit-shapes and pictograms catalogs. Premium items stay licence-gated. |
+| Full bundle *(v8.0)* | `import ApexCharts from 'apexcharts/full'` / `dist/apexcharts.full.min.js` | Every chart type and every feature, Tier 2 included, plus the unit-shapes and pictograms catalogs. Not the Ignite UI add-on *(8.8)*, which is in no bundle. Premium items stay licence-gated. |
 | Per-type entry | `import ApexCharts from 'apexcharts/line'` | Specific chart family + core, plus any feature the type needs (no legend, toolbar, exports or other optional features) |
 | Bare core | `import ApexCharts from 'apexcharts/core'` | Core class only — must manually register everything |
 | Lean core, no bundler *(v7.0)* | `<script src=".../dist/apexcharts.core.js">` | Script-tag equivalent of bare core, assembled from separate tags. See below. |
@@ -123,7 +123,7 @@ import 'apexcharts/bar'   // side-effect: registers bar types onto the same clas
 Two questions decide whether you need a `features/*` import:
 
 1. **Which entry point did you start from?** `apexcharts/core` and the per-type entries carry no optional features (a per-type entry brings only the feature its own type needs), so every feature you want needs its import.
-2. **Which tier is the feature?** Tier 1 is in the default `apexcharts` bundle. **Tier 2 is not**, so it needs its import there too. Only the full bundle (`apexcharts/full`, *v8.0*) has every feature.
+2. **Which tier is the feature?** Tier 1 is in the default `apexcharts` bundle. **Tier 2 is not**, so it needs its import there too. Only the full bundle (`apexcharts/full`, *v8.0*) has every Tier 2 feature; the Ignite UI add-on is in no bundle.
 
 ### Tier 1: in the default `apexcharts` bundle
 

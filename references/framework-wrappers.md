@@ -265,7 +265,7 @@ updateChart() {
 <!-- one add-on next to it: an opt-in chart type -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.6.0/sunburst.js"></script>
 
-<!-- or the full bundle: every chart type and feature, no add-ons -->
+<!-- or the full bundle: every chart type and feature, no add-ons (except ignite-ui, which is in no bundle) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.6.0/apexcharts.full.min.js"></script>
 
 <!-- the same files on jsDelivr keep the dist/ folder in the path -->

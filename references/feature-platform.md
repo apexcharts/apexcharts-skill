@@ -10,7 +10,7 @@ Whether you need an import depends on the feature's or chart type's **tier**. Th
 - **Tier 2 is not in the default bundle.** Each item needs its own import next to it (or its script tag), or the full bundle:
   - features, `import 'apexcharts/features/<name>'` (script tag `dist/features/<name>.js`): `trellis`, `storyboard`, `perspectives`, `ink`, `renderer-canvas`, `link`, `measure`, `history`, `context-menu`, `highlight-filter` *(7.9)*, since 8.0 `drilldown`, `waterfall`, `dumbbell` and `streamgraph` (those three are chart types whose renderers, rangeBar and rangeArea, are in the default bundle, so next to it you add only the feature), and `radial-targets` *(8.5)*;
   - chart types: `unit` / `waffle` (`apexcharts/unit`, `dist/unit.js`), `sunburst`, `violin`, `icicle` (`apexcharts/<type>`, `dist/<type>.js`) and `raincloud` (`apexcharts/raincloud`; script tags `dist/violin.js`, then `dist/features/raincloud.js`).
-- **The full bundle**, `import ApexCharts from 'apexcharts/full'` (script tag `dist/apexcharts.full.min.js`, new in 8.0), has every chart type and feature and needs no add-on import. Premium items still watermark there.
+- **The full bundle**, `import ApexCharts from 'apexcharts/full'` (script tag `dist/apexcharts.full.min.js`, new in 8.0), has every chart type and feature and needs no add-on import. The one exception is the Ignite UI add-on (`apexcharts/features/ignite-ui`, 8.8), which is in no bundle. Premium items still watermark there.
 
 ```js
 import ApexCharts from 'apexcharts'

@@ -18,7 +18,7 @@ v5 and v6 configs keep working, with two v7.0 changes: `plotOptions.bar.borderRa
 Tier 2 chart types, `import 'apexcharts/<type>'` (script tag `dist/<type>.js`): `unit` (also for `waffle`), `sunburst` and `violin` (all three since 8.0), `icicle` (7.6), and `raincloud` (`apexcharts/raincloud` brings violin plus the raincloud feature; script tags `dist/violin.js`, then `dist/features/raincloud.js`).
 Tier 2 features, `import 'apexcharts/features/<name>'` (script tag `dist/features/<name>.js`): radial-targets (8.5, for `plotOptions.radialBar.targets`), drilldown, waterfall, dumbbell, streamgraph (since 8.0), highlight-filter (7.9), trellis, storyboard, perspectives, ink, renderer-canvas, link, measure, history, context-menu (since 7.0). Waterfall, dumbbell and streamgraph are chart types whose renderer is in the default bundle, so next to it add only the feature.
 `apexcharts/features/all` is the Tier 1 set and pulls in none of them.
-Full bundle (v8.0): `import ApexCharts from 'apexcharts/full'` (script tag `dist/apexcharts.full.min.js`) carries every chart type and feature and needs no add-on import. Gzipped at 8.0.0: default bundle 263,188 B, full bundle 381,135 B.
+Full bundle (v8.0): `import ApexCharts from 'apexcharts/full'` (script tag `dist/apexcharts.full.min.js`) carries every chart type and feature and needs no add-on import, except `apexcharts/features/ignite-ui` (8.8), which is in no bundle. Gzipped at 8.0.0: default bundle 263,188 B, full bundle 381,135 B.
 A missing import is named in the console: a Tier 2 chart type makes `render()` reject; a waterfall, dumbbell or streamgraph draws an empty plot; a Tier 2 feature degrades where it can (a trellis renders as one chart; renderer: 'canvas' falls back to SVG; a gauge draws without its targets). Unversioned CDN URLs serve the latest 8.x release; pin a 7.x release to stay on 7.
 
 Premium (watermarked until an entitled premium/enterprise license): trellis, storyboard, link, ink, measure, context-menu, perspectives, history, highlight-filter, and the unit/waffle and raincloud chart types. Premium and Tier 2 are separate axes: since 8.0 every premium item is Tier 2, but renderer-canvas, drilldown, radial-targets, waterfall, dumbbell, streamgraph, sunburst, violin and icicle are Tier 2 and free.
@@ -132,7 +132,7 @@ chart.destroy()                                         // cleanup
 
 ```
 apexcharts              # Default bundle: the standard types (see the box above) + the Tier 1 features
-apexcharts/full         # Full bundle (v8.0): every chart type and feature; no add-on import needed
+apexcharts/full         # Full bundle (v8.0): every chart type and feature; no add-on import needed except ignite-ui
 apexcharts/core         # Bare core (must register types + features manually)
 apexcharts/line         # line, area, scatter, bubble, rangeArea
 apexcharts/bar          # bar, column, rangeBar, funnel, pyramid (aliases)

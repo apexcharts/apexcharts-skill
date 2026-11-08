@@ -62,7 +62,7 @@ metadata:
 >
 > Waterfall and dumbbell draw through rangeBar and streamgraph through rangeArea, which the default bundle has, so next to it you add only the feature. Storyboard registers Perspectives, so importing both costs no more than Storyboard alone.
 >
-> **The full bundle** (v8.0) loads everything at once: `import ApexCharts from 'apexcharts/full'` in a bundler, `dist/apexcharts.full.min.js` from a script tag. It carries every chart type and feature plus the unit-shapes and pictograms catalogs, and needs no add-on import (premium items stay license-gated). Gzipped at 8.0.0: default bundle 263,188 B, full bundle 381,135 B.
+> **The full bundle** (v8.0) loads everything at once: `import ApexCharts from 'apexcharts/full'` in a bundler, `dist/apexcharts.full.min.js` from a script tag. It carries every chart type and feature plus the unit-shapes and pictograms catalogs, and needs no add-on import except the Ignite UI add-on (`apexcharts/features/ignite-ui`, v8.8), which is in no bundle (premium items stay license-gated). Gzipped at 8.0.0: default bundle 263,188 B, full bundle 381,135 B.
 >
 > **Nothing fails silently**: when the import is missing, the console names it. A Tier 2 chart type makes `render()` reject; a `waterfall`, `dumbbell` or `streamgraph` draws an empty plot; a Tier 2 feature degrades where it can (a trellis renders as one chart; `renderer: 'canvas'` falls back to SVG; a gauge draws without its targets). Unversioned CDN URLs serve the latest 8.x release; pin a 7.x release to stay on 7, where unit, sunburst, violin, drilldown, waterfall, dumbbell and streamgraph are still in the default bundle. The split began in v7.0, which moved the nine features in the last table row out of a default bundle that had carried every feature. See `references/tree-shaking.md` for the full tier table and `references/feature-platform.md` for each feature's API.
 >
@@ -191,7 +191,7 @@ A branch may omit its own `y` and be the sum of its children *(fixed in v7.6 for
 # Default bundle (the standard chart types plus the Tier 1 features; see the box at the top)
 import ApexCharts from 'apexcharts'
 
-# Full bundle (v8.0): every chart type and feature, plus the unit-shapes and pictograms catalogs. No add-on needed.
+# Full bundle (v8.0): every chart type and feature, plus the unit-shapes and pictograms catalogs. No add-on needed, except ignite-ui (in no bundle).
 import ApexCharts from 'apexcharts/full'
 
 # Bare core (no chart types, no optional features — must register manually)
