@@ -95,7 +95,7 @@ metadata:
 19. **`dumbbell` (v7.1) takes one series per measure**, each with the same `x` categories: `[{ name: '2020', data: [{ x, y }] }, { name: '2025', data: [{ x, y }] }]`. Do **not** zip the values into `y: [low, high]` pairs; that is the older `plotOptions.bar.isDumbbell` range-bar form, which still works but is a different chart.
 20. **`raincloud` (v7.1) takes the raw sample**, one datum per category: `data: [{ x, points: [number] }]`. It is a premium Tier 2 type, so it needs `import 'apexcharts/raincloud'` on top of the default bundle.
 21. **Unknown names fail loudly (v7.9).** An unknown `chart.type` throws when the chart is constructed or updated, and the message names the closest real type (`'column'` is valid, a synonym for `'bar'`; `''` and `null` draw a line chart). An unknown top-level option key is kept but never read. Numeric-string axis bounds such as `yaxis.min: '10'` work, and a bound that cannot be parsed is ignored (the axis scales to the data). Both cases log a console warning, except in `apexcharts.min.js` (the minified script-tag file), which strips it. Since v8.1 the CommonJS builds (the `*.common.js` files `require('apexcharts')` loads) keep their warnings, and every build, `apexcharts.min.js` included, prints the warning that names a missing Tier 2 import.
-22. **A script tag names the exact version shown here**: `https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.6.0/apexcharts.min.js` or `https://cdn.jsdelivr.net/npm/apexcharts@8.6.0/dist/apexcharts.min.js`. Never write a 3.x or 4.x URL such as `.../apexcharts/3.54.1/...`: those are releases from 2024 and early 2025, and this skill does not describe them. If the environment only accepts an older release, use the newest one it accepts with the same major version as these URLs. See `references/framework-wrappers.md` for add-on files on each CDN.
+22. **A script tag names the exact version shown here**: `https://cdn.jsdelivr.net/npm/apexcharts@8.8.1/dist/apexcharts.min.js`. jsDelivr serves each release from npm as soon as it is published; cdnjs mirrors releases too but can lag by days, so use it only when the environment allows nothing else, with the newest version it lists. Never write a 3.x or 4.x URL such as `.../apexcharts/3.54.1/...`: those are releases from 2024 and early 2025, and this skill does not describe them. If the environment only accepts an older release, use the newest one it accepts with the same major version as these URLs. See `references/framework-wrappers.md` for add-on files on each CDN.
 
 ---
 
@@ -254,7 +254,7 @@ import 'apexcharts/features/dumbbell'        # (v7.1) dumbbell chart type (Tier 
 import 'apexcharts/features/streamgraph'     # (v7.1) streamgraph chart type (Tier 2 since v8)
 import 'apexcharts/features/highlight-filter' # (v7.9) Part-of-whole highlight, highlightFilter (premium)
 import 'apexcharts/features/radial-targets'  # (v8.5) plotOptions.radialBar.targets on radialBar / gauge (free)
-import 'apexcharts/features/ignite-ui'       # (v8.8) Follow an Ignite UI theme on the page (free). In NO bundle, not even full
+import 'apexcharts/features/ignite-ui'       # (v8.8) Follow an Ignite UI theme on the page (no extra licence key). In NO bundle, not even full
 import 'apexcharts/features/trellis'         # (v7.0) Small multiples (premium)
 import 'apexcharts/features/storyboard'      # Scrollytelling (premium; registers perspectives)
 import 'apexcharts/features/perspectives'    # Shareable view state (premium)
@@ -657,7 +657,7 @@ new ApexCharts(el, { theme: { mode: 'light' }, series }).render()  // stays ligh
 ✅ **CORRECT**: import the add-on once, before the first render, and leave `theme.mode` unset so the theme's dark variant (`--ig-theme-variant`) can pick the mode:
 ```js
 import ApexCharts from 'apexcharts'
-import 'apexcharts/features/ignite-ui'   // free, no licence key
+import 'apexcharts/features/ignite-ui'   // no extra licence key
 new ApexCharts(el, { series }).render()
 ```
 
@@ -812,7 +812,7 @@ Every feature below is off by default in config terms. The **Tier** column is ab
 | **Weave** (plugins) | 1 | `apexcharts/features/weave` | Publish reusable chart plugins against a stable `ApexCharts.registerPlugin({ name, setup })` API; activate per chart with `plugins: [{ name }]`. Contract is at **v7** (v8.1): `info`/`categories`/`markDerived` (v2), `reserve` (v3), `pointer` (v4), `claim`/`drawn`/`declare`/`can` (v6), `highlight()` (v7), and the capabilities `observations` and `scale-orientation` (8.0.1) and `radial-scales` (8.5). Declare the **lowest** `apiVersion` you can run on and feature-detect the rest: a host older than the version you declare skips your plugin outright. |
 | **Marks** (custom series) | 1 | `apexcharts/features/marks` | `ApexCharts.registerSeriesType(name, { renderItem })` for first-class custom marks (lollipop, bullet). Baseline is `scales.y(0)`, **not** `api.zeroY`. |
 | **Facet** (themes/tokens) | 1 | `apexcharts/features/facet` | `theme: { follow: 'os', name }`, `--apx-*` CSS custom props, `ApexCharts.registerTheme`. |
-| **Ignite UI theming** | add-on | `apexcharts/features/ignite-ui` | *(from 8.8.0, free, no licence key)* Charts follow an Ignite UI theme on the page: series colours, text, grid, tooltips, menus, font, and light or dark from `--ig-theme-variant` when `theme.mode` is unset. In no bundle, `full` included; script tag `dist/features/ignite-ui.js` after `apexcharts.js`. Ranks below everything you set; `theme: { designSystem: false }` turns it off per chart. |
+| **Ignite UI theming** | add-on | `apexcharts/features/ignite-ui` | *(from 8.8.0, no extra licence key, not a premium feature)* Charts follow an Ignite UI theme on the page: series colours, text, grid, tooltips, menus, font, and light or dark from `--ig-theme-variant` when `theme.mode` is unset. In no bundle, `full` included; script tag `dist/features/ignite-ui.js` after `apexcharts.js`. Ranks below everything you set; `theme: { designSystem: false }` turns it off per chart. |
 | **Morph** | 1 | `apexcharts/features/morph` | Animated transitions between chart types. |
 | **Stats** | 1 | `apexcharts/features/stats` | *(v6.9)* Statistics behind histogram binning, boxPlot/violin raw-sample summaries (R type 7 quartiles, KDE), and `chart.rowSeries()`. The `apexcharts/histogram` entry includes it. |
 | **Cadence** (easing) | core | none | `chart.animations.easing` accepts a named curve, cubic-bezier array, or function; `ApexCharts.registerEasing`. |

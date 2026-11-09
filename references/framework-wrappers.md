@@ -24,7 +24,7 @@ The wrappers' standard components load the default ApexCharts bundle, which sinc
 | `raincloud` | `import 'apexcharts/raincloud'` |
 | `waterfall`, `dumbbell`, `streamgraph`, drilldown or another Tier 2 feature | `import 'apexcharts/features/<name>'` (`highlightFilter` is `features/highlight-filter`, `plotOptions.radialBar.targets` is `features/radial-targets`) |
 | Everything | `import 'apexcharts/full'`, which reuses the default bundle the wrapper already loads |
-| An Ignite UI theme on the page *(from 8.8.0)* | `import 'apexcharts/features/ignite-ui'` (free; in no bundle, `full` included). Leave `theme.mode` unset so the theme's dark variant can apply; after swapping the Ignite UI stylesheet call `ApexCharts.exec('<chart.id>', 'refreshTokens')` (from 8.8.0; returns the update Promise, same as `ApexCharts.getChartByID('<chart.id>').refreshTokens()`) |
+| An Ignite UI theme on the page *(from 8.8.0)* | `import 'apexcharts/features/ignite-ui'` (no extra licence key; in no bundle, `full` included). Leave `theme.mode` unset so the theme's dark variant can apply; after swapping the Ignite UI stylesheet call `ApexCharts.exec('<chart.id>', 'refreshTokens')` (from 8.8.0; returns the update Promise, same as `ApexCharts.getChartByID('<chart.id>').refreshTokens()`) |
 
 ```jsx
 import Chart from 'react-apexcharts'
@@ -243,7 +243,7 @@ updateChart() {
 <div id="chart"></div>
 
 <!-- CDN, pinned to a release -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.6.0/apexcharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@8.8.1/dist/apexcharts.min.js"></script>
 
 <script>
   const options = {
@@ -261,17 +261,15 @@ updateChart() {
 
 ```html
 <!-- default bundle -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.6.0/apexcharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@8.8.1/dist/apexcharts.min.js"></script>
 <!-- one add-on next to it: an opt-in chart type -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.6.0/sunburst.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@8.8.1/dist/sunburst.js"></script>
 
 <!-- or the full bundle: every chart type and feature, no add-ons (except ignite-ui, which is in no bundle) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/8.6.0/apexcharts.full.min.js"></script>
-
-<!-- the same files on jsDelivr keep the dist/ folder in the path -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@8.6.0/dist/apexcharts.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@8.6.0/dist/sunburst.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@8.8.1/dist/apexcharts.full.min.js"></script>
 ```
+
+jsDelivr serves each release from npm as soon as it is published, and keeps the `dist/` folder in the path. cdnjs mirrors the same files without `dist/` (`https://cdnjs.cloudflare.com/ajax/libs/apexcharts/<version>/apexcharts.min.js`) but can lag a release by days: use it only when the environment allows nothing else, with the newest version it lists.
 
 **Always write an exact version**, as above, never a major channel (`apexcharts@<major>`) or the unversioned URL: sandboxes that host generated pages (artifacts, previews) commonly reject a URL without an exact version, and an exact pin keeps a page working when the next major changes what the default bundle holds. **Never write a 3.x or 4.x URL** (`.../apexcharts/3.54.1/...`): those are releases from 2024 and early 2025, and this skill does not describe them. If an environment only accepts an older release, use the newest one it accepts with the same major version as the URLs above, since this skill applies to that whole major. To stay on an older major, pin a release from it. The other add-ons are `unit.js`, `violin.js`, `icicle.js` and `features/<name>.js` beside `apexcharts.min.js`, and may load before or after the main script.
 

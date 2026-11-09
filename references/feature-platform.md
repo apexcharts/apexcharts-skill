@@ -314,7 +314,7 @@ if (h) { h.update([{ series: 'Revenue', values: [8, 4, 20] }]); h.release() }
 
 Declared in the shipped `apexcharts.d.ts`: `ApexPluginAPI` (the `setup(api)` facade), `ApexPluginSeries`, `ApexPluginScales`, `ApexPluginLayer`, `ApexPluginHook`, `ApexPluginPayload`, for the v6 additions `ApexPluginChartInfo` (`api.info`), `ApexPluginPointerEvent` (the `pointer` payload), `ApexPluginClaim` (`{ release(), update(entries) }`) and `ApexDrawnItem` (a `drawn()` row), and, added in 8.x, `ApexPluginHighlight` and `ApexPluginHighlightEntry` (`highlight()`), `ApexRadialScales` (`radialScales`) and `ApexDashPattern` (dash values).
 
-### Typing gap (still present at 8.7.0)
+### Typing gap (still present at 8.8.1)
 
 `api.categories` and `data[].raw` are real at runtime (both shipped in v2) but are **not declared** in the shipped `apexcharts.d.ts`: `ApexPluginAPI` has no `categories` member and `ApexPluginSeries` is typed as `{ name?, hidden, color?, points, observations }`, without `raw`. TypeScript rejects both. Cast the facade where you need them, and do not read the absence as "removed".
 
@@ -470,7 +470,7 @@ const options = {
 
 ### Ignite UI add-on (from 8.8.0)
 
-`import 'apexcharts/features/ignite-ui'`: an opt-in add-on, **free, no licence key**. It is in **no** bundle, `apexcharts/full` included, because it changes how a page's charts look; only a page that asks for it gets it.
+`import 'apexcharts/features/ignite-ui'`: an opt-in add-on that needs **no extra licence key** and is not a premium feature. It is in **no** bundle, `apexcharts/full` included, because it changes how a page's charts look; only a page that asks for it gets it.
 
 With it loaded and an Ignite UI theme on the page, charts follow the theme's `--ig-*` tokens: series colours from its colour families, text, gridlines and overlay colours, tooltips and menus, the font, and (when `theme.mode` is unset) light or dark from `--ig-theme-variant`. Without it the `--ig-*` tokens are ignored, with no error, and `theme.designSystem` does nothing; the `--apx-*` tokens work either way.
 
@@ -501,7 +501,7 @@ new ApexCharts(el, {
 - **Stylesheet swap.** A light/dark switch that replaces the Ignite UI stylesheet does not trigger a render: call `await chart.refreshTokens()` once the new sheet has loaded (`link.onload`).
 - **Fonts.** The chart takes `--ig-font-family` (below `--apx-font-family`); a web font that is still loading is read again once it has loaded, so make sure the page actually loads the font face.
 - **`chart.injectStyleSheet: false`.** In the light DOM, link `dist/apexcharts-ignite-ui.css` after `dist/apexcharts.css`.
-- **Other products.** The add-on registers the Ignite UI adapter shared by the Apex family, so ApexTree, ApexSankey and ApexGantt on the page follow the theme too (from a script tag, only once `apexcharts.js` has loaded). ApexGrid and ApexMaps take their own add-ons.
+- **Other products.** The add-on registers the Ignite UI adapter shared by the Apex family, so ApexTree (2.3.0 or later), ApexSankey (1.14.0) and ApexGantt (3.21.0) on the page follow the theme too (from a script tag, only once `apexcharts.js` has loaded). Each of them also ships its own add-on (`apextree/ignite-ui`, `apexsankey/ignite-ui`, `apexgantt/ignite-ui`) for a page without this one. ApexMaps takes its own add-on, `apexmaps/ignite-ui` (1.3.0). Apex Grid's add-on, `apex-grid/ignite-ui`, exists only in the 4.0 beta on the npm `next` tag (`npm install apex-grid@next`, 4.0.0-beta.2 at the time of writing): a plain `npm install apex-grid` gets 3.6.0, which has no Ignite UI support.
 
 ---
 

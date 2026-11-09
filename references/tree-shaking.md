@@ -170,7 +170,7 @@ Required whatever entry point you used, the default `apexcharts` bundle included
 
 Storyboard registers Perspectives, so importing both costs no more than Storyboard alone.
 
-**In no bundle at all: the Ignite UI add-on *(from 8.8.0)*.** `import 'apexcharts/features/ignite-ui'` (script tag `dist/features/ignite-ui.js`, after `apexcharts.js`) makes charts follow an Ignite UI theme on the page. Unlike the Tier 2 features it is not in `apexcharts/full` either, since it changes how the page's charts look: only a page that imports it gets it. Free, no licence key, about 3.6 KB gzip (pre-release build). Without it the page's `--ig-*` tokens are ignored silently (no warning) and `theme.designSystem` does nothing. See "Ignite UI add-on" in `feature-platform.md`.
+**In no bundle at all: the Ignite UI add-on *(from 8.8.0)*.** `import 'apexcharts/features/ignite-ui'` (script tag `dist/features/ignite-ui.js`, after `apexcharts.js`) makes charts follow an Ignite UI theme on the page. Unlike the Tier 2 features it is not in `apexcharts/full` either, since it changes how the page's charts look: only a page that imports it gets it. No extra licence key, 3.6 KB gzip (at 8.8.1). Without it the page's `--ig-*` tokens are ignored silently (no warning) and `theme.designSystem` does nothing. See "Ignite UI add-on" in `feature-platform.md`.
 
 **`apexcharts/features/all` does not include Tier 2**, by design: upstream has a tier-budget test that fails the build if a Tier 2 feature reappears in it.
 
