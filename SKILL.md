@@ -15,8 +15,8 @@ description: >
   (`react-apexcharts`, `vue3-apexcharts`, `ng-apexcharts`) over the core API.
 metadata:
   author: ApexCharts
-  version: "4.1.0"
-  library_version: "8.7.0"
+  version: "4.2.0"
+  library_version: "8.8.1"
   category: data-visualization
   tags: [charts, visualization, javascript, typescript, svg, apexcharts]
   docs: https://apexcharts.com/docs/
